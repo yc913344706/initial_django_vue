@@ -69,41 +69,44 @@ push_image_with_manifest_for_arch() {
   docker push ${_image_name}:${OS_ARCH}_${_image_tag}
 
   # 检查是否已存在 manifest
-  if docker manifest inspect ${_image_name}:${_image_tag} >/dev/null 2>&1; then
-    # 如果存在，获取现有的 manifest 信息
-    _manifest_json=$(docker manifest inspect ${_image_name}:${_image_tag})
-    _manifest_args=""
-    
-    # 遍历现有的 manifests，只保留不同架构的镜像
-    _existing_archs=$(echo "${_manifest_json}" | jq -r '.manifests[].platform.architecture')
-    for _arch in ${_existing_archs}; do
-      if [ "${_arch}" != "${OS_ARCH}" ]; then
-        # 获取该架构的 digest
-        _digest=$(echo "${_manifest_json}" | jq -r ".manifests[] | select(.platform.architecture==\"${_arch}\") | .digest")
-        _manifest_args="${_manifest_args} ${_image_name}@${_digest}"
-      fi
-    done
-    
-    # 添加新的架构
-    _manifest_args="${_manifest_args} ${_image_name}:${OS_ARCH}_${_image_tag}"
-    
-    # 创建新的 manifest，包含所有架构
-    docker manifest create --amend ${_image_name}:${_image_tag} ${_manifest_args}
-  else
-    # 如果不存在，创建新的
-    docker manifest create ${_image_name}:${_image_tag} ${_image_name}:${OS_ARCH}_${_image_tag}
+  amend_str="--amend"
+  docker manifest inspect ${_image_name}:${_image_tag} || amend_str=""
+
+  # 获取所有已存在的架构镜像
+  already_known_archs="arm64 amd64"
+  _manifest_args=""
+  _archs_to_annotate=""
+  
+  for _arch in ${already_known_archs}; do
+    if docker manifest inspect ${_image_name}:${_arch}_${_image_tag} >/dev/null 2>&1; then
+      _manifest_args="${_manifest_args} ${_image_name}:${_arch}_${_image_tag}"
+      _archs_to_annotate="${_archs_to_annotate} ${_arch}"
+    fi
+  done
+
+  # 如果没有找到任何架构的镜像，使用当前架构
+  if [ -z "${_manifest_args}" ]; then
+    _manifest_args="${_image_name}:${OS_ARCH}_${_image_tag}"
+    _archs_to_annotate="${OS_ARCH}"
   fi
 
-  # 添加架构注解
-  if [ "${OS_ARCH}" = "arm64" ]; then
-    docker manifest annotate ${_image_name}:${_image_tag} \
-      ${_image_name}:${OS_ARCH}_${_image_tag} \
-      --os linux --arch ${OS_ARCH} --variant v8
-  else
-    docker manifest annotate ${_image_name}:${_image_tag} \
-      ${_image_name}:${OS_ARCH}_${_image_tag} \
-      --os linux --arch ${OS_ARCH}
-  fi
+  # 创建或更新 manifest
+  docker manifest create ${amend_str} \
+    ${_image_name}:${_image_tag} \
+    ${_manifest_args}
+
+  # 为每个架构添加注解
+  for _arch in ${_archs_to_annotate}; do
+    if [ "${_arch}" = "arm64" ]; then
+      docker manifest annotate ${_image_name}:${_image_tag} \
+        ${_image_name}:${_arch}_${_image_tag} \
+        --os linux --arch ${_arch} --variant v8
+    else
+      docker manifest annotate ${_image_name}:${_image_tag} \
+        ${_image_name}:${_arch}_${_image_tag} \
+        --os linux --arch ${_arch}
+    fi
+  done
 
   # 推送更新后的 manifest
   docker manifest push ${_image_name}:${_image_tag}
