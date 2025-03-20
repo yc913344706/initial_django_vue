@@ -71,12 +71,17 @@ push_image_with_manifest_for_arch() {
   # 检查是否已存在 manifest
   if docker manifest inspect ${_image_name}:${_image_tag} >/dev/null 2>&1; then
     # 如果存在，获取现有的 manifest 信息
-    _existing_manifests=$(docker manifest inspect ${_image_name}:${_image_tag} | jq -r '.manifests[].digest')
+    _manifest_json=$(docker manifest inspect ${_image_name}:${_image_tag})
     _manifest_args=""
     
-    # 添加现有的架构
-    for _digest in ${_existing_manifests}; do
-      _manifest_args="${_manifest_args} ${_image_name}@${_digest}"
+    # 遍历现有的 manifests，只保留不同架构的镜像
+    _existing_archs=$(echo "${_manifest_json}" | jq -r '.manifests[].platform.architecture')
+    for _arch in ${_existing_archs}; do
+      if [ "${_arch}" != "${OS_ARCH}" ]; then
+        # 获取该架构的 digest
+        _digest=$(echo "${_manifest_json}" | jq -r ".manifests[] | select(.platform.architecture==\"${_arch}\") | .digest")
+        _manifest_args="${_manifest_args} ${_image_name}@${_digest}"
+      fi
     done
     
     # 添加新的架构
@@ -90,9 +95,15 @@ push_image_with_manifest_for_arch() {
   fi
 
   # 添加架构注解
-  docker manifest annotate ${_image_name}:${_image_tag} \
-    ${_image_name}:${OS_ARCH}_${_image_tag} \
-    --os linux --arch ${OS_ARCH}
+  if [ "${OS_ARCH}" = "arm64" ]; then
+    docker manifest annotate ${_image_name}:${_image_tag} \
+      ${_image_name}:${OS_ARCH}_${_image_tag} \
+      --os linux --arch ${OS_ARCH} --variant v8
+  else
+    docker manifest annotate ${_image_name}:${_image_tag} \
+      ${_image_name}:${OS_ARCH}_${_image_tag} \
+      --os linux --arch ${OS_ARCH}
+  fi
 
   # 推送更新后的 manifest
   docker manifest push ${_image_name}:${_image_tag}
