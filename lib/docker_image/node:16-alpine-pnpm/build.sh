@@ -8,7 +8,7 @@ WORKSPACE="$(dirname $(dirname $(dirname $(dirname $(realpath $0)))))"
 
 DOCKER_IMAGE_NAME="${HARBOR_PREFIX}node:16-alpine-pnpm"
 build_image() {
-  docker build --build-arg BASE_IMAGE="${DOCKER_PROXY}node:16-alpine" -t "${DOCKER_IMAGE_NAME}" . || die "docker build failed"
+  docker build --build-arg BASE_IMAGE="${DOCKER_PROXY}library/node:16-alpine" -t "${DOCKER_IMAGE_NAME}" . || die "docker build failed"
 }
 
 build_image

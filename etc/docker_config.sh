@@ -1,2 +1,2 @@
-HARBOR_PREFIX="harbor.XXX.com/public/"
-DOCKER_PROXY="hub.XXX.com"
+HARBOR_PREFIX="yc913344706/"
+DOCKER_PROXY=""

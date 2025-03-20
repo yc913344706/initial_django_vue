@@ -54,6 +54,29 @@ create_manifest() {
   set +x
 }
 
+push_image_with_manifest_for_arch() {
+  check_var_exists "OS_ARCH"
+
+  _image_name=$1
+  _image_tag=$2
+
+  docker tag ${_image_name}:${_image_tag} ${_image_name}:${OS_ARCH}_${_image_tag}
+  docker push ${_image_name}:${OS_ARCH}_${_image_tag}
+
+  amend_str="--amend"
+  docker manifest inspect ${_image_name}:${_image_tag} || amend_str=""
+
+  docker manifest create ${amend_str} \
+    ${_image_name}:${_image_tag} \
+    ${_image_name}:${OS_ARCH}_${_image_tag}
+
+  docker manifest annotate ${_image_name}:${_image_tag} \
+    ${_image_name}:${OS_ARCH}_${_image_tag} \
+    --os linux --arch ${OS_ARCH}
+
+  docker manifest push ${_image_name}:${_image_tag}
+}
+
 push_image()
 {
   need_push=false
@@ -80,4 +103,11 @@ stop_old_docker_container() {
     sleep 2
     log_info "stop over..."
   fi
+}
+
+check_docker_image_exist() {
+  _image_name=$1
+  _image_tag=$2
+
+  docker images | grep "${_image_name}" | grep "${_image_tag}" || die "docker image ${_image_name}:${_image_tag} not found"
 }
