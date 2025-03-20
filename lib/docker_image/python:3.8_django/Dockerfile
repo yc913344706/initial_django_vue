@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=ubuntu:20.04_python3.8
+ARG BASE_IMAGE=yc913344706/ubuntu:20.04_python3.8
 FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND noninteractive

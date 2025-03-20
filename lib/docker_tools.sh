@@ -55,6 +55,7 @@ create_manifest() {
 }
 
 push_image_with_manifest_for_arch() {
+  get_os_arch
   check_var_exists "OS_ARCH"
 
   _image_name=$1
