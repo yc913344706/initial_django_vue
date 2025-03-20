@@ -55,6 +55,9 @@ create_manifest() {
 }
 
 push_image_with_manifest_for_arch() {
+  check_command_exists "jq"
+
+  # 获取当前架构
   get_os_arch
   check_var_exists "OS_ARCH"
 
@@ -67,15 +70,23 @@ push_image_with_manifest_for_arch() {
 
   # 检查是否已存在 manifest
   if docker manifest inspect ${_image_name}:${_image_tag} >/dev/null 2>&1; then
-    # 如果存在，使用 --amend 追加
-    docker manifest create --amend \
-      ${_image_name}:${_image_tag} \
-      ${_image_name}:${OS_ARCH}_${_image_tag}
+    # 如果存在，获取现有的 manifest 信息
+    _existing_manifests=$(docker manifest inspect ${_image_name}:${_image_tag} | jq -r '.manifests[].digest')
+    _manifest_args=""
+    
+    # 添加现有的架构
+    for _digest in ${_existing_manifests}; do
+      _manifest_args="${_manifest_args} ${_image_name}@${_digest}"
+    done
+    
+    # 添加新的架构
+    _manifest_args="${_manifest_args} ${_image_name}:${OS_ARCH}_${_image_tag}"
+    
+    # 创建新的 manifest，包含所有架构
+    docker manifest create --amend ${_image_name}:${_image_tag} ${_manifest_args}
   else
     # 如果不存在，创建新的
-    docker manifest create \
-      ${_image_name}:${_image_tag} \
-      ${_image_name}:${OS_ARCH}_${_image_tag}
+    docker manifest create ${_image_name}:${_image_tag} ${_image_name}:${OS_ARCH}_${_image_tag}
   fi
 
   # 添加架构注解
