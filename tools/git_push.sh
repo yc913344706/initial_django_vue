@@ -11,9 +11,11 @@ cd ${WORKSPACE}/
 
 # 检查git status是否干净
 [ -f ./grep_file.txt ] || die "grep_file.txt not found"
-grep -f ./grep_file.txt -r . | grep -v grep_file.txt && {
+if grep -f ./grep_file.txt -r . | grep -v grep_file.txt; then
     die "git status is not clean"
-}
+else
+    log_info "git status is clean"
+fi
 
 # 用户确认 git status
 git status
