@@ -61,20 +61,29 @@ push_image_with_manifest_for_arch() {
   _image_name=$1
   _image_tag=$2
 
+  # 先推送当前架构的镜像
   docker tag ${_image_name}:${_image_tag} ${_image_name}:${OS_ARCH}_${_image_tag}
   docker push ${_image_name}:${OS_ARCH}_${_image_tag}
 
-  amend_str="--amend"
-  docker manifest inspect ${_image_name}:${_image_tag} || amend_str=""
+  # 检查是否已存在 manifest
+  if docker manifest inspect ${_image_name}:${_image_tag} >/dev/null 2>&1; then
+    # 如果存在，使用 --amend 追加
+    docker manifest create --amend \
+      ${_image_name}:${_image_tag} \
+      ${_image_name}:${OS_ARCH}_${_image_tag}
+  else
+    # 如果不存在，创建新的
+    docker manifest create \
+      ${_image_name}:${_image_tag} \
+      ${_image_name}:${OS_ARCH}_${_image_tag}
+  fi
 
-  docker manifest create ${amend_str} \
-    ${_image_name}:${_image_tag} \
-    ${_image_name}:${OS_ARCH}_${_image_tag}
-
+  # 添加架构注解
   docker manifest annotate ${_image_name}:${_image_tag} \
     ${_image_name}:${OS_ARCH}_${_image_tag} \
     --os linux --arch ${OS_ARCH}
 
+  # 推送更新后的 manifest
   docker manifest push ${_image_name}:${_image_tag}
 }
 
