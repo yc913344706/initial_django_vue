@@ -15,11 +15,14 @@ IMAGE_TAG="3.8_django"
 check_docker_image_exist "${IMAGE_NAME}" "${IMAGE_TAG}"
 
 docker run -it \
+    --name generate_backend_project \
     --rm -v ${WORKSPACE}/code:/data/code \
     ${IMAGE_NAME}:${IMAGE_TAG} \
     bash -c "cd /data/code && \
+    rm -rf backend && \
     django-admin startproject backend && \
-    python manage.py startapp demo"
+    cd backend && \
+    python3 manage.py startapp demo"
 
 
 
