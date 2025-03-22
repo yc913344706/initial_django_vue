@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
-'''
-@Project ：deploy-compose
-@File    ：get_random_passwd.py.py
-@Author  ：于川
-@Date    ：2022/8/17 18:10
-'''
 
-# how to use:
-# - ./tools/get_random_passwd.py 8
-# - ./tools/get_random_passwd.py 18
+# 定义参数
+# =========
+import argparse
+parser = argparse.ArgumentParser()
 
-import sys
+# 必选参数
+parser.add_argument('passwd_length', help='密码长度')
+
+# 可选参数
+# parser.add_argument('-s', dest='split_dir', help='拆分后的文件放到哪里，默认与源文件同目录')
+
+args = parser.parse_args()
+
+
+# 业务逻辑
+# =========
 import random
 
 
@@ -41,4 +46,4 @@ def get_random_password(passwd_length, type_num=4):
 
 
 if __name__ == "__main__":
-    print(get_random_password(int(sys.argv[1])))
+    print(get_random_password(int(args.passwd_length)))
