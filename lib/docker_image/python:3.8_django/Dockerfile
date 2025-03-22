@@ -3,7 +3,11 @@ FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt update && apt install -y libldap2-dev libsasl2-dev
+# 安装uwsgi
+RUN apt update && apt install -y libldap2-dev libsasl2-dev uwsgi
+
+# 安装python-mysql所需包
+RUN apt install -y python3.10-dev python3-mysqldb libmysqlclient-dev
 
 COPY tmp/requirements.txt /tmp/requirements.txt
 

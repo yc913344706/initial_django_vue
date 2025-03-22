@@ -26,10 +26,6 @@ RUN bash -c 'pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/
 RUN bash -c 'pip3 install --upgrade setuptools'
 RUN python3 -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --upgrade pip
 
-# 安装python-mysql所需包
-RUN apt install -y python3.10-dev python3-mysqldb libmysqlclient-dev
-
-
 # 时区
 RUN apt-get install -y locales tzdata xfonts-wqy && \
     locale-gen zh_CN.UTF-8 && \
@@ -41,10 +37,6 @@ ENV LANG=zh_CN.UTF-8 LANGUAGE=zh_CN.UTF-8 LC_ALL=zh_CN.UTF-8
 # 安装基础包
 RUN apt update
 RUN apt install -y vim curl netcat git
-
-# 安装uwsgi
-RUN apt update
-RUN apt install -y uwsgi
 
 # 清理缓存
 RUN apt clean all

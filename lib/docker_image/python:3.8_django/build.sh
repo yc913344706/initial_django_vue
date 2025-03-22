@@ -19,8 +19,8 @@ DOCKER_IMAGE_NAME="${PRIVATE_HARBOR_PREFIX}yc913344706/python"
 DOCKER_IMAGE_TAG="3.8_django"
 
 mkdir -p ./tmp
-if [ -f ${WORKSPACE}/etc/requirements.txt ]; then
-  cp -a ${WORKSPACE}/etc/requirements.txt ./tmp/requirements.txt
+if [ -f ${WORKSPACE}/etc/backend/requirements.txt ]; then
+  cp -a ${WORKSPACE}/etc/backend/requirements.txt ./tmp/requirements.txt
 fi
 
 build_image() {
