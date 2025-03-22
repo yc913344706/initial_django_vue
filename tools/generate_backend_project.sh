@@ -6,7 +6,7 @@ WORKSPACE="$(dirname $(dirname $(realpath $0)))"
 
 . "${WORKSPACE}"/lib/log.sh
 . "${WORKSPACE}"/lib/docker_tools.sh
-. "${WORKSPACE}"/etc/docker_config.sh
+. "${WORKSPACE}"/etc/global_config.sh
 
 mkdir -p ${WORKSPACE}/code/
 

@@ -22,8 +22,8 @@ pre_check() {
 
   # 检查环境变量文件
   check_file_exists "${WORKSPACE}/etc/docker_env_files/${ENV}.env"
-  check_file_exists "${WORKSPACE}/etc/django_config_dir/${ENV}.yaml"
-  prepare_django_config
+  check_file_exists "${WORKSPACE}/etc/config_dir/${ENV}.yaml"
+  prepare_django_config "${WORKSPACE}/etc/config_dir/${ENV}.yaml"
 
   # 检查必要的命令
   check_command_exists "docker"
@@ -39,16 +39,17 @@ main() {
   DOCKER_CONTAINER_NAME="${DJANGO_PROJECT_NAME}_DJANGO_UWSGI"
   stop_old_docker_container "${DOCKER_CONTAINER_NAME}"
 
-  sudo mkdir -p ${WORKSPACE}/logs
-  sudo chown -R 1000:1000 ${WORKSPACE}/logs
+  # log_info "need sudo, please input sudo password."
+  # sudo mkdir -p ${WORKSPACE}/logs
+  # sudo chown -R 644 ${WORKSPACE}/logs
 
   # 运行
   log_info "start docker uwsgi..."
   docker run -itd --rm \
     -p 8000:8000 \
     --name ${DOCKER_CONTAINER_NAME} \
-    -v ${WORKSPACE}/etc/hosts:/etc/hosts \
-    -v ${WORKSPACE}/etc/resolv.conf:/etc/resolv.conf \
+    -v ${WORKSPACE}/etc/backend/hosts:/etc/hosts \
+    -v ${WORKSPACE}/etc/backend/resolv.conf:/etc/resolv.conf \
     -v ${WORKSPACE}/persistent:/data/persistent \
     -v ${WORKSPACE}/logs:/var/log/${DJANGO_PROJECT_NAME} \
     -v ${WORKSPACE}:/data/workspace \
@@ -57,12 +58,12 @@ main() {
     ${DOCKER_IMAGE_NAME} \
     bash -c "
       set -e && \
-      pip3 install -r /data/workspace/etc/requirements.txt && \
+      pip3 install -r /data/workspace/etc/backend/requirements.txt && \
       uwsgi \
         --set-placeholder DJANGO_PROJECT_NAME=${DJANGO_PROJECT_NAME} \
         --set-placeholder UWSGI_CPU_PROCESSES=${UWSGI_CPU_PROCESSES} \
         --set-placeholder UWSGI_CPU_THREADS=${UWSGI_CPU_THREADS} \
-        --ini /data/workspace/etc/uwsgi.ini:prod
+        --ini /data/workspace/etc/backend/uwsgi.ini:prod
     "
     log_info "start over."
 }

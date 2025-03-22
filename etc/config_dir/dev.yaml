@@ -1,0 +1,43 @@
+LOG_LEVEL: "DEBUG"
+
+SETTINGS: {
+  ALLOWED_HOSTS: [
+    'localhost',
+    '127.0.0.1:8000',
+    '127.0.0.1'
+  ],
+  CSRF_TRUSTED_ORIGINS: [
+    'https://localhost:8000',
+    'http://127.0.0.1:8000',
+    'http://127.0.0.1'
+  ],
+}
+
+MYSQL: {
+  "HOST": "127.0.0.1",
+  "PORT": 13306,
+  "USER": "root",
+  "PASSWORD": "Admin@123",
+  "DB": "backend"
+}
+
+REDIS: {
+  "HOST": "127.0.0.1",
+  "PORT": 16379,
+  "PASSWORD": "123456",
+  "DB": {
+    "DEFAULT": 0,
+    # celery use
+    "CELERY_BROKER": 1,
+  },
+}
+
+MIDDLEWARE_WHITE_LIST: [
+  # 登录
+  "/api/v1/myauth/login/",
+  "/api/v1/myauth/logout/",
+  "/api/v1/myauth/refresh_token/",
+
+  # 权限管理
+  "/api/v1/permission/get_current_user_permission/",
+]
