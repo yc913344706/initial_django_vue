@@ -10,14 +10,16 @@ WORKSPACE="$(dirname $(dirname $(realpath $0)))"
 
 mkdir -p ${WORKSPACE}/code/
 
-IMAGE_NAME="${HARBOR_PREFIX}python"
+IMAGE_NAME="${PRIVATE_HARBOR_PREFIX}yc913344706/python"
 IMAGE_TAG="3.8_django"
 check_docker_image_exist "${IMAGE_NAME}" "${IMAGE_TAG}"
 
 docker run -it \
     --rm -v ${WORKSPACE}/code:/data/code \
     ${IMAGE_NAME}:${IMAGE_TAG} \
-    bash -c "cd /data/code && django-admin startproject backend && python manage.py startapp demo"
+    bash -c "cd /data/code && \
+    django-admin startproject backend && \
+    python manage.py startapp demo"
 
 
 

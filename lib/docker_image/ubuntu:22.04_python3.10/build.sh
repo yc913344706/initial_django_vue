@@ -17,11 +17,11 @@ analyze_params $*
 get_os_arch
 cp -a ${CURRENT_DIR}/root/etc/apt/sources.list.${OS_ARCH} ${CURRENT_DIR}/root/etc/apt/sources.list
 
-DOCKER_IMAGE_NAME="${HARBOR_PREFIX}ubuntu"
+DOCKER_IMAGE_NAME="${PRIVATE_HARBOR_PREFIX}yc913344706/ubuntu"
 DOCKER_IMAGE_TAG="22.04_python3.10"
 
 build_image() {
-  docker build --build-arg BASE_IMAGE="${DOCKER_PROXY}library/ubuntu:22.04" -t "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}" . || die "docker build failed"
+  docker build --build-arg BASE_IMAGE="${DOCKER_PROXY_DOCKER_IO}library/ubuntu:22.04" -t "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}" . || die "docker build failed"
 }
 
 build_image
