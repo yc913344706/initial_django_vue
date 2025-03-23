@@ -21,8 +21,8 @@ export const apiMap = {
 
   // 权限管理
   permission: {
-    permissionList: "/permission/permissions/",
-    permission: "/permission/permission/",
+    permissionList: "/perm/permissions/",
+    permission: "/perm/permission/",
   },
 
   // 授权管理
