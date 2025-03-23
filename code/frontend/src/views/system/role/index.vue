@@ -68,6 +68,7 @@ import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { http } from '@/utils/http'
+import { apiMap } from '@/config/api'
 
 const roleList = ref([])
 const permissionList = ref([])
@@ -96,18 +97,32 @@ const rules = {
 // 获取角色列表
 const getRoleList = async () => {
   try {
-    const res = await http.get('/api/perm/roles/')
-    roleList.value = res.data
+    const res = await http.request(
+      "get",
+      import.meta.env.VITE_BACKEND_URL + apiMap.role.roleList
+    );
+    if (res.success) {
+      roleList.value = res.data.data;
+    } else {
+      ElMessage.error(res.msg);
+    }
   } catch (error) {
-    ElMessage.error('获取角色列表失败')
+    ElMessage.error("获取角色列表失败");
   }
 }
 
 // 获取权限列表
 const getPermissionList = async () => {
   try {
-    const res = await http.get('/api/perm/permissions/')
-    permissionList.value = res.data
+    const res = await http.request(
+      "get",
+      import.meta.env.VITE_BACKEND_URL + apiMap.permission.permissionList
+    );
+    if (res.success) {
+      permissionList.value = res.data.data;
+    } else {
+      ElMessage.error(res.msg);
+    }
   } catch (error) {
     ElMessage.error('获取权限列表失败')
   }
@@ -141,11 +156,19 @@ const handleDelete = (row) => {
     type: 'warning'
   }).then(async () => {
     try {
-      await http.delete('/api/perm/role/', { data: { uuid: row.uuid } })
-      ElMessage.success('删除成功')
-      getRoleList()
+      const res = await http.request(
+        "delete",
+        import.meta.env.VITE_BACKEND_URL + apiMap.role.role,
+        { data: { uuid: row.uuid } }
+      );
+      if (res.success) {
+        ElMessage.success("删除成功");
+        getRoleList();
+      } else {
+        ElMessage.error(res.msg);
+      }
     } catch (error) {
-      ElMessage.error('删除失败')
+      ElMessage.error("删除失败");
     }
   })
 }
@@ -158,14 +181,32 @@ const handleSubmit = async () => {
     if (valid) {
       try {
         if (dialogType.value === 'add') {
-          await http.post('/api/perm/role/', form.value)
-          ElMessage.success('新增成功')
+          const res = await http.request(
+            "post",
+            import.meta.env.VITE_BACKEND_URL + apiMap.role.role,
+            { data: form.value }
+          );
+          if (res.success) {
+            ElMessage.success('新增成功')
+          } else {
+            ElMessage.error(res.msg);
+          }
+          dialogVisible.value = false
+          getRoleList()
         } else {
-          await http.put('/api/perm/role/', form.value)
-          ElMessage.success('编辑成功')
+          const res = await http.request(
+            "put",
+            import.meta.env.VITE_BACKEND_URL + apiMap.role.role,
+            { data: form.value }
+          );
+          if (res.success) {
+            ElMessage.success('编辑成功')
+          } else {
+            ElMessage.error(res.msg);
+          }
+          dialogVisible.value = false
+          getRoleList()
         }
-        dialogVisible.value = false
-        getRoleList()
       } catch (error) {
         ElMessage.error(dialogType.value === 'add' ? '新增失败' : '编辑失败')
       }

@@ -111,7 +111,7 @@ const getUserList = async () => {
     if (res.success) {
       userList.value = res.data.data
     } else {
-      ElMessage.error(res.data.msg)
+      ElMessage.error(res.msg)
     }
   } catch (error) {
     ElMessage.error('获取用户列表失败')
@@ -157,7 +157,7 @@ const handleDelete = (row: UserForm) => {
         ElMessage.success('删除成功')
         getUserList()
       } else {
-        ElMessage.error(res.data.msg)
+        ElMessage.error(res.msg)
       }
     } catch (error) {
       ElMessage.error('删除失败')
@@ -179,7 +179,7 @@ const handleSubmit = async () => {
             dialogVisible.value = false
             getUserList()
           } else {
-            ElMessage.error(res.data.msg)
+            ElMessage.error(res.msg)
           }
         } else {
           const res = await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: form.value })
@@ -188,7 +188,7 @@ const handleSubmit = async () => {
             dialogVisible.value = false
             getUserList()
           } else {
-            ElMessage.error(res.data.msg)
+            ElMessage.error(res.msg)
           }
         }
       } catch (error) {

@@ -17,6 +17,9 @@ def format_role_data(role):
     return {
         'uuid': role.uuid,
         'name': role.name,
+        'code': role.code,
+        'description': role.description,
+        'permissions': [format_permission_data(permission) for permission in role.permissions.all()],
     }
 
 def format_grant_data(grant):

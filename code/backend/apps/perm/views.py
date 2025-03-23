@@ -115,6 +115,11 @@ def role(request):
             create_dict = {key: value for key, value in body.items() if key in create_keys}
 
             role = Role.objects.create(**create_dict)
+            
+            for permission in body.get('permissions', []):
+                permission_obj = Permission.objects.get(uuid=permission)
+                role.permissions.add(permission_obj)
+
             return pub_success_response(format_role_data(role))
         elif request.method == 'PUT':
             uuid = body.get('uuid')
@@ -123,10 +128,13 @@ def role(request):
             role_obj = Role.objects.filter(uuid=uuid).first()
             assert role_obj, '更新的角色不存在'
 
-            update_keys = ['name', 'code', 'description']
+            update_keys = ['name', 'code', 'description', 'permissions']
             update_dict = {key: value for key, value in body.items() if key in update_keys}
             for key, value in update_dict.items():
-                setattr(role_obj, key, value)
+                if key == 'permissions':
+                    role_obj.permissions.set(value)
+                else:
+                    setattr(role_obj, key, value)
             role_obj.save()
 
             color_logger.debug(f"更新角色: {role_obj.uuid} 成功")

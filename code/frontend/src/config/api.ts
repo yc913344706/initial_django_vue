@@ -15,8 +15,8 @@ export const apiMap = {
 
   // 角色管理
   role: {
-    roleList: "/role/roles/",
-    role: "/role/role/",
+    roleList: "/perm/roles/",
+    role: "/perm/role/",
   },
 
   // 权限管理
@@ -27,7 +27,7 @@ export const apiMap = {
 
   // 授权管理
   grant: {
-    grantList: "/grant/grants/",
-    grant: "/grant/grant/",
+    grantList: "/perm/grants/",
+    grant: "/perm/grant/",
   },
 }

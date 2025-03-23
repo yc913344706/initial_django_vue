@@ -102,7 +102,7 @@ const getPermissionList = async () => {
     if (res.success) {
       permissionList.value = res.data.data;
     } else {
-      ElMessage.error(res.message);
+      ElMessage.error(res.msg);
     }
   } catch (error) {
     ElMessage.error("获取权限列表失败");
@@ -144,7 +144,7 @@ const handleDelete = row => {
         ElMessage.success("删除成功");
         getPermissionList();
       } else {
-        ElMessage.error(res.message);
+        ElMessage.error(res.msg);
       }
     } catch (error) {
       ElMessage.error("删除失败");
@@ -168,7 +168,7 @@ const handleSubmit = async () => {
           if (res.success) {
             ElMessage.success("新增成功");
           } else {
-            ElMessage.error(res.message);
+            ElMessage.error(res.msg);
           }
         } else {
           const res = await http.request(
@@ -179,7 +179,7 @@ const handleSubmit = async () => {
           if (res.success) {
             ElMessage.success("编辑成功");
           } else {
-            ElMessage.error(res.message);
+            ElMessage.error(res.msg);
           }
         }
         dialogVisible.value = false;
