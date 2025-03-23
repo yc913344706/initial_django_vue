@@ -25,4 +25,5 @@ urllib3
 uuid
 uwsgi
 xmltodict
+PyJWT
 

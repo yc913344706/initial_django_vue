@@ -48,3 +48,12 @@ MIDDLEWARE_WHITE_LIST: [
   # 权限管理
   "/api/v1/permission/get_current_user_permission/",
 ]
+
+
+# Token配置
+AUTH: {
+  "ACCESS_TOKEN_EXPIRE": 7200,  # 2小时
+  "REFRESH_TOKEN_EXPIRE": 604800,  # 7天
+  "JWT_SECRET": "JbzhCpYqofMDBb9A8AWte7jXiwp1FxI0TGWoq8FSI6DMrdPqtt",
+  "JWT_ALGORITHM": "HS256",
+}

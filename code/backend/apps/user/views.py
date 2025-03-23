@@ -1,4 +1,4 @@
-from lib.password_tools import aes_encrypt_password
+from lib.password_tools import aes
 from .utils import format_user_data
 from lib.request_tool import pub_get_request_body, pub_success_response, pub_error_response
 from .models import User
@@ -49,7 +49,7 @@ def user(request):
             create_keys = ['username', 'nickname', 'phone', 'email', 'password']
             create_dict = {key: value for key, value in body.items() if key in create_keys}
 
-            encrypted_password = aes_encrypt_password(create_dict['password'])
+            encrypted_password = aes.encrypt(create_dict['password'])
             create_dict['password'] = encrypted_password
 
             user = User.objects.create(**create_dict)

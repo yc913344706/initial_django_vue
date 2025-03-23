@@ -8,7 +8,7 @@ from pathlib import Path
 parser = argparse.ArgumentParser()
 
 # 必选参数
-parser.add_argument('encrypted_password', help='加密后的密码')
+parser.add_argument('password', help='未加密的密码')
 
 # 可选参数
 # parser.add_argument('-s', dest='split_dir', help='拆分后的文件放到哪里，默认与源文件同目录')
@@ -27,4 +27,4 @@ sys.path.append(os.path.join(WORKSPACE, 'code', 'backend'))
 
 from lib.password_tools import aes
 
-print(aes.decrypt(args.encrypted_password))
+print(aes.encrypt(args.password))

@@ -1,96 +1,13 @@
 {
     "frontend": {
         "route": [
-            {
-                "path": "/system",
-                "meta": {
-                    "title": "系统管理",
-                    "icon": "ep:setting",
-                    "rank": 1
-                },
-                "children": [
-                    {
-                        "path": "/system/user/index",
-                        "name": "UserIndex",
-                        "meta": {
-                            "title": "用户管理",
-                            "roles": ["admin", "common"]
-                        }
-                    },
-                    {
-                        "path": "/system/perm/index",
-                        "name": "PermIndex",
-                        "meta": {
-                            "title": "权限管理",
-                            "roles": ["admin", "common"]
-                        }
-                    },
-                    {
-                        "path": "/system/role/index",
-                        "name": "RoleIndex",
-                        "meta": {
-                            "title": "角色管理",
-                            "roles": ["admin", "common"]
-                        }
-                    },
-                    {
-                        "path": "/system/grant/index",
-                        "name": "GrantIndex",
-                        "meta": {
-                            "title": "授权管理",
-                            "roles": ["admin", "common"]
-                        }
-                    }
-                ]
-            },
-            {
-                "path": "/permission",
-                "meta": {
-                    "title": "权限管理",
-                    "icon": "ep:lollipop",
-                    "rank": 10
-                },
-                "children": [
-                    {
-                        "path": "/permission/page/index",
-                        "name": "PermissionPage",
-                        "meta": {
-                            "title": "页面权限",
-                            "roles": ["admin", "common"]
-                        }
-                    },
-                    {
-                        "path": "/permission/button",
-                        "meta": {
-                            "title": "按钮权限",
-                            "roles": ["admin", "common"]
-                        },
-                        "children": [
-                            {
-                                "path": "/permission/button/router",
-                                "component": "permission/button/index",
-                                "name": "PermissionButtonRouter",
-                                "meta": {
-                                    "title": "路由返回按钮权限",
-                                    "auths": [
-                                        "permission:btn:add",
-                                        "permission:btn:edit",
-                                        "permission:btn:delete"
-                                    ]
-                                }
-                            },
-                            {
-                                "path": "/permission/button/login",
-                                "component": "permission/button/perms",
-                                "name": "PermissionButtonLogin",
-                                "meta": {
-                                    "title": "登录接口返回按钮权限"
-                                }
-                            }
-                        ]
-                    }
-                ]
-            }
+            "system.user",
+            "system.perm",
+            "system.role",
+            "system.grant",
+            "permission.page",
+            "permission.button.router",
+            "permission.button.login"
         ]
     }
 }

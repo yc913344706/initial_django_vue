@@ -25,6 +25,10 @@ pre_check() {
   check_file_exists "${WORKSPACE}/etc/config_dir/${ENV}.yaml"
   prepare_django_config "${WORKSPACE}/etc/config_dir/${ENV}.yaml"
 
+  rm -rf ${WORKSPACE}/code/${DJANGO_PROJECT_NAME}/base_routes.json && \
+    cp -a ${WORKSPACE}/etc/backend/perm_jsons/base_routes.json \
+    ${WORKSPACE}/code/${DJANGO_PROJECT_NAME}/base_routes.json
+
   # 检查必要的命令
   check_command_exists "docker"
 }

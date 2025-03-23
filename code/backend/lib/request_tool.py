@@ -27,6 +27,10 @@ def get_client_ip(request):
         return x_forwarded_for.split(',')[0]
     return request.META.get('REMOTE_ADDR')
 
+def get_authorization_token(request: HttpRequest):
+    """获取Authorization头中的token"""
+    return request.headers.get("Authorization", "").split(" ")[1] if request.headers.get("Authorization") else None
+
 def pub_get_request_body(request: HttpRequest, format_dict = None):
     """
     从请求中提取请求体数据，支持 JSON、表单（QueryDict）和 XML 格式，同时包含 URL 查询参数
