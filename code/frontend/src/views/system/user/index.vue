@@ -35,15 +35,21 @@
     >
       <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="form.username" :disabled="dialogType === 'edit'" />
-        </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="form.email" />
+          <el-input v-model="form.username" placeholder="请输入用户名" />
         </el-form-item>
         <el-form-item label="密码" prop="password" v-if="dialogType === 'add'">
-          <el-input v-model="form.password" type="password" show-password />
+          <el-input v-model="form.password" type="password" placeholder="请输入密码" />
         </el-form-item>
-        <el-form-item label="状态">
+        <el-form-item label="昵称" prop="nickname">
+          <el-input v-model="form.nickname" placeholder="请输入昵称" />
+        </el-form-item>
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="form.phone" placeholder="请输入手机号" />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="form.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item label="状态" prop="is_active">
           <el-switch v-model="form.is_active" />
         </el-form-item>
       </el-form>
@@ -61,40 +67,48 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
-import { http } from "@/utils/http";
-import { apiMap } from "@/config/api";
+import { http } from '@/utils/http'
+import { apiMap } from '@/config/api'
+
+interface UserForm {
+  uuid?: string
+  username: string
+  email: string
+  password?: string
+  nickname: string
+  phone: string
+  is_active: boolean
+}
 
 const userList = ref([])
 const dialogVisible = ref(false)
-const dialogType = ref('add')
+const dialogType = ref<'add' | 'edit'>('add')
 const formRef = ref<FormInstance>()
-const form = ref({
+const form = ref<UserForm>({
   username: '',
   email: '',
   password: '',
+  nickname: '',
+  phone: '',
   is_active: true
 })
 
 const rules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
-  ],
-  email: [
-    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+    { min: 3, max: 150, message: '长度在 3 到 150 个字符', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能小于6位', trigger: 'blur' }
+    { min: 8, message: '密码长度不能小于8位', trigger: 'blur' }
   ]
 }
 
 // 获取用户列表
 const getUserList = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.user.userList,)
-    userList.value = res.data
+    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.user.userList)
+    userList.value = res.data.data
   } catch (error) {
     ElMessage.error('获取用户列表失败')
   }
@@ -107,23 +121,29 @@ const handleAdd = () => {
     username: '',
     email: '',
     password: '',
+    nickname: '',
+    phone: '',
     is_active: true
   }
   dialogVisible.value = true
 }
 
 // 编辑用户
-const handleEdit = (row) => {
+const handleEdit = (row: UserForm) => {
   dialogType.value = 'edit'
   form.value = {
-    ...row,
-    password: '' // 编辑时不显示密码
+    uuid: row.uuid,
+    username: row.username,
+    email: row.email,
+    nickname: row.nickname,
+    phone: row.phone,
+    is_active: row.is_active
   }
   dialogVisible.value = true
 }
 
 // 删除用户
-const handleDelete = (row) => {
+const handleDelete = (row: UserForm) => {
   ElMessageBox.confirm('确认删除该用户吗？', '提示', {
     type: 'warning'
   }).then(async () => {
@@ -145,10 +165,10 @@ const handleSubmit = async () => {
     if (valid) {
       try {
         if (dialogType.value === 'add') {
-          await http.request('post', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, form.value)
+          await http.request('post', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: form.value })
           ElMessage.success('新增成功')
         } else {
-          await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, form.value)
+          await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: form.value })
           ElMessage.success('编辑成功')
         }
         dialogVisible.value = false

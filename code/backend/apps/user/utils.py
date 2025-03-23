@@ -5,4 +5,7 @@ def format_user_data(user):
         'uuid': user.uuid,
         'username': user.username,
         'nickname': user.nickname,
+        'phone': user.phone,
+        'email': user.email,
+        'is_active': user.is_active,
     }

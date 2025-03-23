@@ -2,6 +2,7 @@ from .utils import format_user_data
 from lib.request_tool import pub_get_request_body, pub_success_response, pub_error_response
 from .models import User
 from lib.paginator_tool import pub_paging_tool
+from lib.log import color_logger
 
 # Create your views here.
 
@@ -49,8 +50,11 @@ def user(request):
             user = User.objects.filter(uuid=body['uuid']).update(**body)
             return pub_success_response(format_user_data(user))
         elif request.method == 'DELETE':
-            user = User.objects.filter(uuid=body['uuid']).delete()
-            return pub_success_response(format_user_data(user))
+            color_logger.debug(f"删除用户: {body['uuid']}")
+            user = User.objects.filter(uuid=body['uuid']).first()
+            assert user, '删除的用户不存在'
+            user.delete()
+            return pub_success_response()
         else:
             return pub_error_response('请求方法错误')
     except Exception as e:

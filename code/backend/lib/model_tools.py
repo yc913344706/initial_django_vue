@@ -26,10 +26,11 @@ class BaseModel(models.Model):
     class Meta:
         abstract = True
 
-    def delete(self, using=None, keep_parents=False):
+    def delete(self):
         """
         覆盖 delete 方法，实现软删除
         """
+        color_logger.debug(f"删除模型: {self.__class__.__name__} {self.uuid}")
         self.is_del = True
         self.save()
 
