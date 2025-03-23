@@ -47,8 +47,20 @@ def user(request):
             user = User.objects.create(**body)
             return pub_success_response(format_user_data(user))
         elif request.method == 'PUT':
-            user = User.objects.filter(uuid=body['uuid']).update(**body)
-            return pub_success_response(format_user_data(user))
+            uuid = body.get('uuid')
+            assert uuid, 'uuid 不能为空'
+            
+            user_obj = User.objects.filter(uuid=uuid).first()
+            assert user_obj, '更新的用户不存在'
+
+            update_keys = ['username', 'nickname', 'phone', 'email', 'is_active']
+            update_dict = {key: value for key, value in body.items() if key in update_keys}
+            for key, value in update_dict.items():
+                setattr(user_obj, key, value)
+            user_obj.save()
+
+            color_logger.debug(f"更新用户: {user_obj.uuid} 成功")
+            return pub_success_response(format_user_data(user_obj))
         elif request.method == 'DELETE':
             color_logger.debug(f"删除用户: {body['uuid']}")
             user = User.objects.filter(uuid=body['uuid']).first()
