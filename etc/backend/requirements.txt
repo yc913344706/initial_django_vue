@@ -24,3 +24,5 @@ tzdata
 urllib3
 uuid
 uwsgi
+xmltodict
+

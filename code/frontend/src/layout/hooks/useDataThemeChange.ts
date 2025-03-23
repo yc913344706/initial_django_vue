@@ -9,6 +9,7 @@ import { useAppStoreHook } from "@/store/modules/app";
 import { useEpThemeStoreHook } from "@/store/modules/epTheme";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import { darken, lighten, useGlobal, storageLocal } from "@pureadmin/utils";
+import { apiMap } from "@/config/api";
 
 export function useDataThemeChange() {
   const { layoutTheme, layout } = useLayout();
@@ -118,7 +119,7 @@ export function useDataThemeChange() {
     useMultiTagsStoreHook().multiTagsCacheChange(MultiTagsCache);
     toggleClass(Grey, "html-grey", document.querySelector("html"));
     toggleClass(Weak, "html-weakness", document.querySelector("html"));
-    router.push("/login");
+    router.push(apiMap.login);
     useMultiTagsStoreHook().handleTags("equal", [...routerArrays]);
     resetRouter();
   }

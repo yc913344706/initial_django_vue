@@ -1,8 +1,9 @@
 const Layout = () => import("@/layout/index.vue");
+import { apiMap } from "@/config/api";
 
 export default [
   {
-    path: "/login",
+    path: apiMap.login,
     name: "Login",
     component: () => import("@/views/login/index.vue"),
     meta: {

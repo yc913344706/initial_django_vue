@@ -15,6 +15,7 @@ import {
 } from "@/api/user";
 import { useMultiTagsStoreHook } from "./multiTags";
 import { type DataInfo, setToken, removeToken, userKey } from "@/utils/auth";
+import { apiMap } from "@/config/api";
 
 export const useUserStore = defineStore({
   id: "pure-user",
@@ -85,7 +86,7 @@ export const useUserStore = defineStore({
       removeToken();
       useMultiTagsStoreHook().handleTags("equal", [...routerArrays]);
       resetRouter();
-      router.push("/login");
+      router.push(apiMap.login);
     },
     /** 刷新`token` */
     async handRefreshToken(data) {

@@ -16,6 +16,16 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+from lib.log import set_color_logger_level
+
+from yaml import safe_load
+f2 = open(f"{BASE_DIR}/config.yaml", 'rb')
+config_data = safe_load(f2.read())
+f2.close()
+
+set_color_logger_level(config_data.get('LOG_LEVEL', "DEBUG"))
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -23,10 +33,45 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-y^54noti#i2kbylp8z9s^ky4#w$#0qu!2pu3#^yf1mmp553=ke'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config_data.get('SETTINGS',{}).get('DEBUG', True)
 
-ALLOWED_HOSTS = []
 
+#################
+# CORS相关--start
+#################
+
+ALLOWED_HOSTS = config_data.get('SETTINGS',{}).get('ALLOWED_HOSTS', [])
+
+# 添加 CORS 配置
+CORS_ORIGIN_ALLOW_ALL = True  # 设置为True即信任所有来源
+# CORS_ORIGIN_ALLOW_ALL = False
+# 1. 设置白名单  # 凡是出现在白名单中的域名，都可以访问后端接口
+# CORS_ORIGIN_WHITELIST = (
+#     'https://127.0.0.1',
+#     'https://localhost',
+#     'https://10.18.145.18',
+#
+# )
+
+# 2. 设置 CORS Cookie
+CORS_ALLOW_CREDENTIALS = True  # 指明在跨域访问中，后端是否支持对cookie的操作
+CORS_ALLOW_METHODS = ['*']
+CORS_ALLOW_HEADERS = ['*']
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False      # HTTPS 环境
+
+
+# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = config_data.get('SETTINGS',{}).get('CORS_ALLOWED_ORIGINS', [])
+
+# https://stackoverflow.com/questions/38841109/csrf-validation-does-not-work-on-django-using-https
+CSRF_TRUSTED_ORIGINS = config_data.get('SETTINGS',{}).get('CSRF_TRUSTED_ORIGINS', [])
+
+
+#################
+# CORS相关--finish
+#################
 
 # Application definition
 
@@ -37,13 +82,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # https://stackoverflow.com/questions/35760943/how-can-i-enable-cors-on-django-rest-framework
+    'corsheaders',  # 为解决跨域
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    # https://stackoverflow.com/questions/35760943/how-can-i-enable-cors-on-django-rest-framework
+    'corsheaders.middleware.CorsMiddleware',  # 为解决跨域
+
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # https://zhuanlan.zhihu.com/p/335310285
+    # 'django.middleware.csrf.CsrfViewMiddleware',
+
+
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
