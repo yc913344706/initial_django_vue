@@ -1,4 +1,5 @@
 import { http } from "@/utils/http";
+import { apiMap } from "@/config/api";
 
 type Result = {
   success: boolean;
@@ -6,5 +7,5 @@ type Result = {
 };
 
 export const getAsyncRoutes = () => {
-  return http.request<Result>("get", "/get-async-routes");
+  return http.request<Result>("get", import.meta.env.VITE_BACKEND_URL + apiMap.getAsyncRoutes);
 };

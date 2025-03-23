@@ -84,6 +84,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # https://stackoverflow.com/questions/35760943/how-can-i-enable-cors-on-django-rest-framework
     'corsheaders',  # 为解决跨域
+
+    'apps.user',
+    'apps.perm',
 ]
 
 MIDDLEWARE = [

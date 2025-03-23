@@ -20,3 +20,20 @@ rm -rf .git .husky
 pnpm i
 pnpm dev
 ```
+
+## 一些代码
+
+### 登录
+- 位置: src/store/modules/user.ts: loginByUsername
+- 登陆完成后：
+  - 设置token: accessToken, expires, refreshToken
+  - 进入菜单: getTopMenu
+
+
+### 路由
+
+- 位置：code/frontend/src/router/index.ts
+- 自动导入全部静态路由，无需再手动引入！匹配 src/router/modules 目录（任何嵌套级别）中具有 .ts 扩展名的所有文件，除了 remaining.ts 文件
+
+
+请求/响应拦截器: src/utils/http/index.ts
