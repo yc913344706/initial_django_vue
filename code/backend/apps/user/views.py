@@ -1,3 +1,4 @@
+from lib.password_tools import aes_encrypt_password
 from .utils import format_user_data
 from lib.request_tool import pub_get_request_body, pub_success_response, pub_error_response
 from .models import User
@@ -31,7 +32,8 @@ def user_list(request):
             'data': result
         })
     except Exception as e:
-        return pub_error_response(e)
+        color_logger.error(f"获取用户列表失败: {e.args}")
+        return pub_error_response(f"获取用户列表失败: {e.args}")
 
 
 def user(request):
@@ -44,12 +46,18 @@ def user(request):
             user = User.objects.get(uuid=body['uuid'])
             return pub_success_response(format_user_data(user))
         elif request.method == 'POST':
-            user = User.objects.create(**body)
+            create_keys = ['username', 'nickname', 'phone', 'email', 'password']
+            create_dict = {key: value for key, value in body.items() if key in create_keys}
+
+            encrypted_password = aes_encrypt_password(create_dict['password'])
+            create_dict['password'] = encrypted_password
+
+            user = User.objects.create(**create_dict)
             return pub_success_response(format_user_data(user))
         elif request.method == 'PUT':
             uuid = body.get('uuid')
             assert uuid, 'uuid 不能为空'
-            
+
             user_obj = User.objects.filter(uuid=uuid).first()
             assert user_obj, '更新的用户不存在'
 
@@ -70,5 +78,6 @@ def user(request):
         else:
             return pub_error_response('请求方法错误')
     except Exception as e:
-        return pub_error_response(e)
+        color_logger.error(f"用户操作失败: {e.args}")
+        return pub_error_response(f"用户操作失败: {e.args}")
 

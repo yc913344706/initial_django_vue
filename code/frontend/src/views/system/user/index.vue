@@ -108,7 +108,11 @@ const rules = {
 const getUserList = async () => {
   try {
     const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.user.userList)
-    userList.value = res.data.data
+    if (res.success) {
+      userList.value = res.data.data
+    } else {
+      ElMessage.error(res.data.msg)
+    }
   } catch (error) {
     ElMessage.error('获取用户列表失败')
   }
@@ -148,9 +152,13 @@ const handleDelete = (row: UserForm) => {
     type: 'warning'
   }).then(async () => {
     try {
-      await http.request('delete', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: { uuid: row.uuid } })
-      ElMessage.success('删除成功')
-      getUserList()
+      const res = await http.request('delete', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: { uuid: row.uuid } })
+      if (res.success) {
+        ElMessage.success('删除成功')
+        getUserList()
+      } else {
+        ElMessage.error(res.data.msg)
+      }
     } catch (error) {
       ElMessage.error('删除失败')
     }
@@ -165,14 +173,24 @@ const handleSubmit = async () => {
     if (valid) {
       try {
         if (dialogType.value === 'add') {
-          await http.request('post', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: form.value })
-          ElMessage.success('新增成功')
+          const res = await http.request('post', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: form.value })
+          if (res.success) {
+            ElMessage.success('新增成功')
+            dialogVisible.value = false
+            getUserList()
+          } else {
+            ElMessage.error(res.data.msg)
+          }
         } else {
-          await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: form.value })
-          ElMessage.success('编辑成功')
+          const res = await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: form.value })
+          if (res.success) {
+            ElMessage.success('编辑成功')
+            dialogVisible.value = false
+            getUserList()
+          } else {
+            ElMessage.error(res.data.msg)
+          }
         }
-        dialogVisible.value = false
-        getUserList()
       } catch (error) {
         ElMessage.error(dialogType.value === 'add' ? '新增失败' : '编辑失败')
       }
