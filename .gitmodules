@@ -1,3 +1,4 @@
 [submodule "code/frontend"]
 	path = code/frontend
 	url = https://github.com/yc913344706/vue-pure-admin.git
+    branch = ycley
