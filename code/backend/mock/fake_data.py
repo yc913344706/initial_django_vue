@@ -54,6 +54,48 @@ fake_refresh_token_data = {
 # common：普通角色
 fake_async_routes = [
     {
+        "path": "/system",
+        "meta": {
+            "title": "系统管理",
+            "icon": "ep:setting",
+            "rank": 1
+        },
+        "children": [
+            {
+                "path": "/system/user/index",
+                "name": "UserIndex",
+                "meta": {
+                    "title": "用户管理",
+                    "roles": ["admin", "common"]
+                }
+            },
+            {
+                "path": "/system/perm/index",
+                "name": "PermIndex",
+                "meta": {
+                    "title": "权限管理",
+                    "roles": ["admin", "common"]
+                }
+            },
+            {
+                "path": "/system/role/index",
+                "name": "RoleIndex",
+                "meta": {
+                    "title": "角色管理",
+                    "roles": ["admin", "common"]
+                }
+            },
+            {
+                "path": "/system/grant/index",
+                "name": "GrantIndex",
+                "meta": {
+                    "title": "授权管理",
+                    "roles": ["admin", "common"]
+                }
+            }
+        ]
+    },
+    {
         "path": "/permission",
         "meta": {
             "title": "权限管理",
