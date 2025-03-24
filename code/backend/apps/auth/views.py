@@ -111,3 +111,10 @@ def get_async_routes(request):
 # - 修改基础信息
 # - 后端镜像build更新
 # - 一键start/stop/status脚本
+# - 数据初始化：
+#   - 方案1：
+#     - 有dbsqlite3文件，自行导出导入
+#     - 准备 sql 脚本，执行即可
+#   - 方案2：
+#     - base_router.json: 增加表，存储基础路由，界面管理
+#     - create permission, user
