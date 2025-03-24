@@ -1,5 +1,6 @@
 from django.db import models
 from lib.model_tools import BaseModel, BaseTypeTree
+import uuid
 
 # Create your models here.
 
@@ -25,6 +26,9 @@ class User(BaseModel):
 
 class UserGroup(BaseTypeTree):
     """用户组模型"""
+    code = models.CharField(default=uuid.uuid4, max_length=64, unique=True, verbose_name='类型编码')
+    description = models.TextField(verbose_name='描述', null=True, blank=True)
+    
     users = models.ManyToManyField('User', verbose_name='用户列表')
     permissions = models.ManyToManyField('perm.Permission', verbose_name='权限列表')
     roles = models.ManyToManyField('perm.Role', verbose_name='角色列表')

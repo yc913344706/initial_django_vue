@@ -23,19 +23,19 @@
           "roles": ["admin", "common"]
         }
       },
-      "perm": {
-        "path": "/system/perm/index",
-        "name": "PermIndex",
-        "meta": {
-          "title": "权限管理",
-          "roles": ["admin", "common"]
-        }
-      },
       "role": {
         "path": "/system/role/index",
         "name": "RoleIndex",
         "meta": {
           "title": "角色管理",
+          "roles": ["admin", "common"]
+        }
+      },
+      "perm": {
+        "path": "/system/perm/index",
+        "name": "PermIndex",
+        "meta": {
+          "title": "权限管理",
           "roles": ["admin", "common"]
         }
       }

@@ -2,6 +2,7 @@ from lib.password_tools import aes
 from .utils import format_user_data, format_user_group_data
 from lib.request_tool import pub_get_request_body, pub_success_response, pub_error_response
 from .models import User, UserGroup
+from apps.perm.models import Role, Permission
 from lib.paginator_tool import pub_paging_tool
 from lib.log import color_logger
 
@@ -61,11 +62,26 @@ def user(request):
             user_obj = User.objects.filter(uuid=uuid).first()
             assert user_obj, '更新的用户不存在'
 
+            # 更新基本信息
             update_keys = ['username', 'nickname', 'phone', 'email', 'is_active']
             update_dict = {key: value for key, value in body.items() if key in update_keys}
             for key, value in update_dict.items():
                 setattr(user_obj, key, value)
             user_obj.save()
+
+            # 更新角色
+            if 'roles' in body:
+                user_obj.roles.clear()
+                for role_uuid in body['roles']:
+                    role = Role.objects.get(uuid=role_uuid)
+                    user_obj.roles.add(role)
+
+            # 更新权限
+            if 'permissions' in body:
+                user_obj.permissions.clear()
+                for permission_uuid in body['permissions']:
+                    permission = Permission.objects.get(uuid=permission_uuid)
+                    user_obj.permissions.add(permission)
 
             color_logger.debug(f"更新用户: {user_obj.uuid} 成功")
             return pub_success_response(format_user_data(user_obj))
@@ -118,7 +134,7 @@ def user_group(request):
             user_group = UserGroup.objects.get(uuid=body['uuid'])
             return pub_success_response(format_user_group_data(user_group))
         elif request.method == 'POST':
-            create_keys = ['name', 'description']
+            create_keys = ['name', 'code', 'parent', 'level', 'sort']
             create_dict = {key: value for key, value in body.items() if key in create_keys}
 
             user_group = UserGroup.objects.create(**create_dict)
@@ -130,11 +146,33 @@ def user_group(request):
             user_group_obj = UserGroup.objects.filter(uuid=uuid).first()
             assert user_group_obj, '更新的用户组不存在'
 
-            update_keys = ['name', 'description']
+            # 更新基本信息
+            update_keys = ['name', 'code', 'parent', 'level', 'sort']
             update_dict = {key: value for key, value in body.items() if key in update_keys}
             for key, value in update_dict.items():
                 setattr(user_group_obj, key, value)
             user_group_obj.save()
+
+            # 更新用户
+            if 'users' in body:
+                user_group_obj.users.clear()
+                for user_uuid in body['users']:
+                    user = User.objects.get(uuid=user_uuid)
+                    user_group_obj.users.add(user)
+
+            # 更新角色
+            if 'roles' in body:
+                user_group_obj.roles.clear()
+                for role_uuid in body['roles']:
+                    role = Role.objects.get(uuid=role_uuid)
+                    user_group_obj.roles.add(role)
+
+            # 更新权限
+            if 'permissions' in body:
+                user_group_obj.permissions.clear()
+                for permission_uuid in body['permissions']:
+                    permission = Permission.objects.get(uuid=permission_uuid)
+                    user_group_obj.permissions.add(permission)
 
             color_logger.debug(f"更新用户组: {user_group_obj.uuid} 成功")
             return pub_success_response(format_user_group_data(user_group_obj))

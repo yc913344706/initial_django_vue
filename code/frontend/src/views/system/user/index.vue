@@ -4,12 +4,14 @@
       <template #header>
         <div class="card-header">
           <span>用户管理</span>
-          <el-button type="primary" @click="handleAdd">新增用户</el-button>
+          <el-button type="primary" @click="handleAdd">新增</el-button>
         </div>
       </template>
 
       <el-table :data="userList" style="width: 100%">
         <el-table-column prop="username" label="用户名" />
+        <el-table-column prop="nickname" label="昵称" />
+        <el-table-column prop="phone" label="手机号" />
         <el-table-column prop="email" label="邮箱" />
         <el-table-column prop="is_active" label="状态">
           <template #default="scope">
@@ -18,9 +20,10 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="300">
           <template #default="scope">
             <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+            <el-button type="success" size="small" @click="handleManageAuth(scope.row)">管理权限</el-button>
             <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
@@ -37,9 +40,6 @@
         <el-form-item label="用户名" prop="username">
           <el-input v-model="form.username" placeholder="请输入用户名" />
         </el-form-item>
-        <el-form-item label="密码" prop="password" v-if="dialogType === 'add'">
-          <el-input v-model="form.password" type="password" placeholder="请输入密码" />
-        </el-form-item>
         <el-form-item label="昵称" prop="nickname">
           <el-input v-model="form.nickname" placeholder="请输入昵称" />
         </el-form-item>
@@ -49,6 +49,9 @@
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="form.email" placeholder="请输入邮箱" />
         </el-form-item>
+        <el-form-item label="密码" prop="password" v-if="dialogType === 'add'">
+          <el-input v-model="form.password" type="password" placeholder="请输入密码" />
+        </el-form-item>
         <el-form-item label="状态" prop="is_active">
           <el-switch v-model="form.is_active" />
         </el-form-item>
@@ -57,6 +60,54 @@
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
           <el-button type="primary" @click="handleSubmit">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 权限管理对话框 -->
+    <el-dialog
+      v-model="authDialogVisible"
+      title="权限管理"
+      width="70%"
+    >
+      <el-form :model="authForm" label-width="120px">
+        <el-form-item label="角色">
+          <el-select
+            v-model="authForm.roles"
+            multiple
+            filterable
+            placeholder="请选择角色"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in roleList"
+              :key="item.uuid"
+              :label="item.name"
+              :value="item.uuid"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="权限">
+          <el-select
+            v-model="authForm.permissions"
+            multiple
+            filterable
+            placeholder="请选择权限"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in permissionList"
+              :key="item.uuid"
+              :label="item.name"
+              :value="item.uuid"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="authDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSubmitAuth">确定</el-button>
         </span>
       </template>
     </el-dialog>
@@ -73,34 +124,49 @@ import { apiMap } from '@/config/api'
 interface UserForm {
   uuid?: string
   username: string
-  email: string
-  password?: string
   nickname: string
   phone: string
+  email: string
+  password?: string
   is_active: boolean
 }
 
+interface AuthForm {
+  uuid: string
+  roles: string[]
+  permissions: string[]
+}
+
 const userList = ref([])
+const roleList = ref([])
+const permissionList = ref([])
 const dialogVisible = ref(false)
+const authDialogVisible = ref(false)
 const dialogType = ref<'add' | 'edit'>('add')
 const formRef = ref<FormInstance>()
 const form = ref<UserForm>({
   username: '',
-  email: '',
-  password: '',
   nickname: '',
   phone: '',
+  email: '',
+  password: '',
   is_active: true
+})
+const authForm = ref<AuthForm>({
+  uuid: '',
+  roles: [],
+  permissions: []
 })
 
 const rules = {
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 150, message: '长度在 3 到 150 个字符', trigger: 'blur' }
+    { required: true, message: '请输入用户名', trigger: 'blur' }
+  ],
+  nickname: [
+    { required: true, message: '请输入昵称', trigger: 'blur' }
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 8, message: '密码长度不能小于8位', trigger: 'blur' }
+    { required: true, message: '请输入密码', trigger: 'blur' }
   ]
 }
 
@@ -118,15 +184,43 @@ const getUserList = async () => {
   }
 }
 
+// 获取角色列表
+const getRoleList = async () => {
+  try {
+    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.role.roleList)
+    if (res.success) {
+      roleList.value = res.data.data
+    } else {
+      ElMessage.error(res.msg)
+    }
+  } catch (error) {
+    ElMessage.error('获取角色列表失败')
+  }
+}
+
+// 获取权限列表
+const getPermissionList = async () => {
+  try {
+    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.permission.permissionList)
+    if (res.success) {
+      permissionList.value = res.data.data
+    } else {
+      ElMessage.error(res.msg)
+    }
+  } catch (error) {
+    ElMessage.error('获取权限列表失败')
+  }
+}
+
 // 新增用户
 const handleAdd = () => {
   dialogType.value = 'add'
   form.value = {
     username: '',
-    email: '',
-    password: '',
     nickname: '',
     phone: '',
+    email: '',
+    password: '',
     is_active: true
   }
   dialogVisible.value = true
@@ -135,30 +229,42 @@ const handleAdd = () => {
 // 编辑用户
 const handleEdit = (row: UserForm) => {
   dialogType.value = 'edit'
-  form.value = {
-    uuid: row.uuid,
-    username: row.username,
-    email: row.email,
-    nickname: row.nickname,
-    phone: row.phone,
-    is_active: row.is_active
-  }
+  form.value = { ...row }
   dialogVisible.value = true
+}
+
+// 管理权限
+const handleManageAuth = async (row: UserForm) => {
+  try {
+    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, {
+      params: { uuid: row.uuid }
+    })
+    if (res.success) {
+      authForm.value = {
+        uuid: row.uuid,
+        roles: res.data.roles.map((role: any) => role.uuid),
+        permissions: res.data.permissions.map((permission: any) => permission.uuid)
+      }
+      authDialogVisible.value = true
+    } else {
+      ElMessage.error(res.msg)
+    }
+  } catch (error) {
+    ElMessage.error('获取用户权限失败')
+  }
 }
 
 // 删除用户
 const handleDelete = (row: UserForm) => {
-  ElMessageBox.confirm('确认删除该用户吗？', '提示', {
+  ElMessageBox.confirm('确定删除该用户吗？', '提示', {
     type: 'warning'
   }).then(async () => {
     try {
-      const res = await http.request('delete', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: { uuid: row.uuid } })
-      if (res.success) {
-        ElMessage.success('删除成功')
-        getUserList()
-      } else {
-        ElMessage.error(res.msg)
-      }
+      await http.request('delete', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, {
+        data: { uuid: row.uuid }
+      })
+      ElMessage.success('删除成功')
+      getUserList()
     } catch (error) {
       ElMessage.error('删除失败')
     }
@@ -176,21 +282,19 @@ const handleSubmit = async () => {
           const res = await http.request('post', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: form.value })
           if (res.success) {
             ElMessage.success('新增成功')
-            dialogVisible.value = false
-            getUserList()
           } else {
             ElMessage.error(res.msg)
           }
         } else {
-          const res = await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: form.value })
+          const res = await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: { ...form.value, uuid: form.value.uuid } })
           if (res.success) {
             ElMessage.success('编辑成功')
-            dialogVisible.value = false
-            getUserList()
           } else {
             ElMessage.error(res.msg)
           }
         }
+        dialogVisible.value = false
+        getUserList()
       } catch (error) {
         ElMessage.error(dialogType.value === 'add' ? '新增失败' : '编辑失败')
       }
@@ -198,8 +302,32 @@ const handleSubmit = async () => {
   })
 }
 
+// 提交权限表单
+const handleSubmitAuth = async () => {
+  try {
+    const res = await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, {
+      data: {
+        uuid: authForm.value.uuid,
+        roles: authForm.value.roles,
+        permissions: authForm.value.permissions
+      }
+    })
+    if (res.success) {
+      ElMessage.success('更新成功')
+      authDialogVisible.value = false
+      getUserList()
+    } else {
+      ElMessage.error(res.msg)
+    }
+  } catch (error) {
+    ElMessage.error('更新失败')
+  }
+}
+
 onMounted(() => {
   getUserList()
+  getRoleList()
+  getPermissionList()
 })
 </script>
 

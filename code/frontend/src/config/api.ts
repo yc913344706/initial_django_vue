@@ -13,6 +13,12 @@ export const apiMap = {
     user: "/user/user/",
   },
 
+  // 用户组管理
+  group: {
+    groupList: '/user/groups/',
+    group: '/user/group/',
+  },
+
   // 角色管理
   role: {
     roleList: "/perm/roles/",
@@ -23,17 +29,5 @@ export const apiMap = {
   permission: {
     permissionList: "/perm/permissions/",
     permission: "/perm/permission/",
-  },
-
-  // 用户组管理
-  group: {
-    groupList: '/perm/groups/',
-    group: '/perm/group/',
-  },
-
-  // 授权管理
-  grant: {
-    grantList: "/perm/grants/",
-    grant: "/perm/grant/",
   },
 }
