@@ -20,10 +20,11 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="300">
+        <el-table-column label="操作" width="400">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button type="success" size="small" @click="handleManageAuth(scope.row)">管理权限</el-button>
+            <!-- <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+            <el-button type="success" size="small" @click="handleManageAuth(scope.row)">管理权限</el-button> -->
+            <el-button type="info" size="small" @click="handleViewDetail(scope.row)">查看详情</el-button>
             <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
@@ -120,6 +121,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
+import { useRouter } from 'vue-router'
 
 interface UserForm {
   uuid?: string
@@ -252,6 +254,15 @@ const handleManageAuth = async (row: UserForm) => {
   } catch (error) {
     ElMessage.error('获取用户权限失败')
   }
+}
+
+// 查看详情
+const router = useRouter()
+const handleViewDetail = (row: UserForm) => {
+  router.push({
+    path: '/system/user/detail',
+    query: { uuid: row.uuid }
+  })
 }
 
 // 删除用户

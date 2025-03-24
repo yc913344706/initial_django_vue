@@ -129,6 +129,7 @@ def user_group(request):
 
     try:
         body = pub_get_request_body(request)
+        color_logger.debug(f"用户组请求: {body}")
 
         if request.method == 'GET':
             user_group = UserGroup.objects.get(uuid=body['uuid'])

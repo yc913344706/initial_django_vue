@@ -12,9 +12,10 @@
         <el-table-column prop="name" label="角色名称" />
         <el-table-column prop="code" label="角色代码" />
         <el-table-column prop="description" label="描述" />
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="300">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+            <!-- <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button> -->
+            <el-button type="info" size="small" @click="handleViewDetail(scope.row)">查看详情</el-button>
             <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
@@ -69,6 +70,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
+import { useRouter } from 'vue-router'
 
 const roleList = ref([])
 const permissionList = ref([])
@@ -148,6 +150,15 @@ const handleEdit = (row) => {
     permissions: row.permissions.map(p => p.uuid)
   }
   dialogVisible.value = true
+}
+
+// 查看详情
+const router = useRouter()
+const handleViewDetail = (row) => {
+  router.push({
+    path: '/system/role/detail',
+    query: { uuid: row.uuid }
+  })
 }
 
 // 删除角色

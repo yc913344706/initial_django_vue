@@ -15,11 +15,29 @@
           "roles": ["admin", "common"]
         }
       },
+      "group.detail": {
+        "path": "/system/group/detail",
+        "name": "UserGroupDetail",
+        "meta": {
+          "showLink": false,
+          "title": "用户组详情",
+          "roles": ["admin", "common"]
+        }
+      },
       "user": {
         "path": "/system/user/index",
         "name": "UserIndex",
         "meta": {
           "title": "用户管理",
+          "roles": ["admin", "common"]
+        }
+      },
+      "user.detail": {
+        "path": "/system/user/detail",
+        "name": "UserDetail",
+        "meta": {
+          "showLink": false,
+          "title": "用户详情",
           "roles": ["admin", "common"]
         }
       },
@@ -31,11 +49,29 @@
           "roles": ["admin", "common"]
         }
       },
+      "role.detail": {
+        "path": "/system/role/detail",
+        "name": "RoleDetail",
+        "meta": {
+          "showLink": false,
+          "title": "角色详情",
+          "roles": ["admin", "common"]
+        }
+      },
       "perm": {
         "path": "/system/perm/index",
         "name": "PermIndex",
         "meta": {
           "title": "权限管理",
+          "roles": ["admin", "common"]
+        }
+      },
+      "perm.detail": {
+        "path": "/system/perm/detail",
+        "name": "PermDetail",
+        "meta": {
+          "showLink": false,
+          "title": "权限详情",
           "roles": ["admin", "common"]
         }
       }

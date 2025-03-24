@@ -11,11 +11,12 @@
       <el-table :data="userGroupList" style="width: 100%">
         <el-table-column prop="name" label="用户组" />
         <el-table-column prop="description" label="描述" />
-        <el-table-column label="操作" width="400">
+        <el-table-column label="操作" width="500">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+            <!-- <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
             <el-button type="success" size="small" @click="handleManageUsers(scope.row)">管理用户</el-button>
-            <el-button type="warning" size="small" @click="handleManageAuth(scope.row)">管理权限</el-button>
+            <el-button type="warning" size="small" @click="handleManageAuth(scope.row)">管理权限</el-button> -->
+            <el-button type="info" size="small" @click="handleViewDetail(scope.row)">查看详情</el-button>
             <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
@@ -31,6 +32,16 @@
       <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
         <el-form-item label="用户组" prop="name">
           <el-input v-model="form.name" placeholder="请输入用户组名称" />
+        </el-form-item>
+        <el-form-item label="父组" prop="parent">
+          <el-select v-model="form.parent" placeholder="请选择父组" clearable style="width: 100%">
+            <el-option
+              v-for="item in userGroupList"
+              :key="item.uuid"
+              :label="item.name"
+              :value="item.uuid"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input v-model="form.description" type="textarea" placeholder="请输入描述" />
@@ -132,10 +143,12 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
+import { useRouter } from 'vue-router'
 
 interface UserGroupForm {
   uuid?: string
   name: string
+  parent?: string
   description: string
 }
 
@@ -161,6 +174,7 @@ const dialogType = ref<'add' | 'edit'>('add')
 const formRef = ref<FormInstance>()
 const form = ref<UserGroupForm>({
   name: '',
+  parent: undefined,
   description: ''
 })
 const userForm = ref<UserForm>({
@@ -172,6 +186,7 @@ const authForm = ref<AuthForm>({
   roles: [],
   permissions: []
 })
+
 
 const rules = {
   name: [
@@ -240,6 +255,7 @@ const handleAdd = () => {
   dialogType.value = 'add'
   form.value = {
     name: '',
+    parent: undefined,
     description: ''
   }
   dialogVisible.value = true
@@ -291,6 +307,15 @@ const handleManageAuth = async (row: UserGroupForm) => {
   } catch (error) {
     ElMessage.error('获取用户组权限失败')
   }
+}
+
+// 查看详情
+const router = useRouter()
+const handleViewDetail = (row: UserGroupForm) => {
+  router.push({
+    path: '/system/group/detail',
+    query: { uuid: row.uuid }
+  })
 }
 
 // 删除用户组
