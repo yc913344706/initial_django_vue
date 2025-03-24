@@ -1,5 +1,4 @@
 from django.db import models
-from apps.user.models import User
 from lib.model_tools import BaseModel
 
 class Permission(BaseModel):
@@ -29,16 +28,3 @@ class Role(BaseModel):
 
     def __str__(self):
         return self.name
-
-class Grant(BaseModel):
-    """授权模型"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户')
-    role = models.ForeignKey(Role, on_delete=models.CASCADE, verbose_name='角色')
-    permission = models.ForeignKey(Permission, on_delete=models.CASCADE, verbose_name='权限')
-    
-    class Meta:
-        verbose_name = '授权'
-        verbose_name_plural = verbose_name
-
-    def __str__(self):
-        return f"{self.user.username} - {self.role.name} - {self.permission.name}"

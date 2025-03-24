@@ -25,6 +25,12 @@ export const apiMap = {
     permission: "/perm/permission/",
   },
 
+  // 用户组管理
+  group: {
+    groupList: '/perm/groups/',
+    group: '/perm/group/',
+  },
+
   // 授权管理
   grant: {
     grantList: "/perm/grants/",

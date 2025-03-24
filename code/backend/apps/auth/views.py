@@ -80,7 +80,7 @@ def get_async_routes(request):
             "system.user",
             "system.perm",
             "system.role",
-            "system.grant",
+            "system.group",
             "permission.page",
             "permission.button.router",
             "permission.button.login"

@@ -7,6 +7,14 @@
       "rank": 1
     },
     "children": {
+      "group": {
+        "path": "/system/group/index",
+        "name": "UserGroupIndex",
+        "meta": {
+          "title": "用户组管理",
+          "roles": ["admin", "common"]
+        }
+      },
       "user": {
         "path": "/system/user/index",
         "name": "UserIndex",
@@ -28,14 +36,6 @@
         "name": "RoleIndex",
         "meta": {
           "title": "角色管理",
-          "roles": ["admin", "common"]
-        }
-      },
-      "grant": {
-        "path": "/system/grant/index",
-        "name": "GrantIndex",
-        "meta": {
-          "title": "授权管理",
           "roles": ["admin", "common"]
         }
       }
