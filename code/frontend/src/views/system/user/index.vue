@@ -4,11 +4,20 @@
       <template #header>
         <div class="card-header">
           <span>用户管理</span>
-          <el-button type="primary" @click="handleAdd">新增</el-button>
+          <div>
+            <el-button type="danger" @click="handleBatchDelete" :disabled="!selectedUsers.length">批量删除</el-button>
+            <el-button type="primary" @click="handleAdd">新增</el-button>
+          </div>
         </div>
       </template>
 
-      <el-table :data="userList" style="width: 100%">
+      <el-table
+        v-loading="loading"
+        :data="userList"
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="55" />
         <el-table-column prop="username" label="用户名" />
         <el-table-column prop="nickname" label="昵称" />
         <el-table-column prop="phone" label="手机号" />
@@ -159,6 +168,7 @@ const authForm = ref<AuthForm>({
   roles: [],
   permissions: []
 })
+const selectedUsers = ref<string[]>([])
 
 const rules = {
   username: [
@@ -172,9 +182,12 @@ const rules = {
   ]
 }
 
+const loading = ref(false)
+
 // 获取用户列表
 const getUserList = async () => {
   try {
+    loading.value = true
     const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.user.userList)
     if (res.success) {
       userList.value = res.data.data
@@ -183,6 +196,8 @@ const getUserList = async () => {
     }
   } catch (error) {
     ElMessage.error('获取用户列表失败')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -332,6 +347,38 @@ const handleSubmitAuth = async () => {
     }
   } catch (error) {
     ElMessage.error('更新失败')
+  }
+}
+
+// 表格选择变化
+const handleSelectionChange = (selection: any[]) => {
+  selectedUsers.value = selection.map(item => item.uuid)
+}
+
+// 批量删除
+const handleBatchDelete = async () => {
+  if (!selectedUsers.value.length) return
+  
+  try {
+    await ElMessageBox.confirm('确定要删除选中的用户吗?', '提示', {
+      type: 'warning'
+    })
+    
+    const res = await http.request('delete', import.meta.env.VITE_BACKEND_URL + apiMap.user.userList, {
+      data: { uuids: selectedUsers.value }
+    })
+    
+    if (res.success) {
+      ElMessage.success('删除成功')
+      getUserList()
+      selectedUsers.value = []
+    } else {
+      ElMessage.error(res.msg)
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
   }
 }
 

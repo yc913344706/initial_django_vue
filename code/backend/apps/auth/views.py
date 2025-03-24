@@ -79,8 +79,8 @@ def get_async_routes(request):
         res = route_tool.generate_routes_by_user_permissions([
             "system.user",
             "system.user.detail",
-            "system.perm",
-            "system.perm.detail",
+            "system.permission",
+            "system.permission.detail",
             "system.role",
             "system.role.detail",
             "system.group",

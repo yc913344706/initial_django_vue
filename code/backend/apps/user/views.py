@@ -14,27 +14,37 @@ def user_list(request):
 
     try:
         body = pub_get_request_body(request)
+        if request.method == 'GET':
 
-        page = int(body.get('page', 1))
-        page_size = int(body.get('page_size', 20))
-        
-        user_list = User.objects.all()
+            page = int(body.get('page', 1))
+            page_size = int(body.get('page_size', 20))
             
-        # 分页查询
-        has_next, next_page, page_list, all_num, result = pub_paging_tool(page, user_list, page_size)
-        
-        # 格式化返回数据
-        result = [format_user_data(user) for user in result]
-        
-        return pub_success_response({
-            'has_next': has_next,
-            'next_page': next_page,
-            'all_num': all_num,
-            'data': result
-        })
+            user_list = User.objects.all()
+                
+            # 分页查询
+            has_next, next_page, page_list, all_num, result = pub_paging_tool(page, user_list, page_size)
+            
+            # 格式化返回数据
+            result = [format_user_data(user) for user in result]
+            
+            return pub_success_response({
+                    'has_next': has_next,
+                    'next_page': next_page,
+                    'all_num': all_num,
+                    'data': result
+                })
+        elif request.method == 'DELETE':
+            uuids = body.get('uuids', [])
+            users = User.objects.filter(uuid__in=uuids)
+            for user in users:
+                assert user, '删除的用户不存在'
+                user.delete()
+            return pub_success_response()
+        else:
+            return pub_error_response('请求方法错误')
     except Exception as e:
-        color_logger.error(f"获取用户列表失败: {e.args}")
-        return pub_error_response(f"获取用户列表失败: {e.args}")
+        color_logger.error(f"用户列表操作失败: {e.args}")
+        return pub_error_response(f"用户列表操作失败: {e.args}")
 
 
 def user(request):
@@ -104,21 +114,32 @@ def user_group_list(request):
     try:
         body = pub_get_request_body(request)
 
-        page = int(body.get('page', 1))
-        page_size = int(body.get('page_size', 20))
+        if request.method == 'GET':
 
-        # 分页查询
-        has_next, next_page, page_list, all_num, result = pub_paging_tool(page, UserGroup.objects.all(), page_size)
+            page = int(body.get('page', 1))
+            page_size = int(body.get('page_size', 20))
 
-        # 格式化返回数据
-        result = [format_user_group_data(user_group) for user_group in result]
+            # 分页查询
+            has_next, next_page, page_list, all_num, result = pub_paging_tool(page, UserGroup.objects.all(), page_size)
 
-        return pub_success_response({
-            'has_next': has_next,
-            'next_page': next_page,
-            'all_num': all_num,
-            'data': result
-        })
+            # 格式化返回数据
+            result = [format_user_group_data(user_group) for user_group in result]
+
+            return pub_success_response({
+                'has_next': has_next,
+                'next_page': next_page,
+                'all_num': all_num,
+                'data': result
+            })
+        elif request.method == 'DELETE':
+            uuids = body.get('uuids', [])
+            user_groups = UserGroup.objects.filter(uuid__in=uuids)
+            for user_group in user_groups:
+                assert user_group, '删除的用户组不存在'
+                user_group.delete()
+            return pub_success_response()
+        else:
+            return pub_error_response('请求方法错误')
     except Exception as e:
         color_logger.error(f"获取用户组列表失败: {e.args}")
         return pub_error_response(f"获取用户组列表失败: {e.args}")

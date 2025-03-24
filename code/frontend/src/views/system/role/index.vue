@@ -4,11 +4,20 @@
       <template #header>
         <div class="card-header">
           <span>角色管理</span>
-          <el-button type="primary" @click="handleAdd">新增角色</el-button>
+          <div>
+            <el-button type="danger" @click="handleBatchDelete" :disabled="!selectedRoles.length">批量删除</el-button>
+            <el-button type="primary" @click="handleAdd">新增</el-button>
+          </div>
         </div>
       </template>
 
-      <el-table :data="roleList" style="width: 100%">
+      <el-table
+        v-loading="loading"
+        :data="roleList"
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="55" />
         <el-table-column prop="name" label="角色名称" />
         <el-table-column prop="code" label="角色代码" />
         <el-table-column prop="description" label="描述" />
@@ -83,6 +92,7 @@ const form = ref({
   permissions: [],
   description: ''
 })
+const selectedRoles = ref<string[]>([])
 
 const rules = {
   name: [
@@ -96,9 +106,12 @@ const rules = {
   ]
 }
 
+const loading = ref(false)
+
 // 获取角色列表
 const getRoleList = async () => {
   try {
+    loading.value = true
     const res = await http.request(
       "get",
       import.meta.env.VITE_BACKEND_URL + apiMap.role.roleList
@@ -110,6 +123,8 @@ const getRoleList = async () => {
     }
   } catch (error) {
     ElMessage.error("获取角色列表失败");
+  } finally {
+    loading.value = false
   }
 }
 
@@ -223,6 +238,38 @@ const handleSubmit = async () => {
       }
     }
   })
+}
+
+// 表格选择变化
+const handleSelectionChange = (selection: any[]) => {
+  selectedRoles.value = selection.map(item => item.uuid)
+}
+
+// 批量删除
+const handleBatchDelete = async () => {
+  if (!selectedRoles.value.length) return
+  
+  try {
+    await ElMessageBox.confirm('确定要删除选中的角色吗?', '提示', {
+      type: 'warning'
+    })
+    
+    const res = await http.request('delete', import.meta.env.VITE_BACKEND_URL + apiMap.role.roleList, {
+      data: { uuids: selectedRoles.value }
+    })
+    
+    if (res.success) {
+      ElMessage.success('删除成功')
+      getRoleList()
+      selectedRoles.value = []
+    } else {
+      ElMessage.error(res.msg)
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  }
 }
 
 onMounted(() => {

@@ -4,11 +4,20 @@
       <template #header>
         <div class="card-header">
           <span>权限管理</span>
-          <el-button type="primary" @click="handleAdd">新增权限</el-button>
+          <div>
+            <el-button type="danger" @click="handleBatchDelete" :disabled="!selectedPermissions.length">批量删除</el-button>
+            <el-button type="primary" @click="handleAdd">新增</el-button>
+          </div>
         </div>
       </template>
 
-      <el-table :data="permissionList" style="width: 100%">
+      <el-table
+        v-loading="loading"
+        :data="permissionList"
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="55" />
         <el-table-column prop="name" label="权限名称" />
         <el-table-column prop="code" label="权限代码" />
         <el-table-column prop="description" label="描述" />
@@ -99,9 +108,13 @@ const rules = {
   ]
 };
 
+const selectedPermissions = ref<string[]>([])
+const loading = ref(false)
+
 // 获取权限列表
 const getPermissionList = async () => {
   try {
+    loading.value = true
     const res = await http.request(
       "get",
       import.meta.env.VITE_BACKEND_URL + apiMap.permission.permissionList
@@ -113,6 +126,8 @@ const getPermissionList = async () => {
     }
   } catch (error) {
     ElMessage.error("获取权限列表失败");
+  } finally {
+    loading.value = false
   }
 };
 
@@ -139,7 +154,7 @@ const handleEdit = row => {
 const router = useRouter()
 const handleViewDetail = row => {
   router.push({
-    path: '/system/perm/detail',
+    path: '/system/permission/detail',
     query: { uuid: row.uuid }
   })
 }
@@ -206,6 +221,38 @@ const handleSubmit = async () => {
     }
   });
 };
+
+// 表格选择变化
+const handleSelectionChange = (selection: any[]) => {
+  selectedPermissions.value = selection.map(item => item.uuid)
+}
+
+// 批量删除
+const handleBatchDelete = async () => {
+  if (!selectedPermissions.value.length) return
+  
+  try {
+    await ElMessageBox.confirm('确定要删除选中的权限吗?', '提示', {
+      type: 'warning'
+    })
+    
+    const res = await http.request('delete', import.meta.env.VITE_BACKEND_URL + apiMap.permission.permissionList, {
+      data: { uuids: selectedPermissions.value }
+    })
+    
+    if (res.success) {
+      ElMessage.success('删除成功')
+      getPermissionList()
+      selectedPermissions.value = []
+    } else {
+      ElMessage.error(res.msg)
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  }
+}
 
 onMounted(() => {
   getPermissionList();

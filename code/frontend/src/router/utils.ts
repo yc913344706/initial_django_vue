@@ -28,6 +28,8 @@ const modulesRoutes = import.meta.glob("/src/views/**/*.{vue,tsx}");
 
 // 动态路由
 import { getAsyncRoutes } from "@/api/routes";
+import { removeToken } from "@/utils/auth";
+import { apiMap } from "@/config/api";
 
 function handRank(routeInfo: any) {
   const { name, path, parentId, meta } = routeInfo;
@@ -151,6 +153,9 @@ function addPathMatch() {
 
 /** 处理动态路由（后端返回的路由） */
 function handleAsyncRoutes(routeList) {
+  if (!routeList) {
+    throw new Error("路由列表为空");
+  }
   if (routeList.length === 0) {
     usePermissionStoreHook().handleWholeMenus(routeList);
   } else {
@@ -196,24 +201,55 @@ function initRouter() {
     const key = "async-routes";
     const asyncRouteList = storageLocal().getItem(key) as any;
     if (asyncRouteList && asyncRouteList?.length > 0) {
-      return new Promise(resolve => {
-        handleAsyncRoutes(asyncRouteList);
-        resolve(router);
+      return new Promise((resolve, reject) => {
+        try {
+          handleAsyncRoutes(asyncRouteList);
+          resolve(router);
+        } catch (error) {
+          console.error('Failed to handle async routes:', error);
+          removeToken();
+          router.push(apiMap.login);
+          reject(error);
+        }
       });
     } else {
-      return new Promise(resolve => {
+      return new Promise((resolve, reject) => {
         getAsyncRoutes().then(({ data }) => {
-          handleAsyncRoutes(cloneDeep(data));
-          storageLocal().setItem(key, data);
-          resolve(router);
+          try {
+            handleAsyncRoutes(cloneDeep(data));
+            storageLocal().setItem(key, data);
+            resolve(router);
+          } catch (error) {
+            console.error('Failed to handle async routes:', error);
+            removeToken();
+            router.push(apiMap.login);
+            reject(error);
+          }
+        }).catch(error => {
+          console.error('Failed to get async routes:', error);
+          removeToken();
+          router.push(apiMap.login);
+          reject(error);
         });
       });
     }
   } else {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       getAsyncRoutes().then(({ data }) => {
-        handleAsyncRoutes(cloneDeep(data));
-        resolve(router);
+        try {
+          handleAsyncRoutes(cloneDeep(data));
+          resolve(router);
+        } catch (error) {
+          console.error('Failed to handle async routes:', error);
+          removeToken();
+          router.push(apiMap.login);
+          reject(error);
+        }
+      }).catch(error => {
+        console.error('Failed to get async routes:', error);
+        removeToken();
+        router.push(apiMap.login);
+        reject(error);
       });
     });
   }

@@ -11,26 +11,38 @@ def permission_list(request):
     try:
         body = pub_get_request_body(request)
 
-        page = int(body.get('page', 1))
-        page_size = int(body.get('page_size', 20))
-        
-        permission_list = Permission.objects.all()
+        if request.method == 'GET':
+
+            page = int(body.get('page', 1))
+            page_size = int(body.get('page_size', 20))
             
-        # 分页查询
-        has_next, next_page, page_list, all_num, result = pub_paging_tool(page, permission_list, page_size)
-        
-        # 格式化返回数据
-        result = [format_permission_data(permission) for permission in result]
-        
-        return pub_success_response({
-            'has_next': has_next,
-            'next_page': next_page,
-            'all_num': all_num,
-            'data': result
-        })
+            permission_list = Permission.objects.all()
+                
+            # 分页查询
+            has_next, next_page, page_list, all_num, result = pub_paging_tool(page, permission_list, page_size)
+            
+            # 格式化返回数据
+            result = [format_permission_data(permission) for permission in result]
+            
+            return pub_success_response({
+                'has_next': has_next,
+                'next_page': next_page,
+                'all_num': all_num,
+                'data': result
+            })
+        elif request.method == 'DELETE':
+            uuids = body.get('uuids', [])
+            permissions = Permission.objects.filter(uuid__in=uuids)
+            for permission in permissions:
+                assert permission, '删除的权限不存在'
+                permission.delete()
+
+            return pub_success_response()
+        else:
+            return pub_error_response('请求方法错误')
     except Exception as e:
-        color_logger.error(f"获取权限列表失败: {e.args}")
-        return pub_error_response(f"获取权限列表失败: {e.args}")
+        color_logger.error(f"权限列表操作失败: {e.args}")
+        return pub_error_response(f"权限列表操作失败: {e.args}")
 
 def permission(request):
     """权限"""
@@ -79,27 +91,37 @@ def role_list(request):
 
     try:
         body = pub_get_request_body(request)
+        if request.method == 'GET':
 
-        page = int(body.get('page', 1))
-        page_size = int(body.get('page_size', 20))
-        
-        role_list = Role.objects.all()
+            page = int(body.get('page', 1))
+            page_size = int(body.get('page_size', 20))
             
-        # 分页查询
-        has_next, next_page, page_list, all_num, result = pub_paging_tool(page, role_list, page_size)
-        
-        # 格式化返回数据
-        result = [format_role_data(role) for role in result]
-        
-        return pub_success_response({
-            'has_next': has_next,
-            'next_page': next_page,
-            'all_num': all_num,
-            'data': result
-        })
+            role_list = Role.objects.all()
+                
+            # 分页查询
+            has_next, next_page, page_list, all_num, result = pub_paging_tool(page, role_list, page_size)
+            
+            # 格式化返回数据
+            result = [format_role_data(role) for role in result]
+            
+            return pub_success_response({
+                'has_next': has_next,
+                'next_page': next_page,
+                'all_num': all_num,
+                'data': result
+            })
+        elif request.method == 'DELETE':
+            uuids = body.get('uuids', [])
+            roles = Role.objects.filter(uuid__in=uuids)
+            for role in roles:
+                assert role, '删除的角色不存在'
+                role.delete()
+            return pub_success_response()
+        else:
+            return pub_error_response('请求方法错误')
     except Exception as e:
-        color_logger.error(f"获取角色列表失败: {e.args}")
-        return pub_error_response(f"获取角色列表失败: {e.args}")
+        color_logger.error(f"角色列表操作失败: {e.args}")
+        return pub_error_response(f"角色列表操作失败: {e.args}")
 
 
 def role(request):

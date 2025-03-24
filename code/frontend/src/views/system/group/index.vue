@@ -4,11 +4,20 @@
       <template #header>
         <div class="card-header">
           <span>用户组管理</span>
-          <el-button type="primary" @click="handleAdd">新增</el-button>
+          <div>
+            <el-button type="danger" @click="handleBatchDelete" :disabled="!selectedGroups.length">批量删除</el-button>
+            <el-button type="primary" @click="handleAdd">新增</el-button>
+          </div>
         </div>
       </template>
 
-      <el-table :data="userGroupList" style="width: 100%">
+      <el-table
+        v-loading="loading"
+        :data="userGroupList"
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="55" />
         <el-table-column prop="name" label="用户组" />
         <el-table-column prop="description" label="描述" />
         <el-table-column label="操作" width="500">
@@ -186,7 +195,7 @@ const authForm = ref<AuthForm>({
   roles: [],
   permissions: []
 })
-
+const selectedGroups = ref<string[]>([])
 
 const rules = {
   name: [
@@ -194,9 +203,11 @@ const rules = {
   ]
 }
 
+const loading = ref(false)
 // 获取用户组列表
 const getUserGroupList = async () => {
   try {
+    loading.value = true
     const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.group.groupList)
     if (res.success) {
       userGroupList.value = res.data.data
@@ -205,6 +216,8 @@ const getUserGroupList = async () => {
     }
   } catch (error) {
     ElMessage.error('获取用户组列表失败')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -411,6 +424,38 @@ const handleSubmitAuth = async () => {
     }
   } catch (error) {
     ElMessage.error('更新失败')
+  }
+}
+
+// 表格选择变化
+const handleSelectionChange = (selection: any[]) => {
+  selectedGroups.value = selection.map(item => item.uuid)
+}
+
+// 批量删除
+const handleBatchDelete = async () => {
+  if (!selectedGroups.value.length) return
+  
+  try {
+    await ElMessageBox.confirm('确定要删除选中的用户组吗?', '提示', {
+      type: 'warning'
+    })
+    
+    const res = await http.request('delete', import.meta.env.VITE_BACKEND_URL + apiMap.group.groupList, {
+      data: { uuids: selectedGroups.value }
+    })
+    
+    if (res.success) {
+      ElMessage.success('删除成功')
+      getUserGroupList()
+      selectedGroups.value = []
+    } else {
+      ElMessage.error(res.msg)
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
   }
 }
 

@@ -58,17 +58,17 @@
           "roles": ["admin", "common"]
         }
       },
-      "perm": {
-        "path": "/system/perm/index",
-        "name": "PermIndex",
+      "permission": {
+        "path": "/system/permission/index",
+        "name": "PermissionIndex",
         "meta": {
           "title": "权限管理",
           "roles": ["admin", "common"]
         }
       },
-      "perm.detail": {
-        "path": "/system/perm/detail",
-        "name": "PermDetail",
+      "permission.detail": {
+        "path": "/system/permission/detail",
+        "name": "PermissionDetail",
         "meta": {
           "showLink": false,
           "title": "权限详情",
