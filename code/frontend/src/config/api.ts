@@ -29,5 +29,6 @@ export const apiMap = {
   permission: {
     permissionList: "/perm/permissions/",
     permission: "/perm/permission/",
+    userPermissionJson: "/perm/user-permission-json/",
   },
 }

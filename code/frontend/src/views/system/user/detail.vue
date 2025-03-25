@@ -86,11 +86,22 @@
           <el-table-column prop="description" label="描述" />
         </el-table>
 
+        <div class="section-title">加入的用户组列表</div>
+        <el-table :data="userInfo.groups" style="width: 100%; margin-bottom: 20px">
+          <el-table-column prop="name" label="用户组名称" />
+          <el-table-column prop="description" label="描述" />
+        </el-table>
+
         <div class="section-title">权限列表</div>
         <el-table :data="userInfo.permissions" style="width: 100%">
           <el-table-column prop="name" label="权限名称" />
           <el-table-column prop="description" label="描述" />
         </el-table>
+
+        <div class="section-title">用户权限JSON</div>
+        <el-card class="permission-json-card">
+          <pre class="permission-json">{{ permissionJson }}</pre>
+        </el-card>
       </template>
     </el-card>
   </div>
@@ -116,7 +127,8 @@ const userInfo = ref({
   created_at: '',
   updated_at: '',
   roles: [],
-  permissions: []
+  permissions: [],
+  groups: []
 })
 
 const form = ref({
@@ -127,11 +139,13 @@ const form = ref({
   email: '',
   is_active: true,
   roles: [] as string[],
-  permissions: [] as string[]
+  permissions: [] as string[],
+  groups: [] as string[]
 })
 
 const roleList = ref([])
 const permissionList = ref([])
+const permissionJson = ref({})
 
 const rules = {
   username: [
@@ -186,6 +200,22 @@ const getPermissionList = async () => {
   }
 }
 
+// 获取用户权限JSON
+const getUserPermissionJson = async () => {
+  try {
+    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.permission.userPermissionJson, {
+      params: { uuid: route.query.uuid }
+    })
+    if (res.success) {
+      permissionJson.value = res.data
+    } else {
+      ElMessage.error(res.msg)
+    }
+  } catch (error) {
+    ElMessage.error('获取用户权限JSON失败')
+  }
+}
+
 // 编辑
 const handleEdit = () => {
   form.value = {
@@ -234,6 +264,7 @@ onMounted(() => {
   getUserDetail()
   getRoleList()
   getPermissionList()
+  getUserPermissionJson()
 })
 </script>
 
@@ -247,5 +278,19 @@ onMounted(() => {
   font-size: 16px;
   font-weight: bold;
   margin: 20px 0 10px;
+}
+.permission-json-card {
+  margin-top: 10px;
+}
+.permission-json {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 10px;
+  margin: 0;
+  background-color: #f5f7fa;
+  border-radius: 4px;
 }
 </style> 

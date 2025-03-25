@@ -1,4 +1,4 @@
-from .utils import format_permission_data, format_role_data
+from .utils import format_permission_data, format_role_data, get_user_perm_json_all
 from lib.request_tool import pub_get_request_body, pub_success_response, pub_error_response
 from .models import Permission, Role
 from lib.paginator_tool import pub_paging_tool
@@ -172,3 +172,16 @@ def role(request):
     except Exception as e:
         color_logger.error(f"角色操作失败: {e.args}")
         return pub_error_response(f"角色操作失败: {e.args}")
+
+def user_permission_json(request):
+    """用户权限JSON"""
+    try:
+        body = pub_get_request_body(request)
+        user_uuid = body.get('uuid')
+        assert user_uuid, '用户UUID不能为空'
+
+        permission_json = get_user_perm_json_all(user_uuid)
+        return pub_success_response(permission_json)
+    except Exception as e:
+        color_logger.error(f"用户权限JSON操作失败: {e.args}")
+        return pub_error_response(f"用户权限JSON操作失败: {e.args}")

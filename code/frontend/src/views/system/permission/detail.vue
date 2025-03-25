@@ -47,6 +47,23 @@
 
         <div class="section-title">权限JSON</div>
         <pre class="json-viewer">{{ JSON.stringify(permissionInfo.permission_json, null, 2) }}</pre>
+
+        <div class="section-title">角色列表</div>
+        <el-table :data="permissionInfo.roles" style="width: 100%; margin-bottom: 20px">
+          <el-table-column prop="name" label="角色名称" />
+          <el-table-column prop="description" label="描述" />
+        </el-table>
+
+        <div class="section-title">授予此权限的用户列表</div>
+        <el-table :data="permissionInfo.users" style="width: 100%; margin-bottom: 20px">
+          <el-table-column prop="username" label="用户名" />
+        </el-table>
+
+        <div class="section-title">授予此权限的用户组列表</div>
+        <el-table :data="permissionInfo.groups" style="width: 100%">
+          <el-table-column prop="name" label="用户组名称" />
+          <el-table-column prop="description" label="描述" />
+        </el-table>
       </template>
     </el-card>
   </div>
@@ -70,7 +87,10 @@ const permissionInfo = ref({
   description: '',
   permission_json: {},
   created_at: '',
-  updated_at: ''
+  updated_at: '',
+  roles: [],
+  users: [],
+  groups: []
 })
 
 const form = ref({

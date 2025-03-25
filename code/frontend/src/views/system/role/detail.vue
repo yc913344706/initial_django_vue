@@ -49,8 +49,20 @@
         </el-descriptions>
 
         <div class="section-title">权限列表</div>
-        <el-table :data="roleInfo.permissions" style="width: 100%">
+        <el-table :data="roleInfo.permissions" style="width: 100%; margin-bottom: 20px">
           <el-table-column prop="name" label="权限名称" />
+          <el-table-column prop="description" label="描述" />
+        </el-table>
+
+        <div class="section-title">授予此角色的用户列表</div>
+        <el-table :data="roleInfo.users" style="width: 100%; margin-bottom: 20px">
+          <el-table-column prop="username" label="用户名" />
+          <el-table-column prop="description" label="描述" />
+        </el-table>
+
+        <div class="section-title">授予此角色的用户组列表</div>
+        <el-table :data="roleInfo.groups" style="width: 100%">
+          <el-table-column prop="name" label="用户组名称" />
           <el-table-column prop="description" label="描述" />
         </el-table>
       </template>
@@ -75,7 +87,9 @@ const roleInfo = ref({
   description: '',
   created_at: '',
   updated_at: '',
-  permissions: []
+  permissions: [],
+  users: [],
+  groups: []
 })
 
 const form = ref({
