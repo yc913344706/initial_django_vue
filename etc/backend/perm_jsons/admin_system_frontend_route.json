@@ -1,0 +1,17 @@
+{
+    "frontend": {
+        "routes": [
+        "system.user",
+        "system.user.detail",
+        "system.permission",
+        "system.permission.detail",
+        "system.role",
+        "system.role.detail",
+        "system.group",
+        "system.group.detail",
+        "permission.page",
+        "permission.button.router",
+        "permission.button.login"
+        ]
+    }
+}

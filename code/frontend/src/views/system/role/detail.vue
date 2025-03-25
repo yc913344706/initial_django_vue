@@ -5,16 +5,18 @@
         <div class="card-header">
           <span>角色详情</span>
           <div>
-            <el-button type="primary" @click="handleEdit" v-if="!isEditing">编辑</el-button>
-            <el-button @click="$router.back()">返回</el-button>
+            <el-button type="primary" @click="handleEdit" v-if="!isEditing && hasPerms('system.role:update')">编辑</el-button>
+            <el-button @click="$router.back()"
+            >返回</el-button>
           </div>
         </div>
       </template>
 
-      <el-form :model="form" label-width="120px" :rules="rules" ref="formRef" v-if="isEditing">
-        <el-form-item label="角色名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入角色名称" />
-        </el-form-item>
+      <template v-if="isEditing && hasPerms('system.role:update')">
+        <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
+          <el-form-item label="角色名称" prop="name">
+            <el-input v-model="form.name" placeholder="请输入角色名称" />
+          </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input v-model="form.description" type="textarea" placeholder="请输入描述" />
         </el-form-item>
@@ -39,8 +41,9 @@
           <el-button @click="handleCancel">取消</el-button>
         </el-form-item>
       </el-form>
+      </template>
 
-      <template v-else>
+      <template v-if="!isEditing && hasPerms('system.role:read')">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="角色名称">{{ roleInfo.name }}</el-descriptions-item>
           <el-descriptions-item label="描述">{{ roleInfo.description }}</el-descriptions-item>
@@ -89,6 +92,8 @@ import { ElMessage } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
+import { hasPerms } from "@/utils/auth";
+import router from '@/router'
 
 const route = useRoute()
 const isEditing = ref(false)
@@ -190,6 +195,10 @@ const handleSubmit = async () => {
 }
 
 onMounted(() => {
+  if (!hasPerms('system.role:read')) {
+    ElMessage.error('您没有权限查看角色详情')
+    router.push('/error/403')
+  }
   getRoleDetail()
   getPermissionList()
 })

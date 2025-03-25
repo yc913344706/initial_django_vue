@@ -5,8 +5,12 @@
         <div class="card-header">
           <span>用户管理</span>
           <div>
-            <el-button type="danger" @click="handleBatchDelete" :disabled="!selectedUsers.length">批量删除</el-button>
-            <el-button type="primary" @click="handleAdd">新增</el-button>
+            <el-button type="danger" @click="handleBatchDelete" :disabled="!selectedUsers.length"
+            v-if="hasPerms('system.userList:delete')"
+            >批量删除</el-button>
+            <el-button type="primary" @click="handleAdd"
+            v-if="hasPerms('system.userList:create')"
+            >新增</el-button>
           </div>
         </div>
       </template>
@@ -16,6 +20,7 @@
         :data="userList"
         style="width: 100%"
         @selection-change="handleSelectionChange"
+        v-if="hasPerms('system.userList:read')"
       >
         <el-table-column type="selection" width="55" />
         <el-table-column prop="username" label="用户名" />
@@ -34,7 +39,9 @@
             <!-- <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
             <el-button type="success" size="small" @click="handleManageAuth(scope.row)">管理权限</el-button> -->
             <el-button type="info" size="small" @click="handleViewDetail(scope.row)">查看详情</el-button>
-            <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
+            <el-button type="danger" size="small" @click="handleDelete(scope.row)"
+            v-if="hasPerms('system.user:delete')"
+            >删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -130,7 +137,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
-import { useRouter } from 'vue-router'
+import { hasPerms } from "@/utils/auth";
+import router from '@/router'
 
 interface UserForm {
   uuid?: string
@@ -243,36 +251,7 @@ const handleAdd = () => {
   dialogVisible.value = true
 }
 
-// 编辑用户
-const handleEdit = (row: UserForm) => {
-  dialogType.value = 'edit'
-  form.value = { ...row }
-  dialogVisible.value = true
-}
-
-// 管理权限
-const handleManageAuth = async (row: UserForm) => {
-  try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, {
-      params: { uuid: row.uuid }
-    })
-    if (res.success) {
-      authForm.value = {
-        uuid: row.uuid,
-        roles: res.data.roles.map((role: any) => role.uuid),
-        permissions: res.data.permissions.map((permission: any) => permission.uuid)
-      }
-      authDialogVisible.value = true
-    } else {
-      ElMessage.error(res.msg)
-    }
-  } catch (error) {
-    ElMessage.error('获取用户权限失败')
-  }
-}
-
 // 查看详情
-const router = useRouter()
 const handleViewDetail = (row: UserForm) => {
   router.push({
     path: '/system/user/detail',
@@ -383,6 +362,10 @@ const handleBatchDelete = async () => {
 }
 
 onMounted(() => {
+  if (!hasPerms('system.userList:read')) {
+    ElMessage.error('您没有权限查看用户列表')
+    router.push('/error/403')
+  }
   getUserList()
   getRoleList()
   getPermissionList()

@@ -5,13 +5,15 @@
         <div class="card-header">
           <span>用户详情</span>
           <div>
-            <el-button type="primary" @click="handleEdit" v-if="!isEditing">编辑</el-button>
-            <el-button @click="$router.back()">返回</el-button>
+            <el-button type="primary" @click="handleEdit" v-if="!isEditing && hasPerms('system.user:update')">编辑</el-button>
+            <el-button @click="$router.back()"
+            >返回</el-button>
           </div>
         </div>
       </template>
 
-      <el-form :model="form" label-width="120px" :rules="rules" ref="formRef" v-if="isEditing">
+      <template v-if="isEditing && hasPerms('system.user:update')">
+        <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
         <el-form-item label="用户名" prop="username">
           <el-input v-model="form.username" placeholder="请输入用户名" />
         </el-form-item>
@@ -64,8 +66,9 @@
           <el-button @click="handleCancel">取消</el-button>
         </el-form-item>
       </el-form>
+      </template>
 
-      <template v-else>
+      <template v-if="!isEditing && hasPerms('system.user:read')">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="用户名">{{ userInfo.username }}</el-descriptions-item>
           <el-descriptions-item label="昵称">{{ userInfo.nickname }}</el-descriptions-item>
@@ -126,6 +129,8 @@ import { ElMessage } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
+import { hasPerms } from "@/utils/auth";
+import router from '@/router'
 
 const route = useRoute()
 const isEditing = ref(false)
@@ -273,6 +278,10 @@ const handleSubmit = async () => {
 }
 
 onMounted(() => {
+  if (!hasPerms('system.user:read')) {
+    ElMessage.error('您没有权限查看用户详情')
+    router.push('/error/403')
+  }
   getUserDetail()
   getRoleList()
   getPermissionList()

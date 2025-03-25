@@ -178,8 +178,11 @@ def user_group(request):
 
             # 更新父级
             if 'parent' in update_dict:
-                parent_user_group = UserGroup.objects.get(uuid=update_dict['parent'])
-                update_dict['parent'] = parent_user_group
+                if update_dict['parent'] == 'undefined':
+                    update_dict['parent'] = None
+                else:
+                    parent_user_group = UserGroup.objects.get(uuid=update_dict['parent'])
+                    update_dict['parent'] = parent_user_group
 
             for key, value in update_dict.items():
                 setattr(user_group_obj, key, value)

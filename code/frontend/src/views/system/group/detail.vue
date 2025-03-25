@@ -5,19 +5,26 @@
         <div class="card-header">
           <span>用户组详情</span>
           <div>
-            <el-button type="primary" @click="handleEdit" v-if="!isEditing">编辑</el-button>
-            <el-button @click="$router.back()">返回</el-button>
+            <el-button 
+            type="primary" 
+            @click="handleEdit" 
+            v-if="!isEditing && hasPerms('system.group:update')"
+            >编辑</el-button>
+            <el-button 
+            @click="$router.back()"
+            >返回</el-button>
           </div>
         </div>
       </template>
 
-      <el-form :model="form" label-width="120px" :rules="rules" ref="formRef" v-if="isEditing">
+      <template v-if="isEditing && hasPerms('system.group:update')">
+        <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
         <el-form-item label="用户组名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入用户组名称" />
         </el-form-item>
         <el-form-item label="父级用户组">
           <el-select v-model="form.parent" placeholder="请选择父级用户组" style="width: 100%">
-            <el-option label="无" :value="undefined" />
+            <el-option label="无" value="undefined" />
             <el-option
               v-for="item in groupList"
               :key="item.uuid"
@@ -81,9 +88,10 @@
           <el-button type="primary" @click="handleSubmit">保存</el-button>
           <el-button @click="handleCancel">取消</el-button>
         </el-form-item>
-      </el-form>
+        </el-form>
+      </template>
 
-      <template v-else>
+      <template v-if="!isEditing && hasPerms('system.group:read')">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="用户组名称">{{ groupInfo.name }}</el-descriptions-item>
           <el-descriptions-item label="父级用户组">{{ parentGroupName }}</el-descriptions-item>
@@ -142,6 +150,8 @@ import { ElMessage } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
+import { hasPerms } from "@/utils/auth";
+import router from '@/router'
 
 const route = useRoute()
 const isEditing = ref(false)
@@ -301,6 +311,10 @@ const handleSubmit = async () => {
 }
 
 onMounted(() => {
+  if (!hasPerms('system.group:read')) {
+    ElMessage.error('您没有权限查看用户组详情')
+    router.push('/error/403')
+  }
   getGroupDetail()
   getGroupList()
   getUserList()

@@ -41,44 +41,45 @@ def get_user_perm_json_all(user_uuid):
     - 用户所在用户组的所有父级用户组的角色包含的权限
     """
     try:
-        color_logger.debug(f"获取用户权限JSON: {user_uuid}")
+        # color_logger.debug(f"获取用户权限JSON: {user_uuid}")
         user = User.objects.get(uuid=user_uuid)
         assert user, '用户不存在'
         
         # 1. 获取用户直接拥有的权限JSON
-        color_logger.debug(f"获取用户直接拥有的权限JSON: {user.permissions.all()}")
+        # color_logger.debug(f"获取用户直接拥有的权限JSON: {user.permissions.all()}")
         user_permission_jsons = [p.permission_json for p in user.permissions.all()]
         
         # 2. 获取用户角色包含的权限JSON
-        color_logger.debug(f"获取用户角色包含的权限JSON: {user.roles.all()}")
+        # color_logger.debug(f"获取用户角色包含的权限JSON: {user.roles.all()}")
         role_permission_jsons = []
         for role in user.roles.all():
             role_permission_jsons.extend([p.permission_json for p in role.permissions.all()])
             
         # 3. 获取用户所在用户组的权限JSON
-        color_logger.debug(f"获取用户所在用户组的权限JSON: {UserGroup.objects.filter(users=user)}")
+        # color_logger.debug(f"获取用户所在用户组的权限JSON: {UserGroup.objects.filter(users=user)}")
         group_permission_jsons = []
-        direct_groups = UserGroup.objects.filter(users=user)
+        user_direct_groups = UserGroup.objects.filter(users=user)
+        # color_logger.debug(f"获取用户直接用户组: {user_direct_groups}")
 
-        all_groups = []
-        
-        for group in UserGroup.objects.filter(users=user):
+        all_groups = list(user_direct_groups)
+        for group in user_direct_groups:
             all_groups.extend(group.get_type_all_parent_type())
+        # color_logger.debug(f"获取用户所有用户组: {all_groups}")
         
         for group in all_groups:
             # 用户组直接拥有的权限
-            color_logger.debug(f"获取用户组直接拥有的权限JSON: {group.permissions.all()}")
+            # color_logger.debug(f"获取用户组直接拥有的权限JSON: {group.permissions.all()}")
             group_permission_jsons.extend([p.permission_json for p in group.permissions.all()])
             # 用户组角色包含的权限
             for role in group.roles.all():
-                color_logger.debug(f"获取用户组角色包含的权限JSON: {role.permissions.all()}")
+                # color_logger.debug(f"获取用户组角色包含的权限JSON: {role.permissions.all()}")
                 group_permission_jsons.extend([p.permission_json for p in role.permissions.all()])
         
         # 合并所有权限JSON
-        color_logger.debug(f"合并所有权限JSON: {user_permission_jsons + role_permission_jsons + group_permission_jsons}")
+        # color_logger.debug(f"合并所有权限JSON: {user_permission_jsons + role_permission_jsons + group_permission_jsons}")
         all_permission_jsons = user_permission_jsons + role_permission_jsons + group_permission_jsons
         merged_permission_json = merge_jsons(all_permission_jsons)
-        color_logger.debug(f"合并后的权限JSON: {merged_permission_json}")
+        # color_logger.debug(f"合并后的权限JSON: {merged_permission_json}")
         
         return merged_permission_json
         

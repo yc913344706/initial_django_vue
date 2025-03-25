@@ -5,8 +5,17 @@
         <div class="card-header">
           <span>角色管理</span>
           <div>
-            <el-button type="danger" @click="handleBatchDelete" :disabled="!selectedRoles.length">批量删除</el-button>
-            <el-button type="primary" @click="handleAdd">新增</el-button>
+            <el-button 
+            type="danger" 
+            @click="handleBatchDelete" 
+            :disabled="!selectedRoles.length"
+            v-if="hasPerms('system.roleList:delete')"
+            >批量删除</el-button>
+            <el-button 
+            type="primary" 
+            @click="handleAdd"
+            v-if="hasPerms('system.roleList:create')"
+            >新增</el-button>
           </div>
         </div>
       </template>
@@ -16,6 +25,7 @@
         :data="roleList"
         style="width: 100%"
         @selection-change="handleSelectionChange"
+        v-if="hasPerms('system.roleList:read')"
       >
         <el-table-column type="selection" width="55" />
         <el-table-column prop="name" label="角色名称" />
@@ -25,7 +35,9 @@
           <template #default="scope">
             <!-- <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button> -->
             <el-button type="info" size="small" @click="handleViewDetail(scope.row)">查看详情</el-button>
-            <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
+            <el-button type="danger" size="small" @click="handleDelete(scope.row)"
+            v-if="hasPerms('system.role:delete')"
+            >删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -79,7 +91,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
-import { useRouter } from 'vue-router'
+import { hasPerms } from "@/utils/auth";
+import router from '@/router'
 
 const roleList = ref([])
 const permissionList = ref([])
@@ -157,18 +170,7 @@ const handleAdd = () => {
   dialogVisible.value = true
 }
 
-// 编辑角色
-const handleEdit = (row) => {
-  dialogType.value = 'edit'
-  form.value = {
-    ...row,
-    permissions: row.permissions.map(p => p.uuid)
-  }
-  dialogVisible.value = true
-}
-
 // 查看详情
-const router = useRouter()
 const handleViewDetail = (row) => {
   router.push({
     path: '/system/role/detail',
@@ -273,6 +275,10 @@ const handleBatchDelete = async () => {
 }
 
 onMounted(() => {
+  if (!hasPerms('system.roleList:read')) {
+    ElMessage.error('您没有权限查看角色列表')
+    router.push('/error/403')
+  }
   getRoleList()
   getPermissionList()
 })

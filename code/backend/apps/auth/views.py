@@ -37,13 +37,18 @@ def login(request):
 
         expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE'))
         expires_str = utc_obj_to_time_zone_str(expires)
+
+
+        user_permission_json = get_user_perm_json_all(user_obj.uuid)
+        color_logger.debug(f"获取用户权限JSON: {user_permission_json}")
+
         res = {
             # "avatar": user_obj.avatar,
             "username": user_obj.username,
             "nickname": user_obj.nickname,
 
             "roles": ["common"],
-            "permissions": ["permission:btn:add", "permission:btn:edit"],
+            "permissions": user_permission_json.get('frontend', {}).get('resources', []),
 
             "accessToken": access_token,
             "refreshToken": refresh_token,
@@ -90,14 +95,14 @@ def get_async_routes(request):
 
         user_name = TokenManager().get_username_from_access_token(get_authorization_token(request))
 
-        color_logger.debug(f"获取异步路由请求: user_name: {user_name}")
+        # color_logger.debug(f"获取异步路由请求: user_name: {user_name}")
         assert user_name, f"无法从cookie中获取用户名"
 
         user_obj = User.objects.filter(username=user_name).first()
         assert user_obj, f"用户名({user_name})对应用户不存在"
 
         user_permission_json = get_user_perm_json_all(user_obj.uuid)
-        color_logger.debug(f"获取用户权限JSON: {user_permission_json}")
+        # color_logger.debug(f"获取用户权限JSON: {user_permission_json}")
         default_routes = [
             "system.user",
             "system.user.detail",
@@ -113,7 +118,7 @@ def get_async_routes(request):
         ]
         # user_routes = user_permission_json.get('frontend', {}).get('routes', default_routes)
         user_routes = user_permission_json.get('frontend', {}).get('routes', [])
-        color_logger.debug(f"获取异步路由成功: {user_routes}")
+        # color_logger.debug(f"获取异步路由成功: {user_routes}")
 
         route_tool = RouteTool()
         res = route_tool.generate_routes_by_user_permissions(user_routes)

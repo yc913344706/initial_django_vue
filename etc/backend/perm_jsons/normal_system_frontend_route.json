@@ -1,0 +1,12 @@
+{
+    "frontend": {
+        "routes": [
+        "system.user",
+        "system.user.detail",
+        "system.role",
+        "system.role.detail",
+        "system.group",
+        "system.group.detail"
+        ]
+    }
+}

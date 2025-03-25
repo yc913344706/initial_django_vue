@@ -11,8 +11,7 @@
         "path": "/system/group/index",
         "name": "UserGroupIndex",
         "meta": {
-          "title": "用户组管理",
-          "roles": ["admin", "common"]
+          "title": "用户组管理"
         }
       },
       "group.detail": {
@@ -20,16 +19,14 @@
         "name": "UserGroupDetail",
         "meta": {
           "showLink": false,
-          "title": "用户组详情",
-          "roles": ["admin", "common"]
+          "title": "用户组详情"
         }
       },
       "user": {
         "path": "/system/user/index",
         "name": "UserIndex",
         "meta": {
-          "title": "用户管理",
-          "roles": ["admin", "common"]
+          "title": "用户管理"
         }
       },
       "user.detail": {
@@ -37,16 +34,14 @@
         "name": "UserDetail",
         "meta": {
           "showLink": false,
-          "title": "用户详情",
-          "roles": ["admin", "common"]
+          "title": "用户详情"
         }
       },
       "role": {
         "path": "/system/role/index",
         "name": "RoleIndex",
         "meta": {
-          "title": "角色管理",
-          "roles": ["admin", "common"]
+          "title": "角色管理"
         }
       },
       "role.detail": {
@@ -54,16 +49,14 @@
         "name": "RoleDetail",
         "meta": {
           "showLink": false,
-          "title": "角色详情",
-          "roles": ["admin", "common"]
+          "title": "角色详情"
         }
       },
       "permission": {
         "path": "/system/permission/index",
         "name": "PermissionIndex",
         "meta": {
-          "title": "权限管理",
-          "roles": ["admin", "common"]
+          "title": "权限管理"
         }
       },
       "permission.detail": {
@@ -71,8 +64,7 @@
         "name": "PermissionDetail",
         "meta": {
           "showLink": false,
-          "title": "权限详情",
-          "roles": ["admin", "common"]
+          "title": "权限详情"
         }
       }
     }
@@ -89,16 +81,14 @@
         "path": "/permission/page/index",
         "name": "PermissionPage",
         "meta": {
-          "title": "页面权限",
-          "roles": ["admin", "common"]
+          "title": "页面权限"
         }
       },
       "button": {
         "path": "/permission/button/index",
         "name": "PermissionButton",
         "meta": {
-          "title": "按钮权限",
-          "roles": ["admin", "common"]
+          "title": "按钮权限"
         },
         "children": {
           "router": {
@@ -106,12 +96,7 @@
             "component": "permission/button/index",
             "name": "PermissionButtonRouter",
             "meta": {
-              "title": "路由返回按钮权限",
-              "auths": [
-                "permission:btn:add",
-                "permission:btn:edit",
-                "permission:btn:delete"
-              ]
+              "title": "路由返回按钮权限"
             }
           },
           "login": {

@@ -5,8 +5,15 @@
         <div class="card-header">
           <span>权限管理</span>
           <div>
-            <el-button type="danger" @click="handleBatchDelete" :disabled="!selectedPermissions.length">批量删除</el-button>
-            <el-button type="primary" @click="handleAdd">新增</el-button>
+            <el-button 
+            type="danger" 
+            @click="handleBatchDelete" 
+            :disabled="!selectedPermissions.length"
+            v-if="hasPerms('system.permissionList:delete')"
+            >批量删除</el-button>
+            <el-button type="primary" @click="handleAdd"
+            v-if="hasPerms('system.permissionList:create')"
+            >新增</el-button>
           </div>
         </div>
       </template>
@@ -16,6 +23,7 @@
         :data="permissionList"
         style="width: 100%"
         @selection-change="handleSelectionChange"
+        v-if="hasPerms('system.permissionList:read')"
       >
         <el-table-column type="selection" width="55" />
         <el-table-column prop="name" label="权限名称" />
@@ -39,6 +47,7 @@
               type="danger"
               size="small"
               @click="handleDelete(scope.row)"
+              v-if="hasPerms('system.permission:delete')"
               >删除</el-button
             >
           </template>
@@ -51,6 +60,7 @@
       v-model="dialogVisible"
       :title="dialogType === 'add' ? '新增权限' : '编辑权限'"
       width="50%"
+      v-if="hasPerms('system.permissionList:create')"
     >
       <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
         <el-form-item label="权限名称" prop="name">
@@ -87,7 +97,8 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import type { FormInstance } from "element-plus";
 import { http } from "@/utils/http";
 import { apiMap } from "@/config/api";
-import { useRouter } from "vue-router";
+import { hasPerms } from "@/utils/auth";
+import router from '@/router'
 
 const permissionList = ref([]);
 const dialogVisible = ref(false);
@@ -151,7 +162,6 @@ const handleEdit = row => {
 };
 
 // 查看详情
-const router = useRouter()
 const handleViewDetail = row => {
   router.push({
     path: '/system/permission/detail',
@@ -255,6 +265,10 @@ const handleBatchDelete = async () => {
 }
 
 onMounted(() => {
+  if (!hasPerms('system.permissionList:read')) {
+    ElMessage.error('您没有权限查看权限列表')
+    router.push('/error/403')
+  }
   getPermissionList();
 });
 </script>

@@ -5,8 +5,15 @@
         <div class="card-header">
           <span>用户组管理</span>
           <div>
-            <el-button type="danger" @click="handleBatchDelete" :disabled="!selectedGroups.length">批量删除</el-button>
-            <el-button type="primary" @click="handleAdd">新增</el-button>
+            <el-button 
+            type="danger" 
+            @click="handleBatchDelete" 
+            :disabled="!selectedGroups.length"
+            v-if="hasPerms('system.groupList:delete')"
+            >批量删除</el-button>
+            <el-button type="primary" @click="handleAdd"
+            v-if="hasPerms('system.groupList:create')"
+            >新增</el-button>
           </div>
         </div>
       </template>
@@ -15,6 +22,7 @@
         v-loading="loading"
         :data="userGroupList"
         style="width: 100%"
+        v-if="hasPerms('system.groupList:read')"
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55" />
@@ -26,7 +34,11 @@
             <el-button type="success" size="small" @click="handleManageUsers(scope.row)">管理用户</el-button>
             <el-button type="warning" size="small" @click="handleManageAuth(scope.row)">管理权限</el-button> -->
             <el-button type="info" size="small" @click="handleViewDetail(scope.row)">查看详情</el-button>
-            <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
+            <el-button 
+            type="danger" 
+            size="small" 
+            @click="handleDelete(scope.row)" 
+            v-if="hasPerms('system.group:delete')">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -37,6 +49,7 @@
       v-model="dialogVisible"
       :title="dialogType === 'add' ? '新增用户组' : '编辑用户组'"
       width="50%"
+      v-if="hasPerms('system.groupList:create')"
     >
       <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
         <el-form-item label="用户组" prop="name">
@@ -64,85 +77,6 @@
       </template>
     </el-dialog>
 
-    <!-- 管理用户对话框 -->
-    <el-dialog
-      v-model="userDialogVisible"
-      title="管理用户"
-      width="70%"
-    >
-      <el-form :model="userForm" label-width="120px">
-        <el-form-item label="用户">
-          <el-select
-            v-model="userForm.users"
-            multiple
-            filterable
-            placeholder="请选择用户"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="item in userList"
-              :key="item.uuid"
-              :label="item.username"
-              :value="item.uuid"
-            />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="userDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmitUsers">确定</el-button>
-        </span>
-      </template>
-    </el-dialog>
-
-    <!-- 权限管理对话框 -->
-    <el-dialog
-      v-model="authDialogVisible"
-      title="权限管理"
-      width="70%"
-    >
-      <el-form :model="authForm" label-width="120px">
-        <el-form-item label="角色">
-          <el-select
-            v-model="authForm.roles"
-            multiple
-            filterable
-            placeholder="请选择角色"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="item in roleList"
-              :key="item.uuid"
-              :label="item.name"
-              :value="item.uuid"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="权限">
-          <el-select
-            v-model="authForm.permissions"
-            multiple
-            filterable
-            placeholder="请选择权限"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="item in permissionList"
-              :key="item.uuid"
-              :label="item.name"
-              :value="item.uuid"
-            />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="authDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmitAuth">确定</el-button>
-        </span>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -153,6 +87,7 @@ import type { FormInstance } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
 import { useRouter } from 'vue-router'
+import { hasPerms } from "@/utils/auth";
 
 interface UserGroupForm {
   uuid?: string
@@ -274,54 +209,6 @@ const handleAdd = () => {
   dialogVisible.value = true
 }
 
-// 编辑用户组
-const handleEdit = (row: UserGroupForm) => {
-  dialogType.value = 'edit'
-  form.value = { ...row }
-  dialogVisible.value = true
-}
-
-// 管理用户
-const handleManageUsers = async (row: UserGroupForm) => {
-  try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.group.group, {
-      params: { uuid: row.uuid }
-    })
-    if (res.success) {
-      userForm.value = {
-        userGroup: row.uuid,
-        users: res.data.users.map((user: any) => user.uuid)
-      }
-      userDialogVisible.value = true
-    } else {
-      ElMessage.error(res.msg)
-    }
-  } catch (error) {
-    ElMessage.error('获取用户组用户失败')
-  }
-}
-
-// 管理权限
-const handleManageAuth = async (row: UserGroupForm) => {
-  try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.group.group, {
-      params: { uuid: row.uuid }
-    })
-    if (res.success) {
-      authForm.value = {
-        uuid: row.uuid,
-        roles: res.data.roles.map((role: any) => role.uuid),
-        permissions: res.data.permissions.map((permission: any) => permission.uuid)
-      }
-      authDialogVisible.value = true
-    } else {
-      ElMessage.error(res.msg)
-    }
-  } catch (error) {
-    ElMessage.error('获取用户组权限失败')
-  }
-}
-
 // 查看详情
 const router = useRouter()
 const handleViewDetail = (row: UserGroupForm) => {
@@ -384,49 +271,6 @@ const handleSubmit = async () => {
   })
 }
 
-// 提交用户表单
-const handleSubmitUsers = async () => {
-  try {
-    const res = await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.group.group, {
-      data: {
-        uuid: userForm.value.userGroup,
-        users: userForm.value.users
-      }
-    })
-    if (res.success) {
-      ElMessage.success('更新成功')
-      userDialogVisible.value = false
-      getUserGroupList()
-    } else {
-      ElMessage.error(res.msg)
-    }
-  } catch (error) {
-    ElMessage.error('更新失败')
-  }
-}
-
-// 提交权限表单
-const handleSubmitAuth = async () => {
-  try {
-    const res = await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.group.group, {
-      data: {
-        uuid: authForm.value.uuid,
-        roles: authForm.value.roles,
-        permissions: authForm.value.permissions
-      }
-    })
-    if (res.success) {
-      ElMessage.success('更新成功')
-      authDialogVisible.value = false
-      getUserGroupList()
-    } else {
-      ElMessage.error(res.msg)
-    }
-  } catch (error) {
-    ElMessage.error('更新失败')
-  }
-}
-
 // 表格选择变化
 const handleSelectionChange = (selection: any[]) => {
   selectedGroups.value = selection.map(item => item.uuid)
@@ -460,6 +304,10 @@ const handleBatchDelete = async () => {
 }
 
 onMounted(() => {
+  if (!hasPerms('system.groupList:read')) {
+    ElMessage.error('您没有权限访问该页面')
+    router.push('/error/403')
+  }
   getUserGroupList()
   getUserList()
   getRoleList()

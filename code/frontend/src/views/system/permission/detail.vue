@@ -5,16 +5,23 @@
         <div class="card-header">
           <span>权限详情</span>
           <div>
-            <el-button type="primary" @click="handleEdit" v-if="!isEditing">编辑</el-button>
-            <el-button @click="$router.back()">返回</el-button>
+            <el-button 
+            type="primary" 
+            @click="handleEdit" 
+            v-if="!isEditing && hasPerms('system.permission:update')"
+            >编辑</el-button>
+            <el-button 
+            @click="$router.back()"
+            >返回</el-button>
           </div>
         </div>
       </template>
 
-      <el-form :model="form" label-width="120px" :rules="rules" ref="formRef" v-if="isEditing">
-        <el-form-item label="权限名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入权限名称" />
-        </el-form-item>
+      <template v-if="isEditing && hasPerms('system.permission:update')">
+        <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
+          <el-form-item label="权限名称" prop="name">
+            <el-input v-model="form.name" placeholder="请输入权限名称" />
+          </el-form-item>
         <el-form-item label="权限代码" prop="code">
           <el-input v-model="form.code" placeholder="请输入权限代码" />
         </el-form-item>
@@ -32,11 +39,12 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSubmit">保存</el-button>
-          <el-button @click="handleCancel">取消</el-button>
-        </el-form-item>
-      </el-form>
+            <el-button @click="handleCancel">取消</el-button>
+          </el-form-item>
+        </el-form>
+      </template>
 
-      <template v-else>
+      <template v-if="!isEditing && hasPerms('system.permission:read')">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="权限名称">{{ permissionInfo.name }}</el-descriptions-item>
           <el-descriptions-item label="权限代码">{{ permissionInfo.code }}</el-descriptions-item>
@@ -88,6 +96,8 @@ import { ElMessage } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
+import { hasPerms } from "@/utils/auth";
+import router from '@/router'
 
 const route = useRoute()
 const isEditing = ref(false)
@@ -212,6 +222,10 @@ const handleSubmit = async () => {
 }
 
 onMounted(() => {
+  if (!hasPerms('system.permission:read')) {
+    ElMessage.error('您没有权限查看权限详情')
+    router.push('/error/403')
+  }
   getPermissionDetail()
 })
 </script>
