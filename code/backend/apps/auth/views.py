@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 
 from apps.user.models import User
+from apps.perm.utils import get_user_perm_json_all
 from .token_utils import TokenManager
 from lib.route_tool import RouteTool
 from lib.request_tool import get_authorization_token, pub_get_request_body, pub_success_response, pub_error_response
@@ -57,7 +58,27 @@ def login(request):
         return pub_error_response(f"登录失败: {e}")
 
 def refresh_token(request):
-    return pub_success_response(data=fake_refresh_token_data)
+    try:
+        body = pub_get_request_body(request)
+        refresh_token = body.get('refreshToken')
+        assert refresh_token, f"refreshToken不能为空"
+
+        token_manager = TokenManager()
+        new_access_token = token_manager.refresh_access_token(refresh_token)
+        assert new_access_token, f"刷新token失败"
+
+        expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE'))
+        expires_str = utc_obj_to_time_zone_str(expires)
+        res = {
+            "accessToken": new_access_token,
+            "refreshToken": refresh_token,
+            "expires": expires_str,
+        }
+        
+        return pub_success_response(data=res)
+    except Exception as e:
+        color_logger.error(f"刷新token失败: {e}")
+        return pub_error_response(f"刷新token失败: {e}")
 
 def get_async_routes(request):
     try:
@@ -75,8 +96,9 @@ def get_async_routes(request):
         user_obj = User.objects.filter(username=user_name).first()
         assert user_obj, f"用户名({user_name})对应用户不存在"
 
-        route_tool = RouteTool()
-        res = route_tool.generate_routes_by_user_permissions([
+        user_permission_json = get_user_perm_json_all(user_obj.uuid)
+        color_logger.debug(f"获取用户权限JSON: {user_permission_json}")
+        default_routes = [
             "system.user",
             "system.user.detail",
             "system.permission",
@@ -88,10 +110,15 @@ def get_async_routes(request):
             "permission.page",
             "permission.button.router",
             "permission.button.login"
-        ])
+        ]
+        # user_routes = user_permission_json.get('frontend', {}).get('routes', default_routes)
+        user_routes = user_permission_json.get('frontend', {}).get('routes', [])
+        color_logger.debug(f"获取异步路由成功: {user_routes}")
+
+        route_tool = RouteTool()
+        res = route_tool.generate_routes_by_user_permissions(user_routes)
         # color_logger.debug(f"获取异步路由成功: {res}")
         return pub_success_response(data=res)
-        return pub_success_response(data=fake_async_routes)
     except Exception as e:
         color_logger.error(f"获取异步路由失败: {e}")
         return pub_error_response(f"获取异步路由失败: {e}")
