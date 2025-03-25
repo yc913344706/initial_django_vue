@@ -50,18 +50,30 @@
 
         <div class="section-title">角色列表</div>
         <el-table :data="permissionInfo.roles" style="width: 100%; margin-bottom: 20px">
-          <el-table-column prop="name" label="角色名称" />
+          <el-table-column prop="name" label="角色名称">
+            <template #default="{ row }">
+              <el-link type="primary" @click="$router.push(`/system/role/detail?uuid=${row.uuid}`)">{{ row.name }}</el-link>
+            </template>
+          </el-table-column>
           <el-table-column prop="description" label="描述" />
         </el-table>
 
         <div class="section-title">授予此权限的用户列表</div>
         <el-table :data="permissionInfo.users" style="width: 100%; margin-bottom: 20px">
-          <el-table-column prop="username" label="用户名" />
+          <el-table-column prop="username" label="用户名">
+            <template #default="{ row }">
+              <el-link type="primary" @click="$router.push(`/system/user/detail?uuid=${row.uuid}`)">{{ row.username }}</el-link>
+            </template>
+          </el-table-column>
         </el-table>
 
         <div class="section-title">授予此权限的用户组列表</div>
         <el-table :data="permissionInfo.groups" style="width: 100%">
-          <el-table-column prop="name" label="用户组名称" />
+          <el-table-column prop="name" label="用户组名称">
+            <template #default="{ row }">
+              <el-link type="primary" @click="$router.push(`/system/group/detail?uuid=${row.uuid}`)">{{ row.name }}</el-link>
+            </template>
+          </el-table-column>
           <el-table-column prop="description" label="描述" />
         </el-table>
       </template>

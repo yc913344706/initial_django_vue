@@ -94,7 +94,11 @@
 
         <div class="section-title">用户列表</div>
         <el-table :data="groupInfo.users" style="width: 100%; margin-bottom: 20px">
-          <el-table-column prop="username" label="用户名" />
+          <el-table-column prop="username" label="用户名" >
+            <template #default="{ row }">
+              <el-link type="primary" @click="$router.push(`/system/user/detail?uuid=${row.uuid}`)">{{ row.username }}</el-link>
+            </template>
+          </el-table-column>
           <el-table-column prop="nickname" label="昵称" />
           <el-table-column prop="phone" label="手机号" />
           <el-table-column prop="email" label="邮箱" />
@@ -109,13 +113,21 @@
 
         <div class="section-title">角色列表</div>
         <el-table :data="groupInfo.roles" style="width: 100%; margin-bottom: 20px">
-          <el-table-column prop="name" label="角色名称" />
+          <el-table-column prop="name" label="角色名称" >
+            <template #default="{ row }">
+              <el-link type="primary" @click="$router.push(`/system/role/detail?uuid=${row.uuid}`)">{{ row.name }}</el-link>
+            </template>
+          </el-table-column>
           <el-table-column prop="description" label="描述" />
         </el-table>
 
         <div class="section-title">权限列表</div>
         <el-table :data="groupInfo.permissions" style="width: 100%">
-          <el-table-column prop="name" label="权限名称" />
+          <el-table-column prop="name" label="权限名称" >
+            <template #default="{ row }">
+              <el-link type="primary" @click="$router.push(`/system/permission/detail?uuid=${row.uuid}`)">{{ row.name }}</el-link>
+            </template>
+          </el-table-column>
           <el-table-column prop="description" label="描述" />
         </el-table>
       </template>
