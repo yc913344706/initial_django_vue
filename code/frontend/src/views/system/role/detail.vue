@@ -17,38 +17,42 @@
           <el-form-item label="角色名称" prop="name">
             <el-input v-model="form.name" placeholder="请输入角色名称" />
           </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input v-model="form.description" type="textarea" placeholder="请输入描述" />
-        </el-form-item>
-        <el-form-item label="权限">
-          <el-select
-            v-model="form.permissions"
-            multiple
-            filterable
-            placeholder="请选择权限"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="item in permissionList"
-              :key="item.uuid"
-              :label="item.name"
-              :value="item.uuid"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSubmit">保存</el-button>
-          <el-button @click="handleCancel">取消</el-button>
-        </el-form-item>
-      </el-form>
+          <el-form-item label="角色代码" prop="code">
+            <el-input v-model="form.code" placeholder="请输入角色代码" />
+          </el-form-item>
+          <el-form-item label="描述" prop="description">
+            <el-input v-model="form.description" type="textarea" placeholder="请输入描述" />
+          </el-form-item>
+          <el-form-item label="权限">
+            <el-select
+              v-model="form.permissions"
+              multiple
+              filterable
+              placeholder="请选择权限"
+              style="width: 100%"
+            >
+              <el-option
+                v-for="item in permissionList"
+                :key="item.uuid"
+                :label="item.name"
+                :value="item.uuid"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleSubmit">保存</el-button>
+            <el-button @click="handleCancel">取消</el-button>
+          </el-form-item>
+        </el-form>
       </template>
 
       <template v-if="!isEditing && hasPerms('system.role:read')">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="角色名称">{{ roleInfo.name }}</el-descriptions-item>
+          <el-descriptions-item label="角色代码">{{ roleInfo.code }}</el-descriptions-item>
           <el-descriptions-item label="描述">{{ roleInfo.description }}</el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{ roleInfo.created_at }}</el-descriptions-item>
-          <el-descriptions-item label="更新时间">{{ roleInfo.updated_at }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{ roleInfo.created_time }}</el-descriptions-item>
+          <el-descriptions-item label="更新时间">{{ roleInfo.updated_time }}</el-descriptions-item>
         </el-descriptions>
 
         <div class="section-title">权限列表</div>
@@ -68,7 +72,14 @@
               <el-link type="primary" @click="$router.push(`/system/user/detail?uuid=${row.uuid}`)">{{ row.username }}</el-link>
             </template>
           </el-table-column>
-          <el-table-column prop="description" label="描述" />
+          <el-table-column prop="nickname" label="昵称" />
+          <el-table-column prop="is_active" label="状态">
+            <template #default="{ row }">
+              <el-tag :type="row.is_active ? 'success' : 'danger'">
+                {{ row.is_active ? '启用' : '禁用' }}
+              </el-tag>
+            </template>
+          </el-table-column>
         </el-table>
 
         <div class="section-title">授予此角色的用户组列表</div>
@@ -101,9 +112,10 @@ const formRef = ref<FormInstance>()
 const roleInfo = ref({
   uuid: '',
   name: '',
+  code: '',
   description: '',
-  created_at: '',
-  updated_at: '',
+  created_time: '',
+  updated_time: '',
   permissions: [],
   users: [],
   groups: []
@@ -112,6 +124,7 @@ const roleInfo = ref({
 const form = ref({
   uuid: '',
   name: '',
+  code: '',
   description: '',
   permissions: [] as string[]
 })
@@ -121,6 +134,9 @@ const permissionList = ref([])
 const rules = {
   name: [
     { required: true, message: '请输入角色名称', trigger: 'blur' }
+  ],
+  code: [
+    { required: true, message: '请输入角色代码', trigger: 'blur' }
   ]
 }
 
@@ -159,6 +175,7 @@ const handleEdit = () => {
   form.value = {
     uuid: roleInfo.value.uuid,
     name: roleInfo.value.name,
+    code: roleInfo.value.code,
     description: roleInfo.value.description,
     permissions: roleInfo.value.permissions.map((permission: any) => permission.uuid)
   }

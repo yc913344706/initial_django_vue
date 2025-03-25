@@ -8,8 +8,8 @@ fake_user_data_list = [
         "phone": "12345678901", 
         # "role": "admin",
         "status": "active",
-        "created_at": "2021-01-01",
-        "updated_at": "2025-03-23",
+        "created_time": "2021-01-01",
+        "updated_time": "2025-03-23",
     }
 ]
 

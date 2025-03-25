@@ -3,29 +3,38 @@ from apps.user.models import User, UserGroup
 from .models import Permission, Role
 from lib.log import color_logger
 from lib.json_tools import merge_jsons
+from lib.time_tools import utc_obj_to_time_zone_str
 
-def format_permission_data(permission):
+def format_permission_data(permission: Permission):
     """格式化权限数据"""
     return {
         'uuid': permission.uuid,
+        'created_time': utc_obj_to_time_zone_str(permission.create_time),
+        'updated_time': utc_obj_to_time_zone_str(permission.update_time),
+
         'name': permission.name,
         'code': permission.code,
         'permission_json': permission.permission_json,
         'description': permission.description,
+
         'roles': [{'uuid': role.uuid, 'name': role.name, 'description': role.description} for role in permission.role_set.all()],
-        'users': [{'uuid': user.uuid, 'username': user.username} for user in permission.user_set.all()],
+        'users': [{'uuid': user.uuid, 'username': user.username, 'nickname': user.nickname, 'is_active': user.is_active} for user in permission.user_set.all()],
         'groups': [{'uuid': group.uuid, 'name': group.name, 'description': group.description} for group in permission.usergroup_set.all()]
     }
 
-def format_role_data(role):
+def format_role_data(role: Role):
     """格式化角色数据"""
     return {
         'uuid': role.uuid,
+        'created_time': utc_obj_to_time_zone_str(role.create_time),
+        'updated_time': utc_obj_to_time_zone_str(role.update_time),
+
         'name': role.name,
         'code': role.code,
         'description': role.description,
+
         'permissions': [{'uuid': permission.uuid, 'name': permission.name, 'description': permission.description} for permission in role.permissions.all()],
-        'users': [{'uuid': user.uuid, 'username': user.username} for user in role.user_set.all()],
+        'users': [{'uuid': user.uuid, 'username': user.username, 'nickname': user.nickname, 'is_active': user.is_active} for user in role.user_set.all()],
         'groups': [{'uuid': group.uuid, 'name': group.name, 'description': group.description} for group in role.usergroup_set.all()]
     }
 

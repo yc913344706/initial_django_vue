@@ -79,8 +79,8 @@
               {{ userInfo.is_active ? '启用' : '禁用' }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{ userInfo.created_at }}</el-descriptions-item>
-          <el-descriptions-item label="更新时间">{{ userInfo.updated_at }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{ userInfo.created_time }}</el-descriptions-item>
+          <el-descriptions-item label="更新时间">{{ userInfo.updated_time }}</el-descriptions-item>
         </el-descriptions>
 
         <div class="section-title">角色列表</div>
@@ -141,8 +141,8 @@ const userInfo = ref({
   phone: '',
   email: '',
   is_active: true,
-  created_at: '',
-  updated_at: '',
+  created_time: '',
+  updated_time: '',
   roles: [],
   permissions: [],
   groups: []

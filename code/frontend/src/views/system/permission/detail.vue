@@ -49,8 +49,8 @@
           <el-descriptions-item label="权限名称">{{ permissionInfo.name }}</el-descriptions-item>
           <el-descriptions-item label="权限代码">{{ permissionInfo.code }}</el-descriptions-item>
           <el-descriptions-item label="描述">{{ permissionInfo.description }}</el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{ permissionInfo.created_at }}</el-descriptions-item>
-          <el-descriptions-item label="更新时间">{{ permissionInfo.updated_at }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{ permissionInfo.created_time }}</el-descriptions-item>
+          <el-descriptions-item label="更新时间">{{ permissionInfo.updated_time }}</el-descriptions-item>
         </el-descriptions>
 
         <div class="section-title">权限JSON</div>
@@ -71,6 +71,14 @@
           <el-table-column prop="username" label="用户名">
             <template #default="{ row }">
               <el-link type="primary" @click="$router.push(`/system/user/detail?uuid=${row.uuid}`)">{{ row.username }}</el-link>
+            </template>
+          </el-table-column>
+          <el-table-column prop="nickname" label="昵称" />
+          <el-table-column prop="is_active" label="状态">
+            <template #default="{ row }">
+              <el-tag :type="row.is_active ? 'success' : 'danger'">
+                {{ row.is_active ? '启用' : '禁用' }}
+              </el-tag>
             </template>
           </el-table-column>
         </el-table>
@@ -108,8 +116,8 @@ const permissionInfo = ref({
   code: '',
   description: '',
   permission_json: {},
-  created_at: '',
-  updated_at: '',
+  created_time: '',
+  updated_time: '',
   roles: [],
   users: [],
   groups: []

@@ -96,8 +96,8 @@
           <el-descriptions-item label="用户组名称">{{ groupInfo.name }}</el-descriptions-item>
           <el-descriptions-item label="父级用户组">{{ parentGroupName }}</el-descriptions-item>
           <el-descriptions-item label="描述">{{ groupInfo.description }}</el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{ groupInfo.created_at }}</el-descriptions-item>
-          <el-descriptions-item label="更新时间">{{ groupInfo.updated_at }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{ groupInfo.created_time }}</el-descriptions-item>
+          <el-descriptions-item label="更新时间">{{ groupInfo.updated_time }}</el-descriptions-item>
         </el-descriptions>
 
         <div class="section-title">用户列表</div>
@@ -108,8 +108,8 @@
             </template>
           </el-table-column>
           <el-table-column prop="nickname" label="昵称" />
-          <el-table-column prop="phone" label="手机号" />
-          <el-table-column prop="email" label="邮箱" />
+          <!-- <el-table-column prop="phone" label="手机号" />
+          <el-table-column prop="email" label="邮箱" /> -->
           <el-table-column prop="is_active" label="状态">
             <template #default="{ row }">
               <el-tag :type="row.is_active ? 'success' : 'danger'">
@@ -161,8 +161,8 @@ const groupInfo = ref({
   name: '',
   parent: undefined,
   description: '',
-  created_at: '',
-  updated_at: '',
+  created_time: '',
+  updated_time: '',
   users: [],
   roles: [],
   permissions: []
