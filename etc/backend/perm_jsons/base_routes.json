@@ -68,48 +68,6 @@
         }
       }
     }
-  },
-  "permission": {
-    "path": "/permission",
-    "meta": {
-      "title": "权限管理",
-      "icon": "ep:lollipop",
-      "rank": 10
-    },
-    "children": {
-      "page": {
-        "path": "/permission/page/index",
-        "name": "PermissionPage",
-        "meta": {
-          "title": "页面权限"
-        }
-      },
-      "button": {
-        "path": "/permission/button/index",
-        "name": "PermissionButton",
-        "meta": {
-          "title": "按钮权限"
-        },
-        "children": {
-          "router": {
-            "path": "/permission/button/router",
-            "component": "permission/button/index",
-            "name": "PermissionButtonRouter",
-            "meta": {
-              "title": "路由返回按钮权限"
-            }
-          },
-          "login": {
-            "path": "/permission/button/login",
-            "component": "permission/button/perms",
-            "name": "PermissionButtonLogin",
-            "meta": {
-              "title": "登录接口返回按钮权限"
-            }
-          }
-        }
-      }
-    }
   }
 }
 
