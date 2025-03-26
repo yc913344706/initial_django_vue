@@ -17,9 +17,11 @@ def get_redis_value(redis_db_name, redis_key_name):
 def get_redis_value_with_prefix(redis_db_name, redis_key_prefix):
     redis_conn = get_redis_connection(redis_db_name)
     redis_data = redis_conn.keys(redis_key_prefix)
+    # color_logger.debug(f'redis_key_prefix: {redis_key_prefix}')
+    # color_logger.debug(f'redis_data: {redis_data}')
     
     if redis_data:
-        return {key: json.loads(redis_conn.get(key)) for key in redis_data}
+        return {key.decode('utf-8') if isinstance(key, bytes) else key: json.loads(redis_conn.get(key)) for key in redis_data}
     
     return None
         
