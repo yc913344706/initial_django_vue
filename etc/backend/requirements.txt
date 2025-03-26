@@ -26,4 +26,6 @@ uuid
 uwsgi
 xmltodict
 PyJWT
-
+mkdocs
+mkdocs-material
+pymdown-extensions
