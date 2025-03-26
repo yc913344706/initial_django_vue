@@ -7,7 +7,9 @@ from datetime import datetime
 
 import xmltodict
 
+from apps.auth.token_utils import TokenManager
 from lib.log import color_logger
+from backend.settings import config_data
 import threading
 
 _thread_locals = threading.local()
@@ -29,7 +31,12 @@ def get_client_ip(request):
 
 def get_authorization_token(request: HttpRequest):
     """获取Authorization头中的token"""
-    return request.headers.get("Authorization", "").split(" ")[1] if request.headers.get("Authorization") else None
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header:
+        auth_header_list = auth_header.split(" ")
+        if len(auth_header_list) == 2:
+            return auth_header_list[1]
+    return None
 
 def pub_get_request_body(request: HttpRequest, format_dict = None):
     """
@@ -274,4 +281,23 @@ def pub_json_check(json_data, required_fields=None, optional_fields=None):
                 return False, f"参数类型错误: {field_desc}({field_name})必须是{field_type.__name__}类型"
                 
     return True, None
+
+
+def check_request_token(request):
+    """检查请求token"""
+    try:
+        # 获取token
+        access_token = get_authorization_token(request)
+        if (access_token is None) or (access_token in ['', 'undefined', 'null']):
+            return False, pub_error_response(99999, msg='未登录')
+            
+        # 验证token
+        token_manager = TokenManager()
+        payload = token_manager.verify_token(access_token)
+        if not payload:
+            return False, pub_error_response(99998, msg='登录已过期')
+        
+        return True, None
+    except Exception as e:
+        return False, pub_error_response(99997, msg=f"检查登录状态失败: {e.args}")
 

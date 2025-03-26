@@ -20,6 +20,22 @@ SETTINGS: {
 
 AES_KEY: "dTDR80ClnxN93QmX"
 
+
+# Token配置
+AUTH: {
+  "ACCESS_TOKEN_EXPIRE": 7200,  # 2小时
+  "REFRESH_TOKEN_EXPIRE": 604800,  # 7天
+  "JWT_SECRET": "JbzhCpYqofMDBb9A8AWte7jXiwp1FxI0TGWoq8FSI6DMrdPqtt",
+  "JWT_ALGORITHM": "HS256",
+}
+
+MIDDLEWARE_WHITE_LIST: {
+    "/api/v1/auth/login/": ["POST"],
+    "/api/v1/auth/refresh-token/": ["POST"],
+    "/api/v1/auth/get-async-routes/": ["GET"],
+    "/api/v1/demo": ["GET"]
+}
+
 MYSQL: {
   "HOST": "127.0.0.1",
   "PORT": 13306,
@@ -37,23 +53,4 @@ REDIS: {
     # celery use
     "CELERY_BROKER": 1,
   },
-}
-
-MIDDLEWARE_WHITE_LIST: [
-  # 登录
-  "/api/v1/myauth/login/",
-  "/api/v1/myauth/logout/",
-  "/api/v1/myauth/refresh_token/",
-
-  # 权限管理
-  "/api/v1/permission/get_current_user_permission/",
-]
-
-
-# Token配置
-AUTH: {
-  "ACCESS_TOKEN_EXPIRE": 7200,  # 2小时
-  "REFRESH_TOKEN_EXPIRE": 604800,  # 7天
-  "JWT_SECRET": "JbzhCpYqofMDBb9A8AWte7jXiwp1FxI0TGWoq8FSI6DMrdPqtt",
-  "JWT_ALGORITHM": "HS256",
 }

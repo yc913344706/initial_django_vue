@@ -16,7 +16,7 @@ def permission_list(request):
             page = int(body.get('page', 1))
             page_size = int(body.get('page_size', 20))
             
-            permission_list = Permission.objects.all()
+            permission_list = Permission.objects.all().order_by('name')
                 
             # 分页查询
             has_next, next_page, page_list, all_num, result = pub_paging_tool(page, permission_list, page_size)
@@ -96,7 +96,7 @@ def role_list(request):
             page = int(body.get('page', 1))
             page_size = int(body.get('page_size', 20))
             
-            role_list = Role.objects.all()
+            role_list = Role.objects.all().order_by('name')
                 
             # 分页查询
             has_next, next_page, page_list, all_num, result = pub_paging_tool(page, role_list, page_size)

@@ -74,7 +74,7 @@ class PureHttp {
           return config;
         }
         /** 请求白名单，放置一些不需要`token`的接口（通过设置请求白名单，防止`token`过期后再请求造成的死循环问题） */
-        const whiteList = ["/refresh-token", apiMap.login];
+        const whiteList = [apiMap.refreshToken, apiMap.login];
         return whiteList.some(url => config.url.endsWith(url))
           ? config
           : new Promise(resolve => {
@@ -118,9 +118,20 @@ class PureHttp {
 
   /** 响应拦截 */
   private httpInterceptorsResponse(): void {
+    // console.log('enter httpInterceptorsResponse...')
     const instance = PureHttp.axiosInstance;
     instance.interceptors.response.use(
       (response: PureHttpResponse) => {
+        // console.log('enter PureHttpResponse...')
+        // console.log('response: ', response)
+
+        const responseSuccess = response.data.success
+        if (!responseSuccess) {
+          // 关闭进度条动画
+          NProgress.done();
+          return Promise.reject(response.data)
+        }
+
         const $config = response.config;
         // 关闭进度条动画
         NProgress.done();

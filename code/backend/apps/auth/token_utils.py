@@ -57,11 +57,13 @@ class TokenManager:
     def verify_token(self, token):
         """验证token"""
         try:
+            # color_logger.debug(f"verify_token token: {token}")
             payload = jwt.decode(
                 token,
                 config_data.get('AUTH', {}).get('JWT_SECRET'),
                 algorithms=[config_data.get('AUTH', {}).get('JWT_ALGORITHM')]
             )
+            # color_logger.debug(f"verify_token payload: {payload}")
             
             # 检查Redis中是否存在
             if HAS_REDIS:
@@ -74,7 +76,7 @@ class TokenManager:
                 
             return payload
         except Exception as e:
-            color_logger.error(f"verify_token error: {e}")
+            # color_logger.error(f"verify_token error: {e}")
             return None
             
     def refresh_access_token(self, refresh_token):

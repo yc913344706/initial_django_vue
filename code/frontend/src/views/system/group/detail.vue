@@ -316,10 +316,19 @@ onMounted(() => {
     router.push('/error/403')
   }
   getGroupDetail()
-  getGroupList()
-  getUserList()
-  getRoleList()
-  getPermissionList()
+
+  if (hasPerms('system.groupList:read')) {
+    getGroupList()
+  }
+  if (hasPerms('system.userList:read')) {
+    getUserList()
+  }
+  if (hasPerms('system.roleList:read')) {
+    getRoleList()
+  }
+  if (hasPerms('system.permissionList:read')) {
+    getPermissionList()
+  }
 })
 </script>
 

@@ -1,0 +1,20 @@
+{
+    "backend": {
+        "api": {
+            "/admin/": ["GET", "POST", "PUT", "DELETE"],
+            
+            "/api/v1/perm/permissions/": ["GET", "DELETE"],
+            "/api/v1/perm/permission/": ["GET", "POST", "PUT", "DELETE"],
+            "/api/v1/perm/user-permission-json/": ["GET"],
+
+            "/api/v1/perm/roles/": ["GET", "DELETE"],
+            "/api/v1/perm/role/": ["GET", "POST", "PUT", "DELETE"],
+
+            "/api/v1/user/users/": ["GET", "DELETE"],
+            "/api/v1/user/user/": ["GET", "POST", "PUT", "DELETE"],
+
+            "/api/v1/user/groups/": ["GET", "DELETE"],
+            "/api/v1/user/group/": ["GET", "POST", "PUT", "DELETE"]
+        }
+    }
+}

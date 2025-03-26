@@ -26,8 +26,6 @@ export const useUserStore = defineStore({
     username: storageLocal().getItem<DataInfo<number>>(userKey)?.username ?? "",
     // 昵称
     nickname: storageLocal().getItem<DataInfo<number>>(userKey)?.nickname ?? "",
-    // 页面级别权限
-    roles: storageLocal().getItem<DataInfo<number>>(userKey)?.roles ?? [],
     // 按钮级别权限
     permissions:
       storageLocal().getItem<DataInfo<number>>(userKey)?.permissions ?? [],
@@ -49,11 +47,7 @@ export const useUserStore = defineStore({
     SET_NICKNAME(nickname: string) {
       this.nickname = nickname;
     },
-    /** 存储角色 */
-    SET_ROLES(roles: Array<string>) {
-      this.roles = roles;
-    },
-    /** 存储按钮级别权限 */
+    /** 存储页面资源按钮级别权限 */
     SET_PERMS(permissions: Array<string>) {
       this.permissions = permissions;
     },
@@ -81,7 +75,6 @@ export const useUserStore = defineStore({
     /** 前端登出（不调用接口） */
     logOut() {
       this.username = "";
-      this.roles = [];
       this.permissions = [];
       removeToken();
       useMultiTagsStoreHook().handleTags("equal", [...routerArrays]);

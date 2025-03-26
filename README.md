@@ -8,5 +8,10 @@ grep -f grep_file.txt -r .
 
 https://zhuanlan.zhihu.com/p/423998740
 
-Sphinx
 MkDocs
+
+## dev环境
+
+cd code/backend; python manage.py runserver 0.0.0.0:8000
+
+cd code/frontend; pnpm dev

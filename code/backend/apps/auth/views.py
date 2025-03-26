@@ -19,6 +19,9 @@ def index(request):
 
 def login(request):
     try:
+        if request.method != "POST":
+            return pub_error_response(f"请求方法错误")
+
         body = pub_get_request_body(request)
         username = body.get('username')
         password = body.get('password')
@@ -40,14 +43,14 @@ def login(request):
 
 
         user_permission_json = get_user_perm_json_all(user_obj.uuid)
-        color_logger.debug(f"获取用户权限JSON: {user_permission_json}")
+        # color_logger.debug(f"获取用户权限JSON: {user_permission_json}")
 
         res = {
             # "avatar": user_obj.avatar,
             "username": user_obj.username,
             "nickname": user_obj.nickname,
 
-            "roles": ["common"],
+            # "roles": ["common"],
             "permissions": user_permission_json.get('frontend', {}).get('resources', []),
 
             "accessToken": access_token,
@@ -64,6 +67,9 @@ def login(request):
 
 def refresh_token(request):
     try:
+        if request.method != "POST":
+            return pub_error_response(f"请求方法错误")
+
         body = pub_get_request_body(request)
         refresh_token = body.get('refreshToken')
         assert refresh_token, f"refreshToken不能为空"
@@ -87,6 +93,9 @@ def refresh_token(request):
 
 def get_async_routes(request):
     try:
+        if request.method != "GET":
+            return pub_error_response(f"请求方法错误")
+
         # color_logger.debug(f"request: {request}")
         # color_logger.debug(f"获取异步路由请求cookie: {request.COOKIES}")
         # color_logger.debug(f"获取异步路由请求headers: {request.headers}")
@@ -94,6 +103,9 @@ def get_async_routes(request):
         body = pub_get_request_body(request)
 
         user_name = TokenManager().get_username_from_access_token(get_authorization_token(request))
+
+        if user_name is None:
+            return pub_success_response(data=[])
 
         # color_logger.debug(f"获取异步路由请求: user_name: {user_name}")
         assert user_name, f"无法从cookie中获取用户名"
@@ -121,9 +133,14 @@ def get_async_routes(request):
         # color_logger.debug(f"获取异步路由成功: {user_routes}")
 
         route_tool = RouteTool()
-        res = route_tool.generate_routes_by_user_permissions(user_routes)
+        routes_res = route_tool.generate_routes_by_user_permissions(user_routes)
+
+        resources_res = user_permission_json.get('frontend', {}).get('resources', [])
         # color_logger.debug(f"获取异步路由成功: {res}")
-        return pub_success_response(data=res)
+        return pub_success_response(data={
+            "routes": routes_res,
+            "resources": resources_res
+        })
     except Exception as e:
         color_logger.error(f"获取异步路由失败: {e}")
         return pub_error_response(f"获取异步路由失败: {e}")
@@ -138,10 +155,10 @@ def get_async_routes(request):
 #     - route
 #     - page_role: admin, normal。可以参考:
 #       - 当前拥有的code列表：[ "permission:btn:add", "permission:btn:edit", "permission:btn:delete" ]
-#   - backend <---
+#   - backend
 #     - api: post, get, put, delete
 # - django中间件
-# - HAS_REDIS 配置设置
+# - HAS_REDIS 配置设置 <---
 # - 修改基础信息
 # - 后端镜像build更新
 # - 一键start/stop/status脚本

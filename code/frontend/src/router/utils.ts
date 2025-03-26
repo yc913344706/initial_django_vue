@@ -22,6 +22,7 @@ import { userKey, type DataInfo } from "@/utils/auth";
 import { type menuType, routerArrays } from "@/layout/types";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import { usePermissionStoreHook } from "@/store/modules/permission";
+import { useUserStoreHook } from "@/store/modules/user";
 const IFrame = () => import("@/layout/frame.vue");
 // https://cn.vitejs.dev/guide/features.html#glob-import
 const modulesRoutes = import.meta.glob("/src/views/**/*.{vue,tsx}");
@@ -152,7 +153,13 @@ function addPathMatch() {
 }
 
 /** 处理动态路由（后端返回的路由） */
-function handleAsyncRoutes(routeList) {
+function handleAsyncRoutes(frontendPermissionData) {
+  console.log('handleAsyncRoutes...')
+
+  const routeList = frontendPermissionData.routes
+  const resourceList = frontendPermissionData.resources
+  useUserStoreHook().SET_PERMS(resourceList);
+
   if (!routeList) {
     throw new Error("路由列表为空");
   }

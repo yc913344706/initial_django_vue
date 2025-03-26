@@ -38,7 +38,7 @@ def format_role_data(role: Role):
         'groups': [{'uuid': group.uuid, 'name': group.name, 'description': group.description} for group in role.usergroup_set.all()]
     }
 
-def get_user_perm_json_all(user_uuid):
+def get_user_perm_json_all(user_uuid, is_user_name=False):
     """获取所有用户权限组成的json
     
     包括：
@@ -51,7 +51,10 @@ def get_user_perm_json_all(user_uuid):
     """
     try:
         # color_logger.debug(f"获取用户权限JSON: {user_uuid}")
-        user = User.objects.get(uuid=user_uuid)
+        if is_user_name:
+            user = User.objects.get(username=user_uuid)
+        else:
+            user = User.objects.get(uuid=user_uuid)
         assert user, '用户不存在'
         
         # 1. 获取用户直接拥有的权限JSON
@@ -85,10 +88,10 @@ def get_user_perm_json_all(user_uuid):
                 group_permission_jsons.extend([p.permission_json for p in role.permissions.all()])
         
         # 合并所有权限JSON
-        # color_logger.debug(f"合并所有权限JSON: {user_permission_jsons + role_permission_jsons + group_permission_jsons}")
+        # color_logger.debug(f"({user_uuid})合并所有权限JSON: {user_permission_jsons + role_permission_jsons + group_permission_jsons}")
         all_permission_jsons = user_permission_jsons + role_permission_jsons + group_permission_jsons
         merged_permission_json = merge_jsons(all_permission_jsons)
-        # color_logger.debug(f"合并后的权限JSON: {merged_permission_json}")
+        # color_logger.debug(f"({user_uuid})合并后的权限JSON: {merged_permission_json}")
         
         return merged_permission_json
         
@@ -98,3 +101,30 @@ def get_user_perm_json_all(user_uuid):
     except Exception as e:
         color_logger.error(f"获取用户权限JSON失败: {e}")
         return {}
+
+
+def check_user_api_permission(user_uuid, check_permission_dict, is_user_name=False):
+    """
+    检查用户是否具有api权限
+
+    check_permission_dict: {
+        'api_path': ['GET', 'POST', 'PUT', 'DELETE'],
+        'api_path2': 'GET'
+    }
+    """
+    user_api_permission_in_server = get_user_perm_json_all(user_uuid, is_user_name)
+    user_api_permission_in_server = user_api_permission_in_server.get('backend', {}).get('api', {})
+    # color_logger.debug(f"用户api权限JSON: {user_api_permission_in_server}")
+
+    for check_api, check_methods in check_permission_dict.items():
+        if check_api not in user_api_permission_in_server:
+            return False
+        
+        allow_methods = user_api_permission_in_server[check_api]
+        if isinstance(check_methods, str):
+            check_methods = [check_methods]
+        if len(set(check_methods) - set(allow_methods)) > 0:
+            return False
+
+    return True
+

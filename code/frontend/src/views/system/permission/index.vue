@@ -73,8 +73,9 @@
           <el-input
             v-model="form.permission_json"
             type="textarea"
-            :rows="4"
+            :rows="6"
             placeholder="请输入JSON格式的权限配置"
+            @input="handleJsonInput"
           />
         </el-form-item>
         <el-form-item label="描述">
@@ -193,6 +194,15 @@ const handleDelete = row => {
   });
 };
 
+// JSON输入处理
+const handleJsonInput = (value: string) => {
+  try {
+    JSON.parse(value)
+  } catch (error) {
+    // 输入时不做验证,只在提交时验证
+  }
+}
+
 // 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return;
@@ -200,11 +210,15 @@ const handleSubmit = async () => {
   await formRef.value.validate(async valid => {
     if (valid) {
       try {
+        const submitData = {
+          ...form.value,
+          permission_json: JSON.parse(form.value.permission_json)
+        }
         if (dialogType.value === "add") {
           const res = await http.request(
             "post",
             import.meta.env.VITE_BACKEND_URL + apiMap.permission.permission,
-            { data: form.value }
+            { data: submitData }
           );
           if (res.success) {
             ElMessage.success("新增成功");
@@ -215,7 +229,7 @@ const handleSubmit = async () => {
           const res = await http.request(
             "put",
             import.meta.env.VITE_BACKEND_URL + apiMap.permission.permission,
-            { data: form.value }
+            { data: submitData }
           );
           if (res.success) {
             ElMessage.success("编辑成功");

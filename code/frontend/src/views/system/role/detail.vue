@@ -217,7 +217,9 @@ onMounted(() => {
     router.push('/error/403')
   }
   getRoleDetail()
-  getPermissionList()
+  if (hasPerms('system.permissionList:read')) {
+    getPermissionList()
+  }
 })
 </script>
 
