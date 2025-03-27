@@ -130,13 +130,19 @@ push_image()
   docker push "${DOCKER_IMAGE_NAME}"
 }
 
-stop_old_docker_container() {
+stop_rm_docker_container() {
   if docker ps | grep ${DOCKER_CONTAINER_NAME}; then
     log_info "old docker container ${DOCKER_CONTAINER_NAME} is running, stop it..."
 
     docker stop ${DOCKER_CONTAINER_NAME}
     sleep 2
     log_info "stop over..."
+  fi
+
+  if docker ps -a | grep ${DOCKER_CONTAINER_NAME}; then
+    log_info "old docker container ${DOCKER_CONTAINER_NAME} is exist, remove it..."
+    docker rm ${DOCKER_CONTAINER_NAME}
+    log_info "remove over..."
   fi
 }
 

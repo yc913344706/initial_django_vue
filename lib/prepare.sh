@@ -1,5 +1,7 @@
-prepare_django_config() {
-    [ -f "${WORKSPACE}/code/${DJANGO_PROJECT_NAME}/config.yaml" ] && \
-        rm -f "${WORKSPACE}/code/${DJANGO_PROJECT_NAME}/config.yaml"
-    cp -a "${1}" "${WORKSPACE}/code/${DJANGO_PROJECT_NAME}/config.yaml"
+prepare_config_file() {
+    _src_config_file="$1"
+    _dest_config_file="$2"
+    [ -f "${_dest_config_file}" ] && \
+        rm -f "${_dest_config_file}"
+    cp -a "${_src_config_file}" "${_dest_config_file}"
 }

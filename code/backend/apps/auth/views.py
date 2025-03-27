@@ -145,27 +145,3 @@ def get_async_routes(request):
         color_logger.error(f"获取异步路由失败: {e}")
         return pub_error_response(f"获取异步路由失败: {e}")
 
-
-# todo:
-# - 授权crud
-# - 角色：是抽象的，是根据用户权限组合的，最终还是反映到json上
-# - 不显示原本的权限管理，但是可以参考他的权限控制逻辑
-# - 组合、获取用户权限json
-#   - frontend
-#     - route
-#     - page_role: admin, normal。可以参考:
-#       - 当前拥有的code列表：[ "permission:btn:add", "permission:btn:edit", "permission:btn:delete" ]
-#   - backend
-#     - api: post, get, put, delete
-# - django中间件
-# - HAS_REDIS 配置设置 <---
-# - 修改基础信息
-# - 后端镜像build更新
-# - 一键start/stop/status脚本
-# - 数据初始化：
-#   - 方案1：
-#     - 有dbsqlite3文件，自行导出导入
-#     - 准备 sql 脚本，执行即可
-#   - 方案2：
-#     - base_router.json: 增加表，存储基础路由，界面管理
-#     - create permission, user

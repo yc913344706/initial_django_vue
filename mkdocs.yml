@@ -33,7 +33,7 @@ markdown_extensions:
 
 nav:
   - 首页: index.md
-  - 用户认证: auth/index.md
-  - 权限管理: perm/index.md
-  - 用户管理: user/index.md
-  - 示例功能: demo/index.md 
+  - 用户认证: api/auth/index.md
+  - 权限管理: api/perm/index.md
+  - 用户管理: api/user/index.md
+  - 示例功能: api/demo/index.md 

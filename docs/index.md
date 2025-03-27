@@ -6,10 +6,10 @@
 
 我们的后端项目基于 Django 框架开发，主要包含以下应用模块：
 
-- [用户认证模块](auth/index.md) - 处理用户登录、令牌刷新等认证相关功能
-- [权限管理模块](perm/index.md) - 处理系统权限和角色管理
-- [用户管理模块](user/index.md) - 处理用户信息和用户组管理
-- [示例模块](demo/index.md) - 示例功能模块
+- [用户认证模块](api/auth/index.md) - 处理用户登录、令牌刷新等认证相关功能
+- [权限管理模块](api/perm/index.md) - 处理系统权限和角色管理
+- [用户管理模块](api/user/index.md) - 处理用户信息和用户组管理
+- [示例模块](api/demo/index.md) - 示例功能模块
 
 ## 快速开始
 
@@ -44,7 +44,8 @@ Authorization: Bearer your-token
 ```json
 {
     "code": 200,
-    "message": "success",
+    "success": true,
+    "msg": "success",
     "data": {
         // 响应数据
     }
