@@ -5,7 +5,7 @@ set -o errexit
 set -o pipefail
 
 # 基本导入
-WORKSPACE="$(dirname $(dirname $(realpath $0)))"
+WORKSPACE="$(dirname $(dirname $(dirname $(realpath $0))))"
 
 . "${WORKSPACE}"/lib/log.sh
 . "${WORKSPACE}"/lib/check.sh
