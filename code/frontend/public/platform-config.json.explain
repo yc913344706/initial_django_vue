@@ -1,0 +1,26 @@
+{
+  "Version": "5.9.0", // 版本号
+  "Title": "PureAdmin", // 项目名称
+  "FixedHeader": true, // 是否固定头部
+  "HiddenSideBar": false, // 是否隐藏侧边栏
+  "MultiTagsCache": false, // 是否缓存多标签
+  "KeepAlive": true, // 是否缓存
+  "Layout": "vertical", // 布局方式
+  "Theme": "light", // 主题
+  "DarkMode": false, // 是否暗黑模式
+  "OverallStyle": "light", // 整体风格
+  "Grey": false, // 是否灰色模式
+  "Weak": false, // 是否弱色模式
+  "HideTabs": false, // 是否隐藏标签栏
+  "HideFooter": false, // 是否隐藏底部
+  "Stretch": false, // 是否拉伸
+  "SidebarStatus": true, // 是否显示侧边栏
+  "EpThemeColor": "#409EFF", // 主题色
+  "ShowLogo": true, // 是否显示logo
+  "ShowModel": "smart", // 显示模式
+  "MenuArrowIconNoTransition": false, // 是否不使用过渡动画
+  "CachingAsyncRoutes": false, // 是否缓存异步路由
+  "TooltipEffect": "light", // 提示框效果
+  "ResponsiveStorageNameSpace": "responsive-", // 响应式存储命名空间
+  "MenuSearchHistory": 6 // 菜单搜索历史记录数量
+}

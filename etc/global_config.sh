@@ -1,0 +1,4 @@
+
+# docker pull push 相关
+PRIVATE_HARBOR_PREFIX=""
+DOCKER_PROXY_DOCKER_IO=""

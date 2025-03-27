@@ -1,0 +1,73 @@
+{
+  "system": {
+    "path": "/system",
+    "meta": {
+      "title": "系统管理",
+      "icon": "ep:setting",
+      "rank": 1
+    },
+    "children": {
+      "group": {
+        "path": "/system/group/index",
+        "name": "UserGroupIndex",
+        "meta": {
+          "title": "用户组管理"
+        }
+      },
+      "group.detail": {
+        "path": "/system/group/detail",
+        "name": "UserGroupDetail",
+        "meta": {
+          "showLink": false,
+          "title": "用户组详情"
+        }
+      },
+      "user": {
+        "path": "/system/user/index",
+        "name": "UserIndex",
+        "meta": {
+          "title": "用户管理"
+        }
+      },
+      "user.detail": {
+        "path": "/system/user/detail",
+        "name": "UserDetail",
+        "meta": {
+          "showLink": false,
+          "title": "用户详情"
+        }
+      },
+      "role": {
+        "path": "/system/role/index",
+        "name": "RoleIndex",
+        "meta": {
+          "title": "角色管理"
+        }
+      },
+      "role.detail": {
+        "path": "/system/role/detail",
+        "name": "RoleDetail",
+        "meta": {
+          "showLink": false,
+          "title": "角色详情"
+        }
+      },
+      "permission": {
+        "path": "/system/permission/index",
+        "name": "PermissionIndex",
+        "meta": {
+          "title": "权限管理"
+        }
+      },
+      "permission.detail": {
+        "path": "/system/permission/detail",
+        "name": "PermissionDetail",
+        "meta": {
+          "showLink": false,
+          "title": "权限详情"
+        }
+      }
+    }
+  }
+}
+
