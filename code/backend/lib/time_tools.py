@@ -2,13 +2,13 @@ import json
 import math
 import time
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 from dateutil.relativedelta import relativedelta
 import pytz
 import http.client
 import urllib
 from lib.log import color_logger
-from django.utils import timezone
+from django.utils import timezone as django_timezone
 from collections import OrderedDict
 
 HAS_REDIS = False
@@ -17,7 +17,7 @@ if HAS_REDIS:
 
 def get_now_time_utc_obj():
     """获取当前时间UTC对象"""
-    return datetime.now(timezone.utc)
+    return datetime.now(dt_timezone.utc)
 
 def utc_obj_to_time_zone_str(utc_time_obj: datetime, format_str: str = '%Y-%m-%d %H:%M:%S', time_zone: str = 'Asia/Shanghai'):
     if utc_time_obj is None:
@@ -37,7 +37,7 @@ def utc_obj_to_timezone_obj(utc_time_obj: datetime, time_zone: str = 'Asia/Shang
     shanghai_tz = pytz.timezone(time_zone)
     
     # 确保时间是带时区的，如果不带时区则假定为 UTC
-    if timezone.is_naive(utc_time_obj):
+    if django_timezone.is_naive(utc_time_obj):
         utc_time_obj = pytz.utc.localize(utc_time_obj)
     
     # 转换到上海时区
@@ -71,7 +71,7 @@ def get_utc_obj_from_str(date_str, date_format_str):
     # 将输入日期字符串解析为本地时间的 naive datetime 对象
     naive_datetime = datetime.strptime(date_str, date_format_str)
     # 为 naive datetime 设置 UTC 时区
-    utc_datetime = naive_datetime.replace(tzinfo=timezone.utc)
+    utc_datetime = naive_datetime.replace(tzinfo=dt_timezone.utc)
     return utc_datetime
 
 
@@ -449,7 +449,7 @@ def current_is_worktime():
     if config_data.get('ORDER', {}).get('ORDER_DEBUG_MODE', False):
         return True
 
-    now = timezone.now().astimezone(pytz.timezone('Asia/Shanghai'))
+    now = django_timezone.now().astimezone(pytz.timezone('Asia/Shanghai'))
     
     # 解析工作时间配置
     workday_start = datetime.strptime(

@@ -18,6 +18,7 @@ PyYAML
 requests
 schema
 six
+cryptography
 sqlparse
 typing_extensions
 tzdata
