@@ -1,37 +1,54 @@
 ## 是什么
 
-一个最小化的管理界面。包括前端+后端。
-
-前端 Vue，后端 Django。
+- 基于 `Python 3.10`、`Django 4.2`、`Vue 3.5` 的微服务RBAC 权限管理系统。
+- 一个最小化的管理界面。包括前端+后端。
 
 ## 如何使用
 
 ### 单独启动（用于调试）
 
+#### 前端
+
 ```bash
-# 启动后端
-./bin/start_debug_backend.sh
+# 启动前端（docker形式，run dev, 推荐）
+./bin/debug_frontend_docker.sh -E dev
 
-# 启动前端
-./bin/start_debug_frontend.sh
-
-# 启动api文档
-./bin/start_backend_api_doc.sh
+# 启动前端（非docker, run dev）
+./bin/debug_frontend.sh
 ```
 
-### 一键启动
-
-> 注意，生产环境使用。个人电脑使用，配置不高的情况下，会卡住。
+#### 后端
 
 ```bash
-./bin/prod/start_all_in_one.sh
+# 启动后端（docker形式，推荐）
+./bin/debug_backend_docker.sh -E dev
+
+# 启动后端（非docker）
+./bin/debug_backend.sh
+```
+
+### 正式环境一键启动
+
+> 注意：
+>
+> - 最好在生产环境使用。
+> - 个人电脑使用，配置不高的情况下，电脑负载会很高。
+
+```bash
+./bin/prod/start_all_in_one.sh -E dev
+```
+
+### 启动api文档
+
+```bash
+./bin/start_backend_api_doc.sh
 ```
 
 ## todos
 
-- [x] 一键start/stop/status脚本
 - [ ] 修改基础信息
 - [ ] 后端镜像build更新
+- [ ] doc: 最佳实践：项目应用步骤
 - [ ] HAS_REDIS 配置设置
 - [ ] 操作审计表
 - [ ] sqlite3 数据导出脚本

@@ -5,7 +5,7 @@ set -o errexit
 set -o pipefail
 
 # 基本导入
-WORKSPACE="$(dirname $(dirname $(dirname $(realpath $0))))"
+WORKSPACE="$(dirname $(dirname $(realpath $0)))"
 
 . "${WORKSPACE}"/lib/log.sh
 . "${WORKSPACE}"/lib/check.sh
@@ -57,6 +57,7 @@ setup_container() {
     log_info "启动构建容器"
     docker run -d --name ${DOCKER_CONTAINER_NAME} \
         -v "${WORKSPACE}/code/${FRONTEND_PROJECT_NAME}:/workspace" \
+        -p ${FRONTEND_SERVER_PORT_IN_HOST}:8080 \
         -w "/workspace" \
         ${FRONTEND_IMAGE} \
         tail -f /dev/null
@@ -76,10 +77,7 @@ install_deps() {
 
 build_frontend() {
     log_info "正在构建前端项目..."
-    docker exec ${DOCKER_CONTAINER_NAME} pnpm run build
-
-    # 检查构建产物
-    check_dir_exists "${FRONTEND_DIR}/dist"
+    docker exec ${DOCKER_CONTAINER_NAME} pnpm dev
 }
 
 main() {
@@ -98,12 +96,7 @@ main() {
 
     # 构建项目
     build_frontend
-
-    # 清理构建容器
-    cleanup_container
-
-    log_info "前端项目构建完成"
-    log_info "构建产物位于: ${FRONTEND_DIR}/dist"
+    log_info "前端项目启动完成"
 }
 
 main $*
