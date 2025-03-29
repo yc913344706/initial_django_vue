@@ -17,7 +17,7 @@
   "SidebarStatus": true, // 是否显示侧边栏
   "EpThemeColor": "#409EFF", // 主题色
   "ShowLogo": true, // 是否显示logo
-  "ShowModel": "smart", // 显示模式
+  "ShowModel": "chrome", // 页签风格：smart, card, chrome
   "MenuArrowIconNoTransition": false, // 是否不使用过渡动画
   "CachingAsyncRoutes": false, // 是否缓存异步路由
   "TooltipEffect": "light", // 提示框效果

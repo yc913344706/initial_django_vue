@@ -2,8 +2,12 @@
 defineOptions({
   name: "Welcome"
 });
+
+import { getConfig } from "@/config";
+
+const TITLE = getConfig("Title");
 </script>
 
 <template>
-  <h1>Pure-Admin-Thin（非国际化版本）</h1>
+  <h1>{{ TITLE }}</h1>
 </template>

@@ -44,16 +44,7 @@
 ./bin/start_backend_api_doc.sh
 ```
 
-## todos
-
-- [ ] 修改基础信息
-- [ ] 后端镜像build更新
-- [ ] doc: 最佳实践：项目应用步骤
-- [ ] HAS_REDIS 配置设置
-- [ ] 操作审计表
-- [ ] sqlite3 数据导出脚本
-
-## 一些说明
+## 一些配置
 
 ### 环境变量配置
 
@@ -62,6 +53,21 @@
 - 前端：
   - `code/frontend/.env.dev`
   - `code/frontend/public/platform-config.json`
+
+### 前端图标
+
+- 图标：`code/frontend/public/favicon.ico`
+- logo：`code/frontend/public/logo.png`
+- user-avatar：`code/frontend/src/assets/user.jpg`
+
+## todos
+
+- [ ] 修改基础信息
+- [ ] 后端镜像build更新
+- [ ] doc: 最佳实践：项目应用步骤
+- [ ] HAS_REDIS 配置设置
+- [ ] 操作审计表
+- [ ] sqlite3 数据导出脚本
 
 ## 更多
 

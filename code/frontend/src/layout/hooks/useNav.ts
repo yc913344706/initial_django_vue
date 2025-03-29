@@ -123,6 +123,7 @@ export function useNav() {
 
   /** 获取`logo` */
   function getLogo() {
+    // 用户头像
     return new URL("/logo.svg", import.meta.url).href;
   }
 
