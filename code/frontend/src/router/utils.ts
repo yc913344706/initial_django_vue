@@ -203,59 +203,66 @@ function handleAsyncRoutes(frontendPermissionData) {
 
 /** 初始化路由（`new Promise` 写法防止在异步请求中造成无限循环）*/
 function initRouter() {
-  if (getConfig()?.CachingAsyncRoutes) {
-    // 开启动态路由缓存本地localStorage
     const key = "async-routes";
-    const asyncRouteList = storageLocal().getItem(key) as any;
-    if (asyncRouteList && asyncRouteList?.length > 0) {
+    if (getConfig()?.CachingAsyncRoutes) {
+    // 开启动态路由缓存本地localStorage
+    console.debug('initRouter: 开启了异步缓存路由功能，开始获取本地localStorage中的动态路由...')
+    const asyncRouteObject = storageLocal().getItem(key) as any;
+    console.debug('asyncRouteObject', asyncRouteObject)
+    if (asyncRouteObject && Object.keys(asyncRouteObject).length > 0) {
+      console.debug('initRouter: 获取本地localStorage中的动态路由成功，且动态路由不为空，开始处理动态路由...')
       return new Promise((resolve, reject) => {
         try {
-          handleAsyncRoutes(asyncRouteList);
+          handleAsyncRoutes(asyncRouteObject);
           resolve(router);
         } catch (error) {
-          console.error('Failed to handle async routes:', error);
-          removeToken();
-          router.push(apiMap.login);
+          console.debug('initRouter: 处理动态路由缓存本地localStorage失败...' + error)
+          // 不再清除token，只记录错误
           reject(error);
         }
       });
     } else {
+      console.debug('initRouter: 获取本地localStorage中的动态路由成功，但动态路由为空，开始获取后端动态路由...')
       return new Promise((resolve, reject) => {
         getAsyncRoutes().then(({ data }) => {
           try {
+            console.debug('initRouter: 获取后端动态路由成功，开始处理后端动态路由...')
             handleAsyncRoutes(cloneDeep(data));
             storageLocal().setItem(key, data);
             resolve(router);
           } catch (error) {
-            console.error('Failed to handle async routes:', error);
+            console.debug('initRouter: 处理后端动态路由失败...' + error)
             removeToken();
             router.push(apiMap.login);
             reject(error);
           }
         }).catch(error => {
-          console.error('Failed to get async routes:', error);
-          removeToken();
-          router.push(apiMap.login);
+          console.debug('initRouter: 获取后端动态路由失败...' + error)
+          // removeToken();
+          // router.push(apiMap.login);
           reject(error);
         });
       });
     }
   } else {
+    console.debug('initRouter: 未开启异步缓存路由功能，开始获取后端动态路由...')
     return new Promise((resolve, reject) => {
       getAsyncRoutes().then(({ data }) => {
         try {
+          console.debug('initRouter: 获取后端动态路由成功，开始处理后端动态路由...')
           handleAsyncRoutes(cloneDeep(data));
+          storageLocal().setItem(key, data);
           resolve(router);
         } catch (error) {
-          console.error('Failed to handle async routes:', error);
+          console.debug('initRouter: 处理后端动态路由失败...' + error)
           removeToken();
           router.push(apiMap.login);
           reject(error);
         }
       }).catch(error => {
-        console.error('Failed to get async routes:', error);
-        removeToken();
-        router.push(apiMap.login);
+        console.debug('initRouter: 获取后端动态路由失败...' + error)
+        // removeToken();
+        // router.push(apiMap.login);
         reject(error);
       });
     });

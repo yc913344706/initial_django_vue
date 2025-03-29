@@ -25,7 +25,6 @@ f2.close()
 
 set_color_logger_level(config_data.get('LOG_LEVEL', "DEBUG"))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
