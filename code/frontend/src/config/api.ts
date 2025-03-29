@@ -31,4 +31,9 @@ export const apiMap = {
     permission: "/perm/permission/",
     userPermissionJson: "/perm/user-permission-json/",
   },
+
+  // 审计管理
+  audit: {
+    auditLogs: "/audit/audit-logs/",
+  },
 }

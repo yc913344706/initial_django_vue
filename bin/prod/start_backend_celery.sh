@@ -67,9 +67,7 @@ main() {
 
   # 运行
   log_info "start docker ${DOCKER_CONTAINER_NAME}..."
-  # docker run -itd --rm \
-  docker run -itd \
-    -p ${DJANGO_SERVER_PORT_IN_HOST}:8000 \
+  docker run -itd --rm \
     --name ${DOCKER_CONTAINER_NAME} \
     -v ${WORKSPACE}/etc/backend/hosts:/etc/hosts \
     -v ${WORKSPACE}/etc/backend/resolv.conf:/etc/resolv.conf \

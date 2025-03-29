@@ -62,8 +62,7 @@ main() {
 
   # 运行
   log_info "start docker uwsgi..."
-  # docker run -itd --rm \
-  docker run -itd \
+  docker run -itd --rm \
     -p ${DJANGO_SERVER_PORT_IN_HOST}:8000 \
     --name ${DOCKER_CONTAINER_NAME} \
     -v ${WORKSPACE}/etc/backend/hosts:/etc/hosts \

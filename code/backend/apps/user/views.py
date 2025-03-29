@@ -156,12 +156,13 @@ def user_group(request):
             user_group = UserGroup.objects.get(uuid=body['uuid'])
             return pub_success_response(format_user_group_data(user_group))
         elif request.method == 'POST':
-            create_keys = ['name', 'code', 'parent', 'level', 'sort']
+            create_keys = ['name', 'code', 'parent', 'level', 'sort', 'description']
             create_dict = {key: value for key, value in body.items() if key in create_keys}
 
             # 创建用户组
-            parent_user_group = UserGroup.objects.get(uuid=create_dict['parent'])
-            create_dict['parent'] = parent_user_group
+            if 'parent' in create_dict:
+                parent_user_group = UserGroup.objects.get(uuid=create_dict['parent'])
+                create_dict['parent'] = parent_user_group
 
             user_group = UserGroup.objects.create(**create_dict)
             return pub_success_response(format_user_group_data(user_group))
@@ -173,7 +174,7 @@ def user_group(request):
             assert user_group_obj, '更新的用户组不存在'
 
             # 更新基本信息
-            update_keys = ['name', 'code', 'parent', 'level', 'sort']
+            update_keys = ['name', 'code', 'parent', 'level', 'sort', 'description']
             update_dict = {key: value for key, value in body.items() if key in update_keys}
 
             # 更新父级

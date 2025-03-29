@@ -1,0 +1,59 @@
+{
+    "backend": {
+      "api": {
+        "/admin/": ["GET", "POST", "PUT", "DELETE"],
+        "/api/v1/perm/permissions/": ["GET", "DELETE"],
+        "/api/v1/perm/permission/": ["GET", "POST", "PUT", "DELETE"],
+        "/api/v1/perm/user-permission-json/": ["GET"],
+        "/api/v1/perm/roles/": ["GET", "DELETE"],
+        "/api/v1/perm/role/": ["GET", "POST", "PUT", "DELETE"],
+        "/api/v1/user/users/": ["GET", "DELETE"],
+        "/api/v1/user/user/": ["GET", "POST", "PUT", "DELETE"],
+        "/api/v1/user/groups/": ["GET", "DELETE"],
+        "/api/v1/user/group/": ["GET", "POST", "PUT", "DELETE"]
+      }
+    },
+    "frontend": {
+      "routes": [
+        "system.user",
+        "system.user.detail",
+        "system.permission",
+        "system.permission.detail",
+        "system.role",
+        "system.role.detail",
+        "system.group",
+        "system.group.detail"
+      ],
+      "resources": [
+        "system.userList:read",
+        "system.userList:create",
+        "system.userList:delete",
+        "system.user:read",
+        "system.user:create",
+        "system.user:update",
+        "system.user:delete",
+        "system.permissionList:read",
+        "system.permissionList:create",
+        "system.permissionList:delete",
+        "system.permission:read",
+        "system.permission:create",
+        "system.permission:update",
+        "system.permission:delete",
+        "system.roleList:read",
+        "system.roleList:create",
+        "system.roleList:delete",
+        "system.role:read",
+        "system.role:create",
+        "system.role:update",
+        "system.role:delete",
+        "system.groupList:read",
+        "system.groupList:create",
+        "system.groupList:delete",
+        "system.group:read",
+        "system.group:create",
+        "system.group:update",
+        "system.group:delete"
+      ]
+    }
+  }
+  

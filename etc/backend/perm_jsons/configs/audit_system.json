@@ -1,0 +1,15 @@
+{
+    "backend": {
+      "api": {
+        "/api/v1/audit/audit-logs/": ["GET"]
+      }
+    },
+    "frontend": {
+      "routes": [
+        "system.audit"
+      ],
+      "resources": [
+        "system.auditList:read"
+      ]
+    }
+  }

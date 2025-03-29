@@ -1,0 +1,19 @@
+{
+    "backend": {
+      "api": {
+        "/api/v1/user/users/": ["GET"],
+        "/api/v1/user/user/": ["GET"],
+        "/api/v1/perm/user-permission-json/": ["GET"]
+      }
+    },
+    "frontend": {
+      "routes": [
+        "system.user",
+        "system.user.detail"
+      ],
+      "resources": [
+        "system.userList:read",
+        "system.user:read"
+      ]
+    }
+  }

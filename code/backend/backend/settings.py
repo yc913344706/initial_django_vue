@@ -87,6 +87,7 @@ INSTALLED_APPS = [
 
     'apps.user',
     'apps.perm',
+    'apps.audit',
 ]
 
 MIDDLEWARE = [

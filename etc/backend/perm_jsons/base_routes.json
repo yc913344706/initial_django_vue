@@ -66,6 +66,13 @@
           "showLink": false,
           "title": "权限详情"
         }
+      },
+      "audit": {
+        "path": "/system/audit/index",
+        "name": "AuditIndex",
+        "meta": {
+          "title": "审计日志"
+        }
       }
     }
   }
