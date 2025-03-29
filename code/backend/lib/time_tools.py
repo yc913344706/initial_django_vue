@@ -10,9 +10,9 @@ import urllib
 from lib.log import color_logger
 from django.utils import timezone as django_timezone
 from collections import OrderedDict
+from backend.settings import config_data
 
-HAS_REDIS = False
-if HAS_REDIS:
+if config_data.get('HAS_REDIS', False):
     from lib.redis_tool import get_redis_value, set_redis_value
 
 def get_now_time_utc_obj():
@@ -145,7 +145,7 @@ def get_year_month_holidays(year, month):
     
     redis_key_name = f"holidays_{year}_{month}"
     redis_key_value = get_redis_value(
-        redis_db_name='BASE_DATA',
+        redis_db_name='DEFAULT',
         redis_key_name=redis_key_name
     )
 
@@ -155,7 +155,7 @@ def get_year_month_holidays(year, month):
     month_holidays = get_realtime_year_month_holidays(year, month)
     if month_holidays:
         set_redis_value(
-            redis_db_name='BASE_DATA',
+            redis_db_name='DEFAULT',
             redis_key_name=redis_key_name,
             redis_key_value=month_holidays,
             set_expire=None

@@ -44,13 +44,18 @@ MYSQL: {
   "DB": "backend"
 }
 
+HAS_REDIS: true
 REDIS: {
-  "HOST": "127.0.0.1",
+  "HOST": "172.17.0.1",
   "PORT": 16379,
   "PASSWORD": "123456",
   "DB": {
     "DEFAULT": 0,
-    # celery use
-    "CELERY_BROKER": 1,
+    # celery
+    "CELERY": 1,
+    # celery broker
+    "CELERY_BROKER": 2,
+    # 认证
+    "AUTH": 3,
   },
 }

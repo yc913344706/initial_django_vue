@@ -3,8 +3,7 @@ import jwt
 from backend.settings import config_data
 from lib.log import color_logger
 
-HAS_REDIS = False
-if HAS_REDIS:
+if config_data.get('HAS_REDIS', False):
     from lib.redis_tool import delete_redis_value, get_redis_value, set_redis_value
 
 class TokenManager:
@@ -37,7 +36,7 @@ class TokenManager:
             config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE')
         )
 
-        if HAS_REDIS:
+        if config_data.get('HAS_REDIS', False):
             # 存储到Redis
             set_redis_value(
                 redis_db_name='AUTH',
@@ -66,7 +65,7 @@ class TokenManager:
             # color_logger.debug(f"verify_token payload: {payload}")
             
             # 检查Redis中是否存在
-            if HAS_REDIS:
+            if config_data.get('HAS_REDIS', False):
                 stored_token = get_redis_value(
                     redis_db_name='AUTH',
                     redis_key_name=f"access_token:{payload['username']}"
@@ -89,7 +88,7 @@ class TokenManager:
             )
             
             # 验证refresh token
-            if HAS_REDIS:
+            if config_data.get('HAS_REDIS', False):
                 stored_refresh = get_redis_value(
                     redis_db_name='AUTH',
                     redis_key_name=f"refresh_token:{payload['username']}"
@@ -103,7 +102,7 @@ class TokenManager:
                 config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE')
             )
             
-            if HAS_REDIS:
+            if config_data.get('HAS_REDIS', False):
                 # 更新Redis
                 set_redis_value(
                     redis_db_name='AUTH',
@@ -120,7 +119,7 @@ class TokenManager:
     def invalidate_tokens(self, username):
         """使指定用户的所有token失效"""
         try:
-            if HAS_REDIS:
+            if config_data.get('HAS_REDIS', False):
                 delete_redis_value(
                     redis_db_name='AUTH',
                     redis_key_name=f"access_token:{username}"

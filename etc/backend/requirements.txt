@@ -30,3 +30,5 @@ PyJWT
 mkdocs
 mkdocs-material
 pymdown-extensions
+django-redis
+celery
