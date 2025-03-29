@@ -78,25 +78,11 @@ def serialize_value(value):
 def get_relation_changes(field, old_instance, new_instance):
     """获取关系字段的变更"""
     if field.many_to_many:
-        # 多对多关系
-        old_value = set(getattr(old_instance, field.name).all()) if old_instance else set()
-        new_value = set(getattr(new_instance, field.name).all())
-        if old_value != new_value:
-            return {
-                'old': [serialize_value(item) for item in old_value],
-                'new': [serialize_value(item) for item in new_value]
-            }
-    elif field.one_to_many:
-        # 一对多关系
-        old_value = set(getattr(old_instance, field.name).all()) if old_instance else set()
-        new_value = set(getattr(new_instance, field.name).all())
-        if old_value != new_value:
-            return {
-                'old': [serialize_value(item) for item in old_value],
-                'new': [serialize_value(item) for item in new_value]
-            }
-    elif field.many_to_one or field.one_to_one:
-        # 外键或一对一关系
+        # 多对多关系由 m2m_changed 信号处理
+        return None
+        
+    if field.one_to_many or field.many_to_one or field.one_to_one:
+        # 处理其他关系字段
         old_value = getattr(old_instance, field.name) if old_instance else None
         new_value = getattr(new_instance, field.name)
         if old_value != new_value:
@@ -177,7 +163,7 @@ def model_pre_save(sender, instance, **kwargs):
 
 @receiver(post_save)
 def model_post_save(sender, instance, created, **kwargs):
-    """保存后记录变更"""
+    """处理模型保存后的审计日志记录"""
     if not issubclass(sender, Model) or sender == AuditLog:
         return
 
@@ -358,11 +344,11 @@ def model_m2m_changed(sender, instance, action, pk_set, **kwargs):
                     log.delete()
                 field_changes['audit_logs'] = [field_changes['audit_logs'][-1]]  # 只保留最后一个记录
             
-            if final_value == original_value:
-                color_logger.debug(f"m2m_changed: 字段 {field_name} 没有实际变化，删除审计日志")
-                for log in field_changes['audit_logs']:
-                    log.delete()
-                field_changes['audit_logs'] = []
+                if final_value == original_value:
+                    color_logger.debug(f"m2m_changed: 字段 {field_name} 没有实际变化，删除审计日志")
+                    for log in field_changes['audit_logs']:
+                        log.delete()
+                    field_changes['audit_logs'] = []
             
             # 清理线程本地存储
             try:
