@@ -58,9 +58,11 @@
 ### 环境变量配置
 
 - 后端：配置文件：`etc/config_dir/dev.yaml`
+  - 注：后端日志级别：`LOG_LEVEL`
 - docker环境变量：`etc/docker_env_files/dev.env`
 - 前端：
-  - `code/frontend/.env.dev`
+  - `code/frontend/.env.development`
+    - 注：前端日志级别：`VITE_LOG_LEVEL`
   - `code/frontend/public/platform-config.json`
 
 ### 前端图标
