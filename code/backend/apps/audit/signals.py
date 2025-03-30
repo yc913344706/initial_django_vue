@@ -14,6 +14,7 @@ import uuid
 from django.db import transaction
 from threading import local
 
+# https://docs.djangoproject.com/zh-hans/5.1/ref/signals/
 # 创建一个线程本地存储来存储临时变更
 _thread_locals = local()
 
