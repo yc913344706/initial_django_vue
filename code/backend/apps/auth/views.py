@@ -38,7 +38,7 @@ def login(request):
         token_manager = TokenManager()
         access_token, refresh_token = token_manager.generate_tokens(username)
 
-        expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE'))
+        expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE'))
         expires_str = utc_obj_to_time_zone_str(expires)
 
 

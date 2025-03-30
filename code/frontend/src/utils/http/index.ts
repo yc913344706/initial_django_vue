@@ -63,14 +63,18 @@ class PureHttp {
   private httpInterceptorsRequest(): void {
     PureHttp.axiosInstance.interceptors.request.use(
       async (config: PureHttpRequestConfig): Promise<any> => {
+        logger.debug('进入请求拦截器...')
+        logger.debug('config: ', config)
         // 开启进度条动画
         NProgress.start();
         // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
         if (typeof config.beforeRequestCallback === "function") {
+          logger.debug('执行请求回调...')
           config.beforeRequestCallback(config);
           return config;
         }
         if (PureHttp.initConfig.beforeRequestCallback) {
+          logger.debug('执行初始化请求回调...')
           PureHttp.initConfig.beforeRequestCallback(config);
           return config;
         }
@@ -79,39 +83,52 @@ class PureHttp {
         return whiteList.some(url => config.url.endsWith(url))
           ? config
           : new Promise(resolve => {
+              logger.debug('获取token...')
               const data = getToken();
               if (data) {
+                logger.debug('token存在...')
                 const now = new Date().getTime();
                 const expired = parseInt(data.expires) - now <= 0;
                 if (expired) {
+                  logger.debug('token过期...')
                   if (!PureHttp.isRefreshing) {
+                    logger.debug('刷新token...')
                     PureHttp.isRefreshing = true;
                     // token过期刷新
                     useUserStoreHook()
                       .handRefreshToken({ refreshToken: data.refreshToken })
                       .then(res => {
+                        logger.debug('刷新token成功...')
                         const token = res.data.accessToken;
                         config.headers["Authorization"] = formatToken(token);
                         PureHttp.requests.forEach(cb => cb(token));
                         PureHttp.requests = [];
                       })
+                      .catch(error => {
+                        logger.debug('刷新token失败...')
+                        return Promise.reject(error);
+                      })
                       .finally(() => {
+                        logger.debug('刷新token完成...')
                         PureHttp.isRefreshing = false;
                       });
                   }
                   resolve(PureHttp.retryOriginalRequest(config));
                 } else {
+                  logger.debug('token未过期...')
                   config.headers["Authorization"] = formatToken(
                     data.accessToken
                   );
                   resolve(config);
                 }
               } else {
+                logger.debug('token不存在...')
                 resolve(config);
               }
             });
       },
       error => {
+        logger.debug('请求拦截器错误...')
         return Promise.reject(error);
       }
     );
