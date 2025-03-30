@@ -94,7 +94,7 @@ class TokenManager:
                     redis_key_name=f"refresh_token:{payload['username']}"
                 )
                 if not stored_refresh or stored_refresh != refresh_token:
-                    return None
+                    return None, None
                 
             # 生成新的access token
             access_token = self._generate_token(
@@ -111,10 +111,10 @@ class TokenManager:
                     set_expire=config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE')
                 )
             
-            return access_token
+            return access_token, payload['username']
         except Exception as e:
             color_logger.error(f"refresh_access_token error: {e}")
-            return None
+            return None, None
 
     def invalidate_tokens(self, username):
         """使指定用户的所有token失效"""

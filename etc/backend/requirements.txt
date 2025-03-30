@@ -32,3 +32,4 @@ mkdocs-material
 pymdown-extensions
 django-redis
 celery
+pydantic

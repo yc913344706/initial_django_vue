@@ -76,12 +76,26 @@ def refresh_token(request):
         assert refresh_token, f"refreshToken不能为空"
 
         token_manager = TokenManager()
-        new_access_token = token_manager.refresh_access_token(refresh_token)
+        new_access_token, user_name = token_manager.refresh_access_token(refresh_token)
         assert new_access_token, f"刷新token失败"
 
         access_expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE'))
         refresh_expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE'))
+        
+        user_obj = User.objects.filter(username=user_name).first()
+        assert user_obj, f"用户名({user_name})对应用户不存在"
+
+        user_permission_json = get_user_perm_json_all(user_obj.uuid)
+        # color_logger.debug(f"获取用户权限JSON: {user_permission_json}")
+
         res = {
+            # "avatar": user_obj.avatar,
+            "username": user_obj.username,
+            "nickname": user_obj.nickname,
+
+            # "roles": ["common"],
+            "permissions": user_permission_json.get('frontend', {}).get('resources', []),
+
             "accessToken": new_access_token,
             "refreshToken": refresh_token,
             "accessTokenExpires": access_expires,

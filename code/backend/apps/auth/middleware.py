@@ -58,6 +58,9 @@ class AuthMiddleware:
                     return pub_error_response(99994, msg=f'没有接口权限: {current_path_prefix}: {current_method}')
                 
                 color_logger.debug(f'中间件校验权限成功：{current_path}, {current_method}')
+
+                # 将用户名和用户类型设置到request中
+                request.user_name = user_name
                 
                 return None
             except Exception as e:
