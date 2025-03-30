@@ -46,7 +46,7 @@ MYSQL: {
   "DB": "backend"
 }
 
-HAS_REDIS: true
+HAS_REDIS: false
 REDIS: {
   "HOST": "172.17.0.1",
   "PORT": 16379,
