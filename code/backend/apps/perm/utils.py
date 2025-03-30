@@ -61,6 +61,10 @@ def get_user_perm_json_all(user_uuid, is_user_name=False):
         # color_logger.debug(f"获取用户直接拥有的权限JSON: {user.permissions.all()}")
         user_permission_jsons = [p.permission_json for p in user.permissions.all()]
         
+        everyone_base_perm = Permission.objects.filter(code='everyone_base_perm').first()
+        if everyone_base_perm:
+            user_permission_jsons.append(everyone_base_perm.permission_json)
+
         # 2. 获取用户角色包含的权限JSON
         # color_logger.debug(f"获取用户角色包含的权限JSON: {user.roles.all()}")
         role_permission_jsons = []

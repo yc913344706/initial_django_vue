@@ -23,6 +23,8 @@ import { type menuType, routerArrays } from "@/layout/types";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import { usePermissionStoreHook } from "@/store/modules/permission";
 import { useUserStoreHook } from "@/store/modules/user";
+import logger from '@/utils/logger'
+
 const IFrame = () => import("@/layout/frame.vue");
 // https://cn.vitejs.dev/guide/features.html#glob-import
 const modulesRoutes = import.meta.glob("/src/views/**/*.{vue,tsx}");
@@ -154,7 +156,7 @@ function addPathMatch() {
 
 /** 处理动态路由（后端返回的路由） */
 function handleAsyncRoutes(frontendPermissionData) {
-  console.log('handleAsyncRoutes...')
+  logger.info('handleAsyncRoutes...')
 
   const routeList = frontendPermissionData.routes
   const resourceList = frontendPermissionData.resources
@@ -206,38 +208,38 @@ function initRouter() {
     const key = "async-routes";
     if (getConfig()?.CachingAsyncRoutes) {
     // 开启动态路由缓存本地localStorage
-    console.debug('initRouter: 开启了异步缓存路由功能，开始获取本地localStorage中的动态路由...')
+    logger.debug('initRouter: 开启了异步缓存路由功能，开始获取本地localStorage中的动态路由...')
     const asyncRouteObject = storageLocal().getItem(key) as any;
-    console.debug('asyncRouteObject', asyncRouteObject)
+    logger.debug('asyncRouteObject', asyncRouteObject)
     if (asyncRouteObject && Object.keys(asyncRouteObject).length > 0) {
-      console.debug('initRouter: 获取本地localStorage中的动态路由成功，且动态路由不为空，开始处理动态路由...')
+      logger.debug('initRouter: 获取本地localStorage中的动态路由成功，且动态路由不为空，开始处理动态路由...')
       return new Promise((resolve, reject) => {
         try {
           handleAsyncRoutes(asyncRouteObject);
           resolve(router);
         } catch (error) {
-          console.debug('initRouter: 处理动态路由缓存本地localStorage失败...' + error)
+          logger.debug('initRouter: 处理动态路由缓存本地localStorage失败...' + error)
           // 不再清除token，只记录错误
           reject(error);
         }
       });
     } else {
-      console.debug('initRouter: 获取本地localStorage中的动态路由成功，但动态路由为空，开始获取后端动态路由...')
+      logger.debug('initRouter: 获取本地localStorage中的动态路由成功，但动态路由为空，开始获取后端动态路由...')
       return new Promise((resolve, reject) => {
         getAsyncRoutes().then(({ data }) => {
           try {
-            console.debug('initRouter: 获取后端动态路由成功，开始处理后端动态路由...')
+            logger.debug('initRouter: 获取后端动态路由成功，开始处理后端动态路由...')
             handleAsyncRoutes(cloneDeep(data));
             storageLocal().setItem(key, data);
             resolve(router);
           } catch (error) {
-            console.debug('initRouter: 处理后端动态路由失败...' + error)
+            logger.debug('initRouter: 处理后端动态路由失败...' + error)
             removeToken();
             router.push(apiMap.login);
             reject(error);
           }
         }).catch(error => {
-          console.debug('initRouter: 获取后端动态路由失败...' + error)
+          logger.debug('initRouter: 获取后端动态路由失败...' + error)
           // removeToken();
           // router.push(apiMap.login);
           reject(error);
@@ -245,22 +247,21 @@ function initRouter() {
       });
     }
   } else {
-    console.debug('initRouter: 未开启异步缓存路由功能，开始获取后端动态路由...')
+    logger.debug('initRouter: 未开启异步缓存路由功能，开始获取后端动态路由...')
     return new Promise((resolve, reject) => {
       getAsyncRoutes().then(({ data }) => {
         try {
-          console.debug('initRouter: 获取后端动态路由成功，开始处理后端动态路由...')
+          logger.debug('initRouter: 获取后端动态路由成功，开始处理后端动态路由...')
           handleAsyncRoutes(cloneDeep(data));
-          storageLocal().setItem(key, data);
           resolve(router);
         } catch (error) {
-          console.debug('initRouter: 处理后端动态路由失败...' + error)
+          logger.debug('initRouter: 处理后端动态路由失败...' + error)
           removeToken();
           router.push(apiMap.login);
           reject(error);
         }
       }).catch(error => {
-        console.debug('initRouter: 获取后端动态路由失败...' + error)
+        logger.debug('initRouter: 获取后端动态路由失败...' + error)
         // removeToken();
         // router.push(apiMap.login);
         reject(error);
@@ -436,6 +437,12 @@ function getTopMenu(tag = false): menuType {
   );
   tag && useMultiTagsStoreHook().handleTags("push", topMenu);
   return topMenu;
+}
+
+/** 清除路由缓存 */
+export function clearRouteCache() {
+  const key = "async-routes";
+  storageLocal().removeItem(key);
 }
 
 export {

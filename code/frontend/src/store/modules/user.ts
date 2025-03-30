@@ -16,6 +16,7 @@ import {
 import { useMultiTagsStoreHook } from "./multiTags";
 import { type DataInfo, setToken, removeToken, userKey } from "@/utils/auth";
 import { apiMap } from "@/config/api";
+import { clearRouteCache } from "@/router/utils";
 
 export const useUserStore = defineStore({
   id: "pure-user",
@@ -64,7 +65,11 @@ export const useUserStore = defineStore({
       return new Promise<UserResult>((resolve, reject) => {
         getLogin(data)
           .then(data => {
-            if (data?.success) setToken(data.data);
+            if (data?.success) {
+              // 清除旧的路由缓存
+              clearRouteCache();
+              setToken(data.data);
+            }
             resolve(data);
           })
           .catch(error => {
@@ -77,6 +82,8 @@ export const useUserStore = defineStore({
       this.username = "";
       this.permissions = [];
       removeToken();
+      // 清除路由缓存
+      clearRouteCache();
       useMultiTagsStoreHook().handleTags("equal", [...routerArrays]);
       resetRouter();
       router.push(apiMap.login);

@@ -17,6 +17,7 @@ import dayIcon from "@/assets/svg/day.svg?component";
 import darkIcon from "@/assets/svg/dark.svg?component";
 import Lock from "@iconify-icons/ri/lock-fill";
 import User from "@iconify-icons/ri/user-3-fill";
+import logger from "@/utils/logger";
 
 defineOptions({
   name: "Login"
@@ -56,7 +57,7 @@ const onLogin = async (formEl: FormInstance | undefined) => {
             message("登录失败", { type: "error" });
           }
         }).catch(error => {
-          console.log('error: ', error)
+          logger.error('error: ', error)
           let _error_msg = "登录失败."
           if (error.msg) {
             _error_msg += error.msg

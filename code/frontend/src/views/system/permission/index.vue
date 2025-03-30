@@ -100,6 +100,7 @@ import { http } from "@/utils/http";
 import { apiMap } from "@/config/api";
 import { hasPerms } from "@/utils/auth";
 import router from '@/router'
+import logger from '@/utils/logger'
 
 const permissionList = ref([]);
 const dialogVisible = ref(false);
@@ -240,6 +241,7 @@ const handleSubmit = async () => {
         dialogVisible.value = false;
         getPermissionList();
       } catch (error) {
+        logger.error(error)
         ElMessage.error(dialogType.value === "add" ? "新增失败" : "编辑失败");
       }
     }

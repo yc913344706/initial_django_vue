@@ -124,11 +124,8 @@ export const formatToken = (token: string): string => {
 /** 是否有按钮级别的权限（根据登录接口返回的`permissions`字段进行判断）*/
 export const hasPerms = (value: string | Array<string>): boolean => {
   if (!value) return false;
-  // const allPerms = "*:*:*";
   const { permissions } = useUserStoreHook();
-  // console.log('user allow permissions: ', permissions)
   if (!permissions) return false;
-  // if (permissions.length === 1 && permissions[0] === allPerms) return true;
   const isAuths = isString(value)
     ? permissions.includes(value)
     : isIncludeAllChildren(value, permissions);

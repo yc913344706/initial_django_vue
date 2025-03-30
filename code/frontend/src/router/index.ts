@@ -31,6 +31,7 @@ import {
   multipleTabsKey
 } from "@/utils/auth";
 import { apiMap } from "@/config/api";
+import logger from '@/utils/logger'
 
 /** 自动导入全部静态路由，无需再手动引入！匹配 src/router/modules 目录（任何嵌套级别）中具有 .ts 扩展名的所有文件，除了 remaining.ts 文件
  * 如何匹配所有文件请看：https://github.com/mrmlnc/fast-glob#basic-syntax
@@ -182,6 +183,12 @@ router.beforeEach((to: ToRouteType, _from, next) => {
           }
           // 确保动态路由完全加入路由列表并且不影响静态路由（注意：动态路由刷新时router.beforeEach可能会触发两次，第一次触发动态路由还未完全添加，第二次动态路由才完全添加到路由列表，如果需要在router.beforeEach做一些判断可以在to.name存在的条件下去判断，这样就只会触发一次）
           if (isAllEmpty(to.name)) router.push(to.fullPath);
+        }).catch(error => {
+          logger.error('initRouter error: ', error);
+          if (error.code === 99998) {
+            removeToken();
+            next({ path: apiMap.login });
+          }
         });
       }
       toCorrectRoute();

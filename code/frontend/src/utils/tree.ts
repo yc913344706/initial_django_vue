@@ -1,3 +1,5 @@
+import logger from '@/utils/logger'
+
 /**
  * @description 提取菜单树中的每一项uniqueId
  * @param tree 树
@@ -5,7 +7,7 @@
  */
 export const extractPathList = (tree: any[]): any => {
   if (!Array.isArray(tree)) {
-    console.warn("tree must be an array");
+    logger.warn("tree must be an array");
     return [];
   }
   if (!tree || tree.length === 0) return [];
@@ -28,7 +30,7 @@ export const extractPathList = (tree: any[]): any => {
  */
 export const deleteChildren = (tree: any[], pathList = []): any => {
   if (!Array.isArray(tree)) {
-    console.warn("menuTree must be an array");
+    logger.warn("menuTree must be an array");
     return [];
   }
   if (!tree || tree.length === 0) return [];
@@ -55,7 +57,7 @@ export const deleteChildren = (tree: any[], pathList = []): any => {
  */
 export const buildHierarchyTree = (tree: any[], pathList = []): any => {
   if (!Array.isArray(tree)) {
-    console.warn("tree must be an array");
+    logger.warn("tree must be an array");
     return [];
   }
   if (!tree || tree.length === 0) return [];
@@ -82,7 +84,7 @@ export const getNodeByUniqueId = (
   uniqueId: number | string
 ): any => {
   if (!Array.isArray(tree)) {
-    console.warn("menuTree must be an array");
+    logger.warn("menuTree must be an array");
     return [];
   }
   if (!tree || tree.length === 0) return [];
@@ -108,7 +110,7 @@ export const appendFieldByUniqueId = (
   fields: object
 ): any => {
   if (!Array.isArray(tree)) {
-    console.warn("menuTree must be an array");
+    logger.warn("menuTree must be an array");
     return [];
   }
   if (!tree || tree.length === 0) return [];
@@ -141,7 +143,7 @@ export const handleTree = (
   children?: string
 ): any => {
   if (!Array.isArray(data)) {
-    console.warn("data must be an array");
+    logger.warn("data must be an array");
     return [];
   }
   const config = {

@@ -126,6 +126,7 @@ import { Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
+import logger from '@/utils/logger'
 
 const loading = ref(false)
 const auditList = ref([])
@@ -201,7 +202,7 @@ const fetchAuditLogs = async () => {
       total.value = res.data.total
     }
   } catch (error) {
-    console.error('获取审计日志失败:', error)
+    logger.error('获取审计日志失败:', error)
     ElMessage.error('获取审计日志失败')
   } finally {
     loading.value = false

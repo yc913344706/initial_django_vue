@@ -14,6 +14,7 @@ import NProgress from "../progress";
 import { getToken, formatToken } from "@/utils/auth";
 import { useUserStoreHook } from "@/store/modules/user";
 import { apiMap } from "@/config/api";
+import logger from "@/utils/logger";
 
 // 相关配置请参考：www.axios-js.com/zh-cn/docs/#axios-request-config-1
 const defaultConfig: AxiosRequestConfig = {
@@ -118,12 +119,12 @@ class PureHttp {
 
   /** 响应拦截 */
   private httpInterceptorsResponse(): void {
-    // console.log('enter httpInterceptorsResponse...')
+    // logger.debug('enter httpInterceptorsResponse...')
     const instance = PureHttp.axiosInstance;
     instance.interceptors.response.use(
       (response: PureHttpResponse) => {
-        // console.log('enter PureHttpResponse...')
-        // console.log('response: ', response)
+        // logger.debug('enter PureHttpResponse...')
+        // logger.debug('response: ', response)
 
         const responseSuccess = response.data.success
         if (!responseSuccess) {
