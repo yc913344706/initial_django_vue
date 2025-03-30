@@ -229,12 +229,18 @@ function initRouter() {
         getAsyncRoutes().then(({ data }) => {
           try {
             logger.debug('initRouter: 获取后端动态路由成功，开始处理后端动态路由...')
-            handleAsyncRoutes(cloneDeep(data));
-            storageLocal().setItem(key, data);
-            resolve(router);
+            if (data.routes) {
+              handleAsyncRoutes(cloneDeep(data));
+              storageLocal().setItem(key, data);
+              resolve(router);
+            } else {
+              logger.debug('initRouter: 获取后端动态路由成功，但动态路由为空，说明没有权限...')
+              // router.push(apiMap.login);
+              reject(new Error('获取到的后端动态路由为空'));
+            }
           } catch (error) {
             logger.debug('initRouter: 处理后端动态路由失败...' + error)
-            removeToken();
+            // removeToken();
             router.push(apiMap.login);
             reject(error);
           }
@@ -252,11 +258,17 @@ function initRouter() {
       getAsyncRoutes().then(({ data }) => {
         try {
           logger.debug('initRouter: 获取后端动态路由成功，开始处理后端动态路由...')
-          handleAsyncRoutes(cloneDeep(data));
-          resolve(router);
+          if (data.routes) {
+            handleAsyncRoutes(cloneDeep(data));
+            resolve(router);
+          } else {
+            logger.debug('initRouter: 获取后端动态路由成功，但动态路由为空，说明没有权限...')
+            // router.push(apiMap.login);
+            reject(new Error('获取到的后端动态路由为空'));
+          }
         } catch (error) {
           logger.debug('initRouter: 处理后端动态路由失败...' + error)
-          removeToken();
+          // removeToken();
           router.push(apiMap.login);
           reject(error);
         }
@@ -432,10 +444,19 @@ function handleTopMenu(route) {
 
 /** 获取所有菜单中的第一个菜单（顶级菜单）*/
 function getTopMenu(tag = false): menuType {
+  const wholeMenus = usePermissionStoreHook().wholeMenus;
+  if (!wholeMenus || wholeMenus.length === 0) {
+    return null;
+  }
+  
   const topMenu = handleTopMenu(
-    usePermissionStoreHook().wholeMenus[0]?.children[0]
+    wholeMenus[0]?.children?.[0]
   );
-  tag && useMultiTagsStoreHook().handleTags("push", topMenu);
+  
+  if (tag && topMenu) {
+    useMultiTagsStoreHook().handleTags("push", topMenu);
+  }
+  
   return topMenu;
 }
 

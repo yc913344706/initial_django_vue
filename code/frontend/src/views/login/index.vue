@@ -12,12 +12,15 @@ import { bg, avatar, illustration } from "./utils/static";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { ref, reactive, toRaw, onMounted, onBeforeUnmount } from "vue";
 import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange";
+import { DataInfo } from "@/utils/auth";
 
 import dayIcon from "@/assets/svg/day.svg?component";
 import darkIcon from "@/assets/svg/dark.svg?component";
 import Lock from "@iconify-icons/ri/lock-fill";
 import User from "@iconify-icons/ri/user-3-fill";
 import logger from "@/utils/logger";
+import Cookies from "js-cookie";
+import { setToken } from "@/utils/auth";
 
 defineOptions({
   name: "Login"
@@ -78,7 +81,51 @@ function onkeypress({ code }: KeyboardEvent) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // 判断是否已经登录
+  logger.debug('判断是否已经登录')
+  const accessToken = Cookies.get(import.meta.env.VITE_ACCESS_TOKEN_NAME);
+  const refreshToken = Cookies.get(import.meta.env.VITE_REFRESH_TOKEN_NAME);
+  // 如果有access_token, 跳转到上一个页面，如果没有上一个页面，则跳转到首页
+
+  let _already_login = false;
+  if (accessToken) {
+    logger.debug('有access_token, 跳转到上一个页面')
+    _already_login = true;
+  } else if (refreshToken) {
+    logger.debug('没有access_token, 有refresh_token, 调用刷新token接口')
+    // 如果有 refresh_token，则调用刷新token接口
+    const res = await useUserStoreHook().handRefreshToken({ 
+      refreshToken: refreshToken 
+    });
+    if (res.success) {
+      logger.debug('刷新token成功')
+      setToken(res.data);
+      _already_login = true;
+    } else {
+      logger.debug('刷新token失败，需要保持登录页面' + res)
+    }
+  } else {
+    logger.debug('没有access_token, 没有refresh_token, 需要保持登录页面')
+  }
+
+  if (_already_login) {
+    logger.debug('已登录，跳转到上一个页面')
+
+    const topMenu = getTopMenu(true);
+    if (topMenu?.path) {
+      router.replace(topMenu.path);
+      return;
+    } else {
+      // 如果没有可用的菜单，跳转到首页
+      router.replace("/");
+      return;
+    }
+  }
+  logger.debug('最终，保持登录页面...')
+
+  // 如果有 refresh_token，则调用刷新token接口
+  
   window.document.addEventListener("keypress", onkeypress);
 });
 

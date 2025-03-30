@@ -38,8 +38,8 @@ def login(request):
         token_manager = TokenManager()
         access_token, refresh_token = token_manager.generate_tokens(username)
 
-        expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE'))
-        expires_str = utc_obj_to_time_zone_str(expires)
+        access_expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE'))
+        refresh_expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE'))
 
 
         user_permission_json = get_user_perm_json_all(user_obj.uuid)
@@ -55,7 +55,8 @@ def login(request):
 
             "accessToken": access_token,
             "refreshToken": refresh_token,
-            "expires": expires,
+            "accessTokenExpires": access_expires,
+            "refreshTokenExpires": refresh_expires,
         }
 
         
@@ -78,12 +79,13 @@ def refresh_token(request):
         new_access_token = token_manager.refresh_access_token(refresh_token)
         assert new_access_token, f"刷新token失败"
 
-        expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE'))
-        expires_str = utc_obj_to_time_zone_str(expires)
+        access_expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE'))
+        refresh_expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE'))
         res = {
             "accessToken": new_access_token,
             "refreshToken": refresh_token,
-            "expires": expires_str,
+            "accessTokenExpires": access_expires,
+            "refreshTokenExpires": refresh_expires,
         }
         
         return pub_success_response(data=res)

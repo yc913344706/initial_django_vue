@@ -25,6 +25,9 @@ AES_KEY: "dTDR80ClnxN93QmX"
 AUTH: {
   "ACCESS_TOKEN_EXPIRE": 10,  # 2小时
   "REFRESH_TOKEN_EXPIRE": 604800,  # 7天
+  "ACCESS_TOKEN_NAME": "dev_idv_accessToken",  # accessToken name
+  "REFRESH_TOKEN_NAME": "dev_idv_refreshToken",  # refreshToken name
+  
   "JWT_SECRET": "JbzhCpYqofMDBb9A8AWte7jXiwp1FxI0TGWoq8FSI6DMrdPqtt",
   "JWT_ALGORITHM": "HS256",
 }

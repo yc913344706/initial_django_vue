@@ -11,7 +11,8 @@ import type {
 } from "./types.d";
 import { stringify } from "qs";
 import NProgress from "../progress";
-import { getToken, formatToken, setToken } from "@/utils/auth";
+import { formatToken, setToken } from "@/utils/auth";
+import Cookies from "js-cookie";
 import { useUserStoreHook } from "@/store/modules/user";
 import { apiMap } from "@/config/api";
 import logger from "@/utils/logger";
@@ -99,59 +100,44 @@ class PureHttp {
 
         return new Promise(resolve => {
           logger.debug('获取token...')
-          const data = getToken();
-          if (data) {
-            logger.debug('token信息:', {
-              accessToken: data.accessToken ? '存在' : '不存在',
-              refreshToken: data.refreshToken ? '存在' : '不存在',
-              expires: data.expires
-            })
-            
-            const now = new Date().getTime();
-            const expired = parseInt(data.expires) - now <= 0;
-            if (expired) {
-              logger.debug('token已过期，开始刷新流程...')
-              if (!PureHttp.isRefreshing) {
-                logger.debug('开始刷新token...')
-                PureHttp.isRefreshing = true;
-                // token过期刷新
-                useUserStoreHook()
-                  .handRefreshToken({ refreshToken: data.refreshToken })
-                  .then(res => {
-                    logger.debug('刷新token成功:', {
-                      success: res.success,
-                      code: res.code
-                    })
-                    const token = res.data.accessToken;
-                    config.headers["Authorization"] = formatToken(token);
-                    logger.debug('更新请求头中的token')
-                    PureHttp.requests.forEach(cb => {
-                      logger.debug('执行队列中的请求回调')
-                      cb(token)
-                    });
-                    PureHttp.requests = [];
-                  })
-                  .catch(error => {
-                    logger.error('刷新token失败:', error)
-                  })
-                  .finally(() => {
-                    logger.debug('刷新token流程结束')
-                    PureHttp.isRefreshing = false;
-                  });
-              } else {
-                logger.debug('token正在刷新中，将请求加入队列')
-              }
-              resolve(PureHttp.retryOriginalRequest(config));
-            } else {
-              logger.debug('token未过期，直接使用')
-              config.headers["Authorization"] = formatToken(
-                data.accessToken
-              );
-              resolve(config);
-            }
-          } else {
-            logger.debug('未找到token')
+          const accessToken = Cookies.get(import.meta.env.VITE_ACCESS_TOKEN_NAME);
+          const refreshToken = Cookies.get(import.meta.env.VITE_REFRESH_TOKEN_NAME);
+          if (accessToken) {
+            logger.debug('token未过期，直接使用')
+            config.headers["Authorization"] = formatToken(
+              accessToken
+            );
             resolve(config);
+          } else {
+            logger.debug('token已过期，开始刷新流程...')
+            if (!PureHttp.isRefreshing) {
+              logger.debug('开始刷新token...')
+              PureHttp.isRefreshing = true;
+              // token过期刷新
+              useUserStoreHook()
+                .handRefreshToken({ refreshToken: refreshToken })
+                .then(res => {
+                  logger.debug('刷新token成功')
+                  const token = res.data.accessToken;
+                  config.headers["Authorization"] = formatToken(token);
+                  logger.debug('更新请求头中的token')
+                  PureHttp.requests.forEach(cb => {
+                    logger.debug('执行队列中的请求回调')
+                    cb(token)
+                  });
+                  PureHttp.requests = [];
+                })
+                .catch(error => {
+                  logger.error('刷新token失败:', error)
+                })
+                .finally(() => {
+                  logger.debug('刷新token流程结束')
+                  PureHttp.isRefreshing = false;
+                });
+            } else {
+              logger.debug('token正在刷新中，将请求加入队列')
+            }
+            resolve(PureHttp.retryOriginalRequest(config));
           }
         });
       },
@@ -195,9 +181,9 @@ class PureHttp {
             }
 
             PureHttp.isRefreshing = true;
-            const token = getToken();
+            const refreshToken = Cookies.get(import.meta.env.VITE_REFRESH_TOKEN_NAME);
             
-            if (!token?.refreshToken) {
+            if (!refreshToken) {
               logger.error('未找到refreshToken，无法刷新')
               PureHttp.isRefreshing = false;
               useUserStoreHook().logOut();
@@ -206,7 +192,7 @@ class PureHttp {
 
             logger.debug('开始刷新token...')
             return useUserStoreHook()
-              .handRefreshToken({ refreshToken: token.refreshToken })
+              .handRefreshToken({ refreshToken: refreshToken })
               .then(res => {
                 logger.debug('刷新token响应:', {
                   success: res.success
@@ -241,11 +227,11 @@ class PureHttp {
                 // 如果队列中还有请求，执行它们
                 if (PureHttp.requests.length > 0) {
                   logger.debug('队列中还有请求，开始执行')
-                  const token = getToken();
-                  if (token?.accessToken) {
+                  const accessToken = Cookies.get(import.meta.env.VITE_ACCESS_TOKEN_NAME);
+                  if (accessToken) {
                     PureHttp.requests.forEach(cb => {
                       logger.debug('执行队列中的请求回调')
-                      cb(token.accessToken)
+                      cb(accessToken)
                     });
                     PureHttp.requests = [];
                   }

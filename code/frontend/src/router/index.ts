@@ -34,7 +34,6 @@ import {
 import { apiMap } from "@/config/api";
 import logger from '@/utils/logger'
 import { useUserStoreHook } from "@/store/modules/user";
-import { formatToken, getToken } from "@/utils/auth";
 
 /** 自动导入全部静态路由，无需再手动引入！匹配 src/router/modules 目录（任何嵌套级别）中具有 .ts 扩展名的所有文件，除了 remaining.ts 文件
  * 如何匹配所有文件请看：https://github.com/mrmlnc/fast-glob#basic-syntax
@@ -110,9 +109,17 @@ const whiteList = [apiMap.login];
 
 const { VITE_HIDE_HOME } = import.meta.env;
 
+async function refres_access_token() {
+  
+  
+  return res;
+}
+
 router.beforeEach(async (to: ToRouteType, _from, next) => {
-  // 处理页面缓存
+  logger.debug('进入路由拦截器...')
+    // 处理页面缓存
   if (to.meta?.keepAlive) {
+    logger.debug('处理页面缓存...')
     handleAliveRoute(to, "add");
     if (_from.name === undefined || _from.name === "Redirect") {
       handleAliveRoute(to);
@@ -122,6 +129,7 @@ router.beforeEach(async (to: ToRouteType, _from, next) => {
   // 设置页面标题
   const externalLink = isUrl(to?.name as string);
   if (!externalLink) {
+    logger.debug('处理外部链接...')
     to.matched.some(item => {
       if (!item.meta.title) return "";
       const Title = getConfig().Title;
@@ -131,14 +139,16 @@ router.beforeEach(async (to: ToRouteType, _from, next) => {
   }
 
   // 开始进度条
+  logger.debug('开始进度条...')
   NProgress.start();
 
   // 获取用户信息
   const userInfo = storageLocal().getItem<DataInfo<number>>(userKey);
-  const token = getToken();
+  const accessToken = Cookies.get(import.meta.env.VITE_ACCESS_TOKEN_NAME);
 
   // 处理外部链接
   if (externalLink) {
+    logger.debug('处理外部链接，跳过token检查')
     openLink(to?.name as string);
     NProgress.done();
     return;
@@ -146,42 +156,72 @@ router.beforeEach(async (to: ToRouteType, _from, next) => {
 
   // 处理白名单路由
   if (whiteList.includes(to.fullPath)) {
+    logger.debug('白名单路由，跳过token检查')
     next();
     return;
   }
 
   // 未登录处理
-  if (!token) {
-    next({ path: apiMap.login });
+  if (!accessToken) {
+    logger.debug('未登录，尝试刷新token...')
+
+    const refreshToken = Cookies.get(import.meta.env.VITE_REFRESH_TOKEN_NAME);
+    if (!refreshToken) {
+      logger.debug('未找到refresh_token，跳转到登录页...')
+      next({ path: apiMap.login });
+      return;
+    }
+
+    const res = await useUserStoreHook().handRefreshToken({ 
+      refreshToken: refreshToken 
+    });
+
+    if (res?.data) {
+      logger.debug('刷新token成功...')
+      setToken(res.data);
+      next();
+    } else {
+      logger.debug('刷新token失败...')
+      next({ path: apiMap.login });
+    }
     return;
   }
 
   try {
+    logger.debug('检查是否需要初始化路由...')
     // 检查是否需要初始化路由
     if (usePermissionStoreHook().wholeMenus.length === 0) {
       try {
+        logger.debug('初始化路由...')
         await initRouter();
       } catch (error) {
-        logger.error('Failed to initialize routes:', error);
+        logger.debug('初始化路由失败...' + error)
         // 如果是token过期错误，尝试刷新token
         if (error.code === 99998) {
-          const data = getToken();
-          if (!data?.refreshToken) {
-            throw new Error('No refresh token available');
-          }
+          logger.debug('尝试刷新token...')
 
+          const refreshToken = Cookies.get(import.meta.env.VITE_REFRESH_TOKEN_NAME);
+          if (!refreshToken) {
+            logger.debug('未找到refresh_token，跳转到登录页...')
+            next({ path: apiMap.login });
+            return;
+          }
+      
           const res = await useUserStoreHook().handRefreshToken({ 
-            refreshToken: data.refreshToken 
+            refreshToken: refreshToken 
           });
           
           if (res?.data) {
+            logger.debug('刷新token成功...')
             setToken(res.data);
             // 重新初始化路由
             await initRouter();
           } else {
+            logger.debug('刷新token失败...')
             throw new Error('Failed to refresh token');
           }
         } else {
+          logger.debug('初始化路由失败...' + error)
           throw error;
         }
       }
@@ -204,18 +244,20 @@ router.beforeEach(async (to: ToRouteType, _from, next) => {
 
     // 检查路由是否存在
     if (!router.hasRoute(to.name as string) && !to.matched.length) {
-      logger.warn(`Route not found: ${to.fullPath}`);
+      logger.warn(`路由不存在: ${to.fullPath}`);
       next({ path: "/error/404" });
       return;
     }
 
     // 正常导航
+    logger.debug('正常导航...')
     next();
   } catch (error) {
-    logger.error('Router navigation error:', error);
+    logger.error('路由导航错误:', error);
     
     // 处理token相关错误
     if (error.code === 99998 || error.code === 401) {
+      logger.debug('处理token相关错误...')
       useUserStoreHook().logOut();
       next({ 
         path: apiMap.login,

@@ -6,9 +6,11 @@ export interface DataInfo<T> {
   /** token */
   accessToken: string;
   /** `accessToken`的过期时间（时间戳） */
-  expires: T;
+  accessTokenExpires: T;
   /** 用于调用刷新accessToken的接口时所需的token */
   refreshToken: string;
+  /** refreshToken的过期时间（时间戳） */
+  refreshTokenExpires: T;
   /** 头像 */
   avatar?: string;
   /** 用户名 */
@@ -22,7 +24,6 @@ export interface DataInfo<T> {
 }
 
 export const userKey = "user-info";
-export const TokenKey = "authorized-token";
 /**
  * 通过`multiple-tabs`是否在`cookie`中，判断用户是否已经登录系统，
  * 从而支持多标签页打开已经登录的系统后无需再登录。
@@ -31,27 +32,6 @@ export const TokenKey = "authorized-token";
  * */
 export const multipleTabsKey = "multiple-tabs";
 
-/** 获取`token` */
-export function getToken(): DataInfo<number> {
-  // 此处与`TokenKey`相同，此写法解决初始化时`Cookies`中不存在`TokenKey`报错
-  const token = Cookies.get(TokenKey)
-    ? JSON.parse(Cookies.get(TokenKey))
-    : storageLocal().getItem(userKey);
-
-  if (!token) return null;
-
-  // 检查token是否过期
-  const now = new Date().getTime();
-  const expired = parseInt(token.expires) - now <= 0;
-  
-  // 如果token过期，清除token
-  if (expired) {
-    removeToken();
-    return null;
-  }
-
-  return token;
-}
 
 /**
  * @description 设置`token`以及一些必要信息并采用无感刷新`token`方案
@@ -61,16 +41,18 @@ export function getToken(): DataInfo<number> {
  */
 export function setToken(data: DataInfo<Date>) {
   let expires = 0;
-  const { accessToken, refreshToken } = data;
+  const { accessToken, accessTokenExpires, refreshToken, refreshTokenExpires } = data;
   const { isRemembered, loginDay } = useUserStoreHook();
-  expires = new Date(data.expires).getTime(); // 如果后端直接设置时间戳，将此处代码改为expires = data.expires，然后把上面的DataInfo<Date>改成DataInfo<number>即可
-  const cookieString = JSON.stringify({ accessToken, expires, refreshToken });
 
-  expires > 0
-    ? Cookies.set(TokenKey, cookieString, {
-        expires: (expires - Date.now()) / 86400000
-      })
-    : Cookies.set(TokenKey, cookieString);
+  const _accessTokenExpires = new Date(accessTokenExpires).getTime();
+  const _refreshTokenExpires = new Date(refreshTokenExpires).getTime();
+
+  Cookies.set(import.meta.env.VITE_ACCESS_TOKEN_NAME, accessToken, {
+    expires: (_accessTokenExpires - Date.now()) / 86400000
+  })
+  Cookies.set(import.meta.env.VITE_REFRESH_TOKEN_NAME, refreshToken, {
+    expires: (_refreshTokenExpires - Date.now()) / 86400000
+  })
 
   Cookies.set(
     multipleTabsKey,
@@ -125,7 +107,7 @@ export function setToken(data: DataInfo<Date>) {
 
 /** 删除`token`以及key值为`user-info`的localStorage信息 */
 export function removeToken() {
-  Cookies.remove(TokenKey);
+  Cookies.remove(import.meta.env.VITE_ACCESS_TOKEN_NAME);
   Cookies.remove(multipleTabsKey);
   storageLocal().removeItem(userKey);
 }
