@@ -3,6 +3,7 @@ logs/
 .DS_Store
 .pyc
 *.pyc
+__pycache__/
 *.pyo
 *.swp
 .env/

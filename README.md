@@ -30,6 +30,7 @@
 ```bash
 # 启动后端（docker形式，推荐）
 ./bin/debug_backend_docker.sh -E dev
+# 如果实在pnpm install失败，可以尝试本地 pnpm install，然后再用docker启动
 
 # 启动后端（非docker）
 ./bin/debug_backend.sh
