@@ -110,16 +110,16 @@ const whiteList = [apiMap.login];
 
 const { VITE_HIDE_HOME } = import.meta.env;
 
-router.beforeEach((to: ToRouteType, _from, next) => {
+router.beforeEach(async (to: ToRouteType, _from, next) => {
+  // 处理页面缓存
   if (to.meta?.keepAlive) {
     handleAliveRoute(to, "add");
-    // 页面整体刷新和点击标签页刷新
     if (_from.name === undefined || _from.name === "Redirect") {
       handleAliveRoute(to);
     }
   }
-  const userInfo = storageLocal().getItem<DataInfo<number>>(userKey);
-  NProgress.start();
+
+  // 设置页面标题
   const externalLink = isUrl(to?.name as string);
   if (!externalLink) {
     to.matched.some(item => {
@@ -129,104 +129,105 @@ router.beforeEach((to: ToRouteType, _from, next) => {
       else document.title = item.meta.title as string;
     });
   }
-  /** 如果已经登录并存在登录信息后不能跳转到路由白名单，而是继续保持在当前页面 */
-  function toCorrectRoute() {
-    whiteList.includes(to.fullPath) ? next(_from.fullPath) : next();
+
+  // 开始进度条
+  NProgress.start();
+
+  // 获取用户信息
+  const userInfo = storageLocal().getItem<DataInfo<number>>(userKey);
+  const token = getToken();
+
+  // 处理外部链接
+  if (externalLink) {
+    openLink(to?.name as string);
+    NProgress.done();
+    return;
   }
-  if (Cookies.get(multipleTabsKey) && userInfo) {
-    // 无权限跳转403页面
-    if (to.meta?.roles && !isOneOfArray(to.meta?.roles, userInfo?.roles)) {
-      next({ path: "/error/403" });
+
+  // 处理白名单路由
+  if (whiteList.includes(to.fullPath)) {
+    next();
+    return;
+  }
+
+  // 未登录处理
+  if (!token) {
+    next({ path: apiMap.login });
+    return;
+  }
+
+  try {
+    // 检查是否需要初始化路由
+    if (usePermissionStoreHook().wholeMenus.length === 0) {
+      try {
+        await initRouter();
+      } catch (error) {
+        logger.error('Failed to initialize routes:', error);
+        // 如果是token过期错误，尝试刷新token
+        if (error.code === 99998) {
+          const data = getToken();
+          if (!data?.refreshToken) {
+            throw new Error('No refresh token available');
+          }
+
+          const res = await useUserStoreHook().handRefreshToken({ 
+            refreshToken: data.refreshToken 
+          });
+          
+          if (res?.data) {
+            setToken(res.data);
+            // 重新初始化路由
+            await initRouter();
+          } else {
+            throw new Error('Failed to refresh token');
+          }
+        } else {
+          throw error;
+        }
+      }
     }
-    // 开启隐藏首页后在浏览器地址栏手动输入首页welcome路由则跳转到404页面
+
+    // 权限检查
+    if (to.meta?.roles) {
+      const hasPermission = isOneOfArray(to.meta.roles, userInfo?.roles ?? []);
+      if (!hasPermission) {
+        next({ path: "/error/403" });
+        return;
+      }
+    }
+
+    // 处理首页隐藏
     if (VITE_HIDE_HOME === "true" && to.fullPath === "/welcome") {
       next({ path: "/error/404" });
+      return;
     }
-    if (_from?.name) {
-      // name为超链接
-      if (externalLink) {
-        openLink(to?.name as string);
-        NProgress.done();
-      } else {
-        toCorrectRoute();
-      }
-    } else {
-      // 刷新
-      if (
-        usePermissionStoreHook().wholeMenus.length === 0 &&
-        to.path !== apiMap.login
-      ) {
-        initRouter().then((router: Router) => {
-          if (!useMultiTagsStoreHook().getMultiTagsCache) {
-            const { path } = to;
-            const route = findRouteByPath(
-              path,
-              router.options.routes[0].children
-            );
-            getTopMenu(true);
-            // query、params模式路由传参数的标签页不在此处处理
-            if (route && route.meta?.title) {
-              if (isAllEmpty(route.parentId) && route.meta?.backstage) {
-                // 此处为动态顶级路由（目录）
-                const { path, name, meta } = route.children[0];
-                useMultiTagsStoreHook().handleTags("push", {
-                  path,
-                  name,
-                  meta
-                });
-              } else {
-                const { path, name, meta } = route;
-                useMultiTagsStoreHook().handleTags("push", {
-                  path,
-                  name,
-                  meta
-                });
-              }
-            }
-          }
-          // 确保动态路由完全加入路由列表并且不影响静态路由（注意：动态路由刷新时router.beforeEach可能会触发两次，第一次触发动态路由还未完全添加，第二次动态路由才完全添加到路由列表，如果需要在router.beforeEach做一些判断可以在to.name存在的条件下去判断，这样就只会触发一次）
-          if (isAllEmpty(to.name)) router.push(to.fullPath);
-        }).catch(error => {
-          logger.error('router beforeEach initRouter error: ', error);
-          if (error.code === 99998) {
-            logger.debug('token过期 code: 99998')
-            // token过期刷新
-            const data = getToken();
-            logger.debug('data: ', data)
-            useUserStoreHook()
-            .handRefreshToken({ refreshToken: data.refreshToken })
-            .then(res => {
-              logger.debug('刷新token成功...')
-              setToken(res.data);
-              // PureHttp.requests.forEach(cb => cb(token));
-              // PureHttp.requests = [];
-            })
-            .catch(error => {
-              logger.debug('刷新token失败...' + error)
-              removeToken();
-              next({ path: apiMap.login });
-              // return Promise.reject(error);
-            })
-            .finally(() => {
-              logger.debug('刷新token完成...')
-              // PureHttp.isRefreshing = false;
-            });
-          }
-        });
-      }
-      toCorrectRoute();
+
+    // 检查路由是否存在
+    if (!router.hasRoute(to.name as string) && !to.matched.length) {
+      logger.warn(`Route not found: ${to.fullPath}`);
+      next({ path: "/error/404" });
+      return;
     }
-  } else {
-    if (to.path !== apiMap.login) {
-      if (whiteList.indexOf(to.path) !== -1) {
-        next();
-      } else {
-        removeToken();
-        next({ path: apiMap.login });
-      }
-    } else {
-      next();
+
+    // 正常导航
+    next();
+  } catch (error) {
+    logger.error('Router navigation error:', error);
+    
+    // 处理token相关错误
+    if (error.code === 99998 || error.code === 401) {
+      useUserStoreHook().logOut();
+      next({ 
+        path: apiMap.login,
+        query: { redirect: to.fullPath }
+      });
+      return;
     }
+
+    // 其他错误处理
+    next({ path: "/error/500" });
+  } finally {
+    NProgress.done();
   }
 });
 

@@ -11,7 +11,7 @@ import type {
 } from "./types.d";
 import { stringify } from "qs";
 import NProgress from "../progress";
-import { getToken, formatToken } from "@/utils/auth";
+import { getToken, formatToken, setToken } from "@/utils/auth";
 import { useUserStoreHook } from "@/store/modules/user";
 import { apiMap } from "@/config/api";
 import logger from "@/utils/logger";
@@ -51,8 +51,13 @@ class PureHttp {
 
   /** 重连原始请求 */
   private static retryOriginalRequest(config: PureHttpRequestConfig) {
+    logger.debug('准备重试请求:', {
+      url: config.url,
+      method: config.method
+    })
     return new Promise(resolve => {
       PureHttp.requests.push((token: string) => {
+        logger.debug('执行重试请求回调')
         config.headers["Authorization"] = formatToken(token);
         resolve(config);
       });
@@ -64,9 +69,15 @@ class PureHttp {
     PureHttp.axiosInstance.interceptors.request.use(
       async (config: PureHttpRequestConfig): Promise<any> => {
         logger.debug('进入请求拦截器...')
-        logger.debug('config: ', config)
+        logger.debug('请求配置:', {
+          url: config.url,
+          method: config.method,
+          headers: config.headers
+        })
+        
         // 开启进度条动画
         NProgress.start();
+        
         // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
         if (typeof config.beforeRequestCallback === "function") {
           logger.debug('执行请求回调...')
@@ -78,57 +89,74 @@ class PureHttp {
           PureHttp.initConfig.beforeRequestCallback(config);
           return config;
         }
+        
         /** 请求白名单，放置一些不需要`token`的接口（通过设置请求白名单，防止`token`过期后再请求造成的死循环问题） */
         const whiteList = [apiMap.refreshToken, apiMap.login];
-        return whiteList.some(url => config.url.endsWith(url))
-          ? config
-          : new Promise(resolve => {
-              logger.debug('获取token...')
-              const data = getToken();
-              if (data) {
-                logger.debug('token存在...')
-                const now = new Date().getTime();
-                const expired = parseInt(data.expires) - now <= 0;
-                if (expired) {
-                  logger.debug('token过期...')
-                  if (!PureHttp.isRefreshing) {
-                    logger.debug('刷新token...')
-                    PureHttp.isRefreshing = true;
-                    // token过期刷新
-                    useUserStoreHook()
-                      .handRefreshToken({ refreshToken: data.refreshToken })
-                      .then(res => {
-                        logger.debug('刷新token成功...')
-                        const token = res.data.accessToken;
-                        config.headers["Authorization"] = formatToken(token);
-                        PureHttp.requests.forEach(cb => cb(token));
-                        PureHttp.requests = [];
-                      })
-                      .catch(error => {
-                        logger.debug('刷新token失败...')
-                        return Promise.reject(error);
-                      })
-                      .finally(() => {
-                        logger.debug('刷新token完成...')
-                        PureHttp.isRefreshing = false;
-                      });
-                  }
-                  resolve(PureHttp.retryOriginalRequest(config));
-                } else {
-                  logger.debug('token未过期...')
-                  config.headers["Authorization"] = formatToken(
-                    data.accessToken
-                  );
-                  resolve(config);
-                }
+        if (whiteList.some(url => config.url.endsWith(url))) {
+          logger.debug('白名单请求，跳过token检查')
+          return config;
+        }
+
+        return new Promise(resolve => {
+          logger.debug('获取token...')
+          const data = getToken();
+          if (data) {
+            logger.debug('token信息:', {
+              accessToken: data.accessToken ? '存在' : '不存在',
+              refreshToken: data.refreshToken ? '存在' : '不存在',
+              expires: data.expires
+            })
+            
+            const now = new Date().getTime();
+            const expired = parseInt(data.expires) - now <= 0;
+            if (expired) {
+              logger.debug('token已过期，开始刷新流程...')
+              if (!PureHttp.isRefreshing) {
+                logger.debug('开始刷新token...')
+                PureHttp.isRefreshing = true;
+                // token过期刷新
+                useUserStoreHook()
+                  .handRefreshToken({ refreshToken: data.refreshToken })
+                  .then(res => {
+                    logger.debug('刷新token成功:', {
+                      success: res.success,
+                      code: res.code
+                    })
+                    const token = res.data.accessToken;
+                    config.headers["Authorization"] = formatToken(token);
+                    logger.debug('更新请求头中的token')
+                    PureHttp.requests.forEach(cb => {
+                      logger.debug('执行队列中的请求回调')
+                      cb(token)
+                    });
+                    PureHttp.requests = [];
+                  })
+                  .catch(error => {
+                    logger.error('刷新token失败:', error)
+                  })
+                  .finally(() => {
+                    logger.debug('刷新token流程结束')
+                    PureHttp.isRefreshing = false;
+                  });
               } else {
-                logger.debug('token不存在...')
-                resolve(config);
+                logger.debug('token正在刷新中，将请求加入队列')
               }
-            });
+              resolve(PureHttp.retryOriginalRequest(config));
+            } else {
+              logger.debug('token未过期，直接使用')
+              config.headers["Authorization"] = formatToken(
+                data.accessToken
+              );
+              resolve(config);
+            }
+          } else {
+            logger.debug('未找到token')
+            resolve(config);
+          }
+        });
       },
       error => {
-        logger.debug('请求拦截器错误...')
+        logger.error('请求拦截器错误:', error)
         return Promise.reject(error);
       }
     );
@@ -136,29 +164,105 @@ class PureHttp {
 
   /** 响应拦截 */
   private httpInterceptorsResponse(): void {
-    // logger.debug('enter httpInterceptorsResponse...')
     const instance = PureHttp.axiosInstance;
     instance.interceptors.response.use(
       (response: PureHttpResponse) => {
-        // logger.debug('enter PureHttpResponse...')
-        // logger.debug('response: ', response)
-
-        const responseSuccess = response.data.success
-        if (!responseSuccess) {
-          // 关闭进度条动画
-          NProgress.done();
-          return Promise.reject(response.data)
-        }
-
         const $config = response.config;
+        logger.debug('进入响应拦截器...')
+        logger.debug('响应数据:', {
+          url: $config.url,
+          status: response.status,
+          success: response.data.success,
+          code: response.data.code
+        })
+        
         // 关闭进度条动画
         NProgress.done();
+
+        // 处理业务错误
+        if (!response.data.success) {
+          logger.debug('业务处理失败:', response.data)
+          // 处理token过期错误
+          if (response.data.code === 99998) {
+            logger.debug('检测到token过期错误(99998)')
+            // 如果已经在刷新token，将请求加入队列
+            if (PureHttp.isRefreshing) {
+              logger.debug('token正在刷新中，将请求加入队列')
+              return PureHttp.retryOriginalRequest($config).then(config => {
+                logger.debug('队列中的请求开始重试')
+                return instance.request(config);
+              });
+            }
+
+            PureHttp.isRefreshing = true;
+            const token = getToken();
+            
+            if (!token?.refreshToken) {
+              logger.error('未找到refreshToken，无法刷新')
+              PureHttp.isRefreshing = false;
+              useUserStoreHook().logOut();
+              return Promise.reject(response.data);
+            }
+
+            logger.debug('开始刷新token...')
+            return useUserStoreHook()
+              .handRefreshToken({ refreshToken: token.refreshToken })
+              .then(res => {
+                logger.debug('刷新token响应:', {
+                  success: res.success
+                })
+                if (res?.data) {
+                  setToken(res.data);
+                  logger.debug('设置新token成功')
+                  // 重试所有失败的请求
+                  PureHttp.requests.forEach(cb => {
+                    logger.debug('执行队列中的请求回调')
+                    cb(res.data.accessToken)
+                  });
+                  PureHttp.requests = [];
+                  // 重试当前请求
+                  logger.debug('重试当前请求')
+                  // 直接使用新的 token 重试请求
+                  $config.headers["Authorization"] = formatToken(res.data.accessToken);
+                  return instance.request($config);
+                }
+                logger.error('刷新token响应数据异常')
+                return Promise.reject(response.data);
+              })
+              .catch(error => {
+                logger.error('刷新token失败:', error)
+                // 刷新token失败，清除用户信息
+                useUserStoreHook().logOut();
+                return Promise.reject(response.data);
+              })
+              .finally(() => {
+                logger.debug('刷新token流程结束')
+                PureHttp.isRefreshing = false;
+                // 如果队列中还有请求，执行它们
+                if (PureHttp.requests.length > 0) {
+                  logger.debug('队列中还有请求，开始执行')
+                  const token = getToken();
+                  if (token?.accessToken) {
+                    PureHttp.requests.forEach(cb => {
+                      logger.debug('执行队列中的请求回调')
+                      cb(token.accessToken)
+                    });
+                    PureHttp.requests = [];
+                  }
+                }
+              });
+          }
+          return Promise.reject(response.data);
+        }
+
         // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
         if (typeof $config.beforeResponseCallback === "function") {
+          logger.debug('执行响应回调')
           $config.beforeResponseCallback(response);
           return response.data;
         }
         if (PureHttp.initConfig.beforeResponseCallback) {
+          logger.debug('执行初始化响应回调')
           PureHttp.initConfig.beforeResponseCallback(response);
           return response.data;
         }
@@ -167,12 +271,67 @@ class PureHttp {
       (error: PureHttpError) => {
         const $error = error;
         $error.isCancelRequest = Axios.isCancel($error);
+        logger.error('响应拦截器错误:', {
+          isCancelRequest: $error.isCancelRequest,
+          message: $error.message,
+          response: $error.response?.data
+        })
         // 关闭进度条动画
         NProgress.done();
+        // 处理错误
+        this.handleError($error);
         // 所有的响应异常 区分来源为取消请求/非取消请求
         return Promise.reject($error);
       }
     );
+  }
+
+  /** 统一错误处理 */
+  private handleError(error: PureHttpError): void {
+    // 处理取消请求的情况
+    if (error.isCancelRequest) {
+      return;
+    }
+
+    // 处理网络错误
+    if (!error.response) {
+      // 网络错误，可能是服务器未启动或网络连接问题
+      console.error('Network error:', error.message);
+      return;
+    }
+
+    const status = error.response.status;
+    const data = error.response.data as any; // 添加类型断言
+
+    // 处理401错误（未授权）
+    if (status === 401) {
+      // 只有在token确实无效时才清除
+      if (data?.detail === 'Token is invalid or expired') {
+        useUserStoreHook().logOut();
+      }
+      return;
+    }
+
+    // 处理403错误（禁止访问）
+    if (status === 403) {
+      console.error('Access forbidden:', data);
+      return;
+    }
+
+    // 处理404错误（未找到）
+    if (status === 404) {
+      console.error('Resource not found:', data);
+      return;
+    }
+
+    // 处理500错误（服务器错误）
+    if (status === 500) {
+      console.error('Server error:', data);
+      return;
+    }
+
+    // 处理其他错误
+    console.error('Request failed:', error.message);
   }
 
   /** 通用请求工具函数 */

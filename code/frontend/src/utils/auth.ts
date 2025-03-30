@@ -34,9 +34,23 @@ export const multipleTabsKey = "multiple-tabs";
 /** 获取`token` */
 export function getToken(): DataInfo<number> {
   // 此处与`TokenKey`相同，此写法解决初始化时`Cookies`中不存在`TokenKey`报错
-  return Cookies.get(TokenKey)
+  const token = Cookies.get(TokenKey)
     ? JSON.parse(Cookies.get(TokenKey))
     : storageLocal().getItem(userKey);
+
+  if (!token) return null;
+
+  // 检查token是否过期
+  const now = new Date().getTime();
+  const expired = parseInt(token.expires) - now <= 0;
+  
+  // 如果token过期，清除token
+  if (expired) {
+    removeToken();
+    return null;
+  }
+
+  return token;
 }
 
 /**
