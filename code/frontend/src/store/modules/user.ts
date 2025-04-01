@@ -17,6 +17,7 @@ import { useMultiTagsStoreHook } from "./multiTags";
 import { type DataInfo, setToken, removeToken, userKey } from "@/utils/auth";
 import { apiMap } from "@/config/api";
 import { clearRouteCache } from "@/router/utils";
+import logger from "@/utils/logger";
 
 export const useUserStore = defineStore({
   id: "pure-user",
@@ -94,6 +95,7 @@ export const useUserStore = defineStore({
         refreshTokenApi(data)
           .then(data => {
             if (data) {
+              logger.debug('handRefreshToken刷新token成功', data)
               setToken(data.data);
               resolve(data);
             }

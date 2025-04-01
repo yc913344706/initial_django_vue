@@ -172,16 +172,24 @@ router.beforeEach(async (to: ToRouteType, _from, next) => {
       return;
     }
 
-    const res = await useUserStoreHook().handRefreshToken({ 
-      refreshToken: refreshToken 
-    });
+    try {
+      const res = await useUserStoreHook().handRefreshToken({ 
+        refreshToken: refreshToken 
+      });
 
-    if (res?.data) {
-      logger.debug('刷新token成功...')
-      setToken(res.data);
-      next();
-    } else {
-      logger.debug('刷新token失败...')
+      if (res?.data) {
+        logger.debug('!accessToken 刷新token成功...')
+        setToken(res.data);
+        // 重新初始化路由
+        await initRouter();
+        // 重新导航到目标路由
+        next({ ...to, replace: true });
+      } else {
+        logger.debug('刷新token失败...')
+        next({ path: apiMap.login });
+      }
+    } catch (error) {
+      logger.error('刷新token出错:', error);
       next({ path: apiMap.login });
     }
     return;
@@ -212,7 +220,7 @@ router.beforeEach(async (to: ToRouteType, _from, next) => {
           });
           
           if (res?.data) {
-            logger.debug('刷新token成功...')
+            logger.debug('初始化路由，刷新token成功...')
             setToken(res.data);
             // 重新初始化路由
             await initRouter();

@@ -1,5 +1,5 @@
 <template>
-  <div class="audit-list">
+  <div class="audit-list" v-if="hasPerms('system.auditList:read')">
     <!-- 搜索区域 -->
     <el-card class="search-card">
       <el-form :inline="true" :model="searchForm" class="search-form">
@@ -127,6 +127,8 @@ import { ElMessage } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
 import logger from '@/utils/logger'
+import { hasPerms } from "@/utils/auth";
+import router from '@/router'
 
 const loading = ref(false)
 const auditList = ref([])
@@ -227,6 +229,10 @@ const showDetail = (row) => {
 }
 
 onMounted(() => {
+  if (!hasPerms('system.auditList:read')) {
+    ElMessage.error('您没有权限查看审计日志')
+    router.push('/error/403')
+  }
   fetchAuditLogs()
 })
 </script>
