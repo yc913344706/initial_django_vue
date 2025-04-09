@@ -74,6 +74,9 @@
 ## todos
 
 - [ ] doc: 最佳实践：项目应用步骤
+- [ ] logout
+- [ ] 后端设置 access_token, refresh_token
+- [ ] django admin
 - [ ] 自定义表格
 
 ## 更多

@@ -1,0 +1,72 @@
+// 系统管理页面通用样式
+.system-page {
+  padding: 20px;
+
+  .search-card {
+    margin-bottom: 20px;
+    
+    .search-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-start;
+
+      .form-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0;
+        margin-right: 0;
+
+        .label {
+          margin-right: 8px;
+          color: #606266;
+          font-size: 14px;
+          white-space: nowrap;
+        }
+
+        &.button-group {
+          margin-left: auto;
+        }
+      }
+
+      .search-input {
+        width: 200px;
+      }
+
+      .date-range-picker {
+        width: 300px;
+      }
+    }
+  }
+
+  .table-card {
+    .el-table {
+      margin-bottom: 20px;
+
+      .el-tag {
+        min-width: 80px;
+        text-align: center;
+      }
+    }
+
+    .pagination-container {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+  }
+}
+
+// 详情对话框样式
+.detail-dialog {
+  .detail-content {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 16px;
+    background-color: #f5f7fa;
+    border-radius: 4px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+} 

@@ -281,23 +281,3 @@ def pub_json_check(json_data, required_fields=None, optional_fields=None):
                 return False, f"参数类型错误: {field_desc}({field_name})必须是{field_type.__name__}类型"
                 
     return True, None
-
-
-def check_request_token(request):
-    """检查请求token"""
-    try:
-        # 获取token
-        access_token = get_authorization_token(request)
-        if (access_token is None) or (access_token in ['', 'undefined', 'null']):
-            return False, pub_error_response(99999, msg='未登录')
-            
-        # 验证token
-        token_manager = TokenManager()
-        payload = token_manager.verify_token(access_token)
-        if not payload:
-            return False, pub_error_response(99998, msg='登录已过期')
-        
-        return True, None
-    except Exception as e:
-        return False, pub_error_response(99997, msg=f"检查登录状态失败: {e.args}")
-

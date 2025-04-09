@@ -68,7 +68,6 @@
         "name": "PermissionDetail",
         "meta": {
           "showLink": false,
-          "hideNav": true,
           "title": "权限详情"
         }
       },
