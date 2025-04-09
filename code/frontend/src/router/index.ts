@@ -22,7 +22,10 @@ import {
   type Router,
   createRouter,
   type RouteRecordRaw,
-  type RouteComponent
+  type RouteComponent,
+  createWebHistory,
+  NavigationGuardNext,
+  RouteLocationNormalizedLoaded
 } from "vue-router";
 import {
   type DataInfo,
@@ -34,6 +37,11 @@ import {
 import { apiMap } from "@/config/api";
 import logger from '@/utils/logger'
 import { useUserStoreHook } from "@/store/modules/user";
+import { getBackendConfig } from '@/utils/backendConfig'
+import { http } from '@/utils/http'
+import {config} from '@/config'
+
+type FromRouteType = RouteLocationNormalizedLoaded;
 
 /** 自动导入全部静态路由，无需再手动引入！匹配 src/router/modules 目录（任何嵌套级别）中具有 .ts 扩展名的所有文件，除了 remaining.ts 文件
  * 如何匹配所有文件请看：https://github.com/mrmlnc/fast-glob#basic-syntax
@@ -71,6 +79,7 @@ export const remainingPaths = Object.keys(remainingRouter).map(v => {
 /** 创建路由实例 */
 export const router: Router = createRouter({
   history: getHistoryMode(import.meta.env.VITE_ROUTER_HISTORY),
+  // history: createWebHistory(),
   routes: constantRoutes.concat(...(remainingRouter as any)),
   strict: true,
   scrollBehavior(to, from, savedPosition) {
@@ -88,8 +97,13 @@ export const router: Router = createRouter({
   }
 });
 
+// 确保静态路由已注册
+const staticRoutes = router.getRoutes();
+logger.debug('已注册的静态路由:', staticRoutes.map(route => route.path));
+
 /** 重置路由 */
 export function resetRouter() {
+  logDebug('重置路由...')
   router.getRoutes().forEach(route => {
     const { name, meta } = route;
     if (name && router.hasRoute(name) && meta?.backstage) {
@@ -105,31 +119,21 @@ export function resetRouter() {
 }
 
 /** 路由白名单 */
-const whiteList = [apiMap.login];
+const routeWhiteList = [apiMap.login];
+const routeWhiteMouleList = [];
 
 const { VITE_HIDE_HOME } = import.meta.env;
 
-async function refres_access_token() {
-  
-  
-  return res;
-}
+// 添加日志辅助函数
+const logDebug = (message: string) => {
+  logger.debug(message);
+};
 
-router.beforeEach(async (to: ToRouteType, _from, next) => {
-  logger.debug('进入路由拦截器...')
-    // 处理页面缓存
-  if (to.meta?.keepAlive) {
-    logger.debug('处理页面缓存...')
-    handleAliveRoute(to, "add");
-    if (_from.name === undefined || _from.name === "Redirect") {
-      handleAliveRoute(to);
-    }
-  }
-
-  // 设置页面标题
+// 处理页面标题
+const handlePageTitle = (to: ToRouteType) => {
   const externalLink = isUrl(to?.name as string);
   if (!externalLink) {
-    logger.debug('处理外部链接...')
+    logDebug('处理外部链接...')
     to.matched.some(item => {
       if (!item.meta.title) return "";
       const Title = getConfig().Title;
@@ -137,148 +141,204 @@ router.beforeEach(async (to: ToRouteType, _from, next) => {
       else document.title = item.meta.title as string;
     });
   }
+  return externalLink;
+};
 
-  // 开始进度条
-  logger.debug('开始进度条...')
-  NProgress.start();
+// 处理页面缓存
+const handlePageCache = (to: ToRouteType, from: FromRouteType) => {
+  if (to.meta?.keepAlive) {
+    logDebug('处理页面缓存...')
+    handleAliveRoute(to, "add");
+    // 页面整体刷新和点击标签页刷新
+    if (from.name === undefined || from.name === "Redirect") {
+      handleAliveRoute(to);
+    }
+  }
+};
 
-  // 获取用户信息
-  const userInfo = storageLocal().getItem<DataInfo<number>>(userKey);
+/**
+ * 根据 userInfo 判断是否需要跳转到登录页
+ * 1. to.path === login 页面: true
+ * 2. to.path in 路由白名单: true
+ * 3. to.path === 其他页面，如果 userInfo 为空: false
+ * 4. to.path === 其他页面，如果 userInfo 不为空: true
+*/
+const checkGoLoginByHasUserInfo = (to: ToRouteType, userInfo: DataInfo<number> | null) => {
+  if (!userInfo) {
+    logDebug('路由拦截器，未找到用户信息...' + JSON.stringify(to, null, 2))
+    if (to.path !== apiMap.login) {
+      logDebug('路由拦截器，to.path 不是login...')
+      return true;
+    } 
+
+    logDebug('路由拦截器，to.path 是login...')
+    return false;
+
+  }
+
+  logDebug('路由拦截器，找到用户信息...')
+  return false;
+};
+
+/**
+ * 检查 access_token 是否有效
+ * 
+ * 1. 有access_token: true
+ * 2. 没有access_token，没有refresh_token: false
+ * 3. 没有access_token，有refresh_token: 刷新并设置access_token
+ * 
+ * @returns boolean
+ */
+const canGetAccessToken = async () => {
   const accessToken = Cookies.get(import.meta.env.VITE_ACCESS_TOKEN_NAME);
-
-  // 处理外部链接
-  if (externalLink) {
-    logger.debug('处理外部链接，跳过token检查')
-    openLink(to?.name as string);
-    NProgress.done();
-    return;
-  }
-
-  // 处理白名单路由
-  if (whiteList.includes(to.fullPath)) {
-    logger.debug('白名单路由，跳过token检查')
-    next();
-    return;
-  }
-
-  // 未登录处理
   if (!accessToken) {
-    logger.debug('未登录，尝试刷新token...')
+    logDebug('未找到access_token，尝试刷新token...')
 
     const refreshToken = Cookies.get(import.meta.env.VITE_REFRESH_TOKEN_NAME);
     if (!refreshToken) {
-      logger.debug('未找到refresh_token，跳转到登录页...')
-      next({ path: apiMap.login });
-      return;
+      logDebug('未找到refresh_token，跳转到登录页...')
+      return false;
     }
-
-    try {
-      const res = await useUserStoreHook().handRefreshToken({ 
-        refreshToken: refreshToken 
-      });
-
-      if (res?.data) {
-        logger.debug('!accessToken 刷新token成功...')
-        setToken(res.data);
-        // 重新初始化路由
-        await initRouter();
-        // 重新导航到目标路由
-        next({ ...to, replace: true });
-      } else {
-        logger.debug('刷新token失败...')
-        next({ path: apiMap.login });
-      }
-    } catch (error) {
-      logger.error('刷新token出错:', error);
-      next({ path: apiMap.login });
+    
+    const res = await useUserStoreHook().handRefreshToken({ 
+      refreshToken: refreshToken 
+    });
+    
+    if (res?.data) {
+      logDebug('beforeEach中，刷新token成功...')
+      setToken(res.data);
+      return true;
     }
-    return;
   }
+  return true;
+};
 
+// 处理路由初始化
+const handleRouteInit = async (to: ToRouteType) => {
   try {
-    logger.debug('检查是否需要初始化路由...')
-    // 检查是否需要初始化路由
-    if (usePermissionStoreHook().wholeMenus.length === 0) {
-      try {
-        logger.debug('初始化路由...')
-        await initRouter();
-      } catch (error) {
-        logger.debug('初始化路由失败...' + error)
-        // 如果是token过期错误，尝试刷新token
-        if (error.code === 99998) {
-          logger.debug('尝试刷新token...')
-
-          const refreshToken = Cookies.get(import.meta.env.VITE_REFRESH_TOKEN_NAME);
-          if (!refreshToken) {
-            logger.debug('未找到refresh_token，跳转到登录页...')
-            next({ path: apiMap.login });
-            return;
-          }
-      
-          const res = await useUserStoreHook().handRefreshToken({ 
-            refreshToken: refreshToken 
+    const router = await initRouter() as Router;
+    logDebug('beforeEach中，初始化路由完成...')
+    if (!useMultiTagsStoreHook().getMultiTagsCache) {
+      logDebug('beforeEach中，不存在多标签页缓存...')
+      const { path } = to;
+      const route = findRouteByPath(
+        path,
+        router.options.routes[0].children
+      );
+      logDebug('beforeEach中，findRouteByPath完成...' + JSON.stringify(route, null, 2))
+      getTopMenu(true);
+      // query、params模式路由传参数的标签页不在此处处理
+      if (route && route.meta?.title) {
+        logDebug('beforeEach中，route && route.meta?.title...')
+        if (isAllEmpty(route.parentId) && route.meta?.backstage) {
+          logDebug('beforeEach中，isAllEmpty(route.parentId) && route.meta?.backstage...')
+          // 此处为动态顶级路由（目录）
+          const { path, name, meta } = route.children[0];
+          useMultiTagsStoreHook().handleTags("push", {
+            path,
+            name,
+            meta
           });
-          
-          if (res?.data) {
-            logger.debug('初始化路由，刷新token成功...')
-            setToken(res.data);
-            // 重新初始化路由
-            await initRouter();
-          } else {
-            logger.debug('刷新token失败...')
-            throw new Error('Failed to refresh token');
-          }
         } else {
-          logger.debug('初始化路由失败...' + error)
-          throw error;
+          logDebug('beforeEach中，route && route.meta?.title...')
+          const { path, name, meta } = route;
+          useMultiTagsStoreHook().handleTags("push", {
+            path,
+            name,
+            meta
+          });
         }
       }
     }
+    // 确保动态路由完全加入路由列表并且不影响静态路由
+    if (isAllEmpty(to.name)) {
+      logDebug('beforeEach中，isAllEmpty(to.name)...')
+      router.push(to.fullPath);
+    }
+  } catch (error) {
+    logDebug('初始化路由失败...' + error)
+  }
+};
 
-    // 权限检查
-    if (to.meta?.roles) {
-      const hasPermission = isOneOfArray(to.meta.roles, userInfo?.roles ?? []);
-      if (!hasPermission) {
-        next({ path: "/error/403" });
+router.beforeEach(async (to: ToRouteType, _from, next) => {
+  logDebug('进入路由拦截器...')
+  
+  // 处理页面缓存
+  handlePageCache(to, _from);
+
+  // 设置页面标题
+  const externalLink = handlePageTitle(to);
+
+  // 开始进度条
+  logDebug('开始进度条...')
+  NProgress.start();
+
+
+  // 开启隐藏首页后在浏览器地址栏手动输入首页welcome路由则跳转到404页面
+  if (VITE_HIDE_HOME === "true" && to.fullPath === "/welcome") {
+    next({ path: "/error/404" });
+    return;
+  }
+
+  // 白名单
+  if (routeWhiteList.indexOf(to.path) !== -1) {
+    logDebug('路由拦截器，to.path 在routeWhiteList中...')
+    next();
+    return;
+  }
+
+  // 白名单模块
+  const to_path_module = to.path.split('/')[1];
+  if (routeWhiteMouleList.indexOf(to_path_module) !== -1) {
+    logDebug('路由拦截器，to.path 在routeWhiteMouleList中...')
+    next();
+    return;
+  }
+  
+  // 获取用户信息
+  const userInfo = storageLocal().getItem<DataInfo<number>>(userKey);
+
+  // 处理认证和权限验证
+  const needGoLogin = checkGoLoginByHasUserInfo(to, userInfo);
+  if (needGoLogin) {
+    removeToken();
+
+    next({ path: apiMap.login });
+    return;
+  }
+
+  if (_from?.name) {
+    logDebug('beforeEach中，from存在name...')
+    // name为超链接
+    if (externalLink) {
+      logDebug('beforeEach中，存在超链接...')
+      openLink(to?.name as string);
+      NProgress.done();
+    } else {
+      logDebug('beforeEach中，不存在超链接...')
+      next();
+    }
+  } else {
+    logDebug('beforeEach中，不存在name...')
+    if (
+      usePermissionStoreHook().wholeMenus.length === 0 &&
+      to.path !== apiMap.login
+    ) {
+      logDebug('beforeEach中，usePermissionStoreHook().wholeMenus.length === 0 && to.path !== "' + apiMap.login + '"...')
+
+      const _canGetAccessToken = await canGetAccessToken();
+      if (!_canGetAccessToken) {
+        next({ path: apiMap.login });
         return;
       }
-    }
 
-    // 处理首页隐藏
-    if (VITE_HIDE_HOME === "true" && to.fullPath === "/welcome") {
-      next({ path: "/error/404" });
-      return;
+      await handleRouteInit(to);
     }
-
-    // 检查路由是否存在
-    if (!router.hasRoute(to.name as string) && !to.matched.length) {
-      logger.warn(`路由不存在: ${to.fullPath}`);
-      next({ path: "/error/404" });
-      return;
-    }
-
-    // 正常导航
-    logger.debug('正常导航...')
     next();
-  } catch (error) {
-    logger.error('路由导航错误:', error);
-    
-    // 处理token相关错误
-    if (error.code === 99998 || error.code === 401) {
-      logger.debug('处理token相关错误...')
-      useUserStoreHook().logOut();
-      next({ 
-        path: apiMap.login,
-        query: { redirect: to.fullPath }
-      });
-      return;
-    }
-
-    // 其他错误处理
-    next({ path: "/error/500" });
-  } finally {
-    NProgress.done();
+    return;
   }
+
+  next();
 });
 
 router.afterEach(() => {

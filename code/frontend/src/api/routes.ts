@@ -7,5 +7,5 @@ type Result = {
 };
 
 export const getAsyncRoutes = () => {
-  return http.request<Result>("get", import.meta.env.VITE_BACKEND_URL + apiMap.getAsyncRoutes);
+  return http.request<Result>("get", apiMap.getAsyncRoutes);
 };

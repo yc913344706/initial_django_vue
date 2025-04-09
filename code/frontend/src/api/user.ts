@@ -37,10 +37,15 @@ export type RefreshTokenResult = {
 
 /** 登录 */
 export const getLogin = (data?: object) => {
-  return http.request<UserResult>("post", import.meta.env.VITE_BACKEND_URL + apiMap.login, { data });
+  return http.request<UserResult>("post", apiMap.login, { data });
+};
+
+/** 登出 */
+export const getLogout = () => {
+  return http.request<RefreshTokenResult>("post", apiMap.logout, {});
 };
 
 /** 刷新`token` */
 export const refreshTokenApi = (data?: object) => {
-  return http.request<RefreshTokenResult>("post", import.meta.env.VITE_BACKEND_URL + apiMap.refreshToken, { data });
+  return http.request<RefreshTokenResult>("post", apiMap.refreshToken, { data });
 };

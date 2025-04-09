@@ -42,25 +42,77 @@ const ruleForm = reactive({
 });
 
 const onLogin = async (formEl: FormInstance | undefined) => {
+  logger.debug('开始登录')
   if (!formEl) return;
   await formEl.validate((valid, fields) => {
     if (valid) {
+      logger.debug('表单验证通过')
       loading.value = true;
       useUserStoreHook()
         .loginByUsername({ username: ruleForm.username, password: ruleForm.password })
         .then(res => {
+          logger.debug('登录成功: loginByUsername')
           if (res.success) {
+            logger.debug('登录成功: loginByUsername: res.success')
             // 获取后端路由
             return initRouter().then(() => {
-              router.push(getTopMenu(true).path).then(() => {
-                message("登录成功", { type: "success" });
-              });
+              logger.debug('路由初始化完成')
+              const topMenu = getTopMenu(true);
+              logger.debug('获取到的topMenu:', topMenu)
+              if (topMenu?.path) {
+                logger.debug('准备跳转到菜单页面:', topMenu.path)
+                // 检查路由是否存在
+                if (router.hasRoute(topMenu.path)) {
+                  router.push(topMenu.path)
+                    .then(() => {
+                      logger.debug('跳转成功' + topMenu.path)
+                      message("登录成功", { type: "success" });
+                    })
+                    .catch(err => {
+                      logger.error('路由跳转失败:', err)
+                      // message("路由跳转失败: " + err.message, { type: "error" });
+                      // 如果跳转失败，尝试跳转到首页
+                      router.push("/").then(() => {
+                        logger.debug('跳转到首页成功')
+                        message("登录成功", { type: "success" });
+                      }).catch(e => {
+                        logger.error('跳转到首页也失败:', e)
+                        message("登录失败，跳转到首页失败", { type: "error" });
+                      });
+                    });
+                } else {
+                  logger.error('路由不存在:', topMenu.path)
+                  // message("目标路由不存在，将跳转到首页", { type: "warning" });
+                  router.push("/").then(() => {
+                    logger.debug('跳转到首页成功')
+                    message("登录成功", { type: "success" });
+                  }).catch(e => {
+                    logger.error('跳转到首页失败:', e)
+                    message("登录失败，跳转到首页失败", { type: "error" });
+                  });
+                }
+              } else {
+                logger.debug('没有可用的菜单，准备跳转到首页')
+                router.push("/")
+                  .then(() => {
+                    logger.debug('跳转到首页成功')
+                    message("登录成功", { type: "success" });
+                  })
+                  .catch(err => {
+                    logger.error('跳转到首页失败:', err)
+                    message("登录失败，跳转到首页失败", { type: "error" });
+                  });
+              }
+            }).catch(err => {
+              logger.error('路由初始化失败:', err)
+              message("登录失败，路由初始化失败", { type: "error" });
             });
           } else {
+            logger.error('登录失败，返回结果:', res)
             message("登录失败", { type: "error" });
           }
         }).catch(error => {
-          logger.error('error: ', error)
+          logger.error('登录过程发生错误:', error)
           let _error_msg = "登录失败."
           if (error.msg) {
             _error_msg += error.msg
@@ -69,7 +121,10 @@ const onLogin = async (formEl: FormInstance | undefined) => {
           }
           message(_error_msg, { type: "error" });
         })
-        .finally(() => (loading.value = false));
+        .finally(() => {
+          loading.value = false;
+          logger.debug('登录流程结束，loading状态:', loading.value)
+        });
     }
   });
 };
@@ -114,11 +169,38 @@ onMounted(async () => {
 
     const topMenu = getTopMenu(true);
     if (topMenu?.path) {
-      router.replace(topMenu.path);
+      logger.debug('准备跳转到菜单页面:', topMenu.path)
+      // 检查路由是否存在
+      if (router.hasRoute(topMenu.path)) {
+        router.push(topMenu.path)
+          .then(() => {
+            logger.debug('跳转成功')
+          })
+          .catch(err => {
+            logger.error('路由跳转失败:', err)
+            // 如果跳转失败，尝试跳转到首页
+            router.push("/").catch(e => {
+              logger.error('跳转到首页也失败:', e)
+            });
+          });
+      } else {
+        logger.error('路由不存在:', topMenu.path)
+        // 如果路由不存在，跳转到首页
+        router.push("/").catch(e => {
+          logger.error('跳转到首页失败:', e)
+        });
+      }
       return;
     } else {
       // 如果没有可用的菜单，跳转到首页
-      router.replace("/");
+      logger.debug('没有可用的菜单，跳转到首页')
+      router.push("/")
+        .then(() => {
+          logger.debug('跳转到首页成功')
+        })
+        .catch(err => {
+          logger.error('跳转到首页失败:', err)
+        });
       return;
     }
   }

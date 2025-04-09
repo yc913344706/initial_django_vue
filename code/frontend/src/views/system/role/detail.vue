@@ -143,7 +143,7 @@ const rules = {
 // 获取角色详情
 const getRoleDetail = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.role.role, {
+    const res = await http.request('get', apiMap.role.role, {
       params: { uuid: route.query.uuid }
     })
     if (res.success) {
@@ -159,7 +159,7 @@ const getRoleDetail = async () => {
 // 获取权限列表
 const getPermissionList = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.permission.permissionList)
+    const res = await http.request('get', apiMap.permission.permissionList)
     if (res.success) {
       permissionList.value = res.data.data
     } else {
@@ -194,7 +194,7 @@ const handleSubmit = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        const res = await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.role.role, {
+        const res = await http.request('put', apiMap.role.role, {
           data: form.value
         })
         if (res.success) {

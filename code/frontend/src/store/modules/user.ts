@@ -11,7 +11,8 @@ import {
   type UserResult,
   type RefreshTokenResult,
   getLogin,
-  refreshTokenApi
+  refreshTokenApi,
+  getLogout
 } from "@/api/user";
 import { useMultiTagsStoreHook } from "./multiTags";
 import { type DataInfo, setToken, removeToken, userKey } from "@/utils/auth";
@@ -78,8 +79,14 @@ export const useUserStore = defineStore({
           });
       });
     },
-    /** 前端登出（不调用接口） */
-    logOut() {
+    /** 前端登出 */
+    async logOut(needCallBackend: boolean = true) {
+      if (needCallBackend) {
+        logger.debug('调用后端logOut')
+        await getLogout();
+        logger.debug('后端logOut成功')
+      }
+
       this.username = "";
       this.permissions = [];
       removeToken();

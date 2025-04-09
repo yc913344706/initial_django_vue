@@ -1,28 +1,46 @@
 <template>
-  <div class="app-container">
-    <el-card class="box-card">
-      <template #header>
-        <div class="card-header">
-          <span>用户组管理</span>
-          <div>
-            <el-button 
+  <div class="system-page" v-if="hasPerms('system.groupList:read')">
+    <!-- 搜索区域 -->
+    <el-card class="search-card">
+      <div class="search-form">
+        <div class="form-item">
+          <span class="label">关键词</span>
+          <el-input
+            v-model="searchForm.keyword"
+            placeholder="搜索用户组名称"
+            clearable
+            class="search-input"
+            @keyup.enter="handleSearch"
+          />
+        </div>
+
+        <div class="form-item button-group">
+          <el-button type="primary" @click="handleSearch">
+            <el-icon><Search /></el-icon>
+            搜索
+          </el-button>
+          <el-button @click="resetSearch">重置</el-button>
+          <el-button 
             type="danger" 
             @click="handleBatchDelete" 
             :disabled="!selectedGroups.length"
             v-if="hasPerms('system.groupList:delete')"
-            >批量删除</el-button>
-            <el-button type="primary" @click="handleAdd"
+          >批量删除</el-button>
+          <el-button 
+            type="primary" 
+            @click="handleAdd"
             v-if="hasPerms('system.groupList:create')"
-            >新增</el-button>
-          </div>
+          >新增</el-button>
         </div>
-      </template>
+      </div>
+    </el-card>
 
+    <!-- 表格区域 -->
+    <el-card class="table-card">
       <el-table
         v-loading="loading"
         :data="userGroupList"
         style="width: 100%"
-        v-if="hasPerms('system.groupList:read')"
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55" />
@@ -30,18 +48,28 @@
         <el-table-column prop="description" label="描述" />
         <el-table-column label="操作" width="500">
           <template #default="scope">
-            <!-- <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button type="success" size="small" @click="handleManageUsers(scope.row)">管理用户</el-button>
-            <el-button type="warning" size="small" @click="handleManageAuth(scope.row)">管理权限</el-button> -->
             <el-button type="info" size="small" @click="handleViewDetail(scope.row)">查看详情</el-button>
             <el-button 
-            type="danger" 
-            size="small" 
-            @click="handleDelete(scope.row)" 
-            v-if="hasPerms('system.group:delete')">删除</el-button>
+              type="danger" 
+              size="small" 
+              @click="handleDelete(scope.row)" 
+              v-if="hasPerms('system.group:delete')"
+            >删除</el-button>
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="page"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="total"
+          layout="total, sizes, prev, pager, next"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </el-card>
 
     <!-- 新增/编辑对话框 -->
@@ -49,7 +77,6 @@
       v-model="dialogVisible"
       :title="dialogType === 'add' ? '新增用户组' : '编辑用户组'"
       width="50%"
-      v-if="hasPerms('system.groupList:create')"
     >
       <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
         <el-form-item label="用户组" prop="name">
@@ -76,7 +103,6 @@
         </span>
       </template>
     </el-dialog>
-
   </div>
 </template>
 
@@ -88,6 +114,8 @@ import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
 import { useRouter } from 'vue-router'
 import { hasPerms } from "@/utils/auth";
+import { Search } from '@element-plus/icons-vue'
+import '@/style/system.scss'
 
 interface UserGroupForm {
   uuid?: string
@@ -132,6 +160,16 @@ const authForm = ref<AuthForm>({
 })
 const selectedGroups = ref<string[]>([])
 
+// 分页相关
+const page = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+
+// 搜索相关
+const searchForm = ref({
+  keyword: ''
+})
+
 const rules = {
   name: [
     { required: true, message: '请输入用户组名称', trigger: 'blur' }
@@ -143,9 +181,15 @@ const loading = ref(false)
 const getUserGroupList = async () => {
   try {
     loading.value = true
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.group.groupList)
+    const params = {
+      page: page.value,
+      page_size: pageSize.value,
+      search: searchForm.value.keyword
+    }
+    const res = await http.request('get', apiMap.group.groupList, { params: params })
     if (res.success) {
       userGroupList.value = res.data.data
+      total.value = res.data.total
     } else {
       ElMessage.error(res.msg)
     }
@@ -159,7 +203,7 @@ const getUserGroupList = async () => {
 // 获取用户列表
 const getUserList = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.user.userList)
+    const res = await http.request('get', apiMap.user.userList)
     if (res.success) {
       userList.value = res.data.data
     } else {
@@ -173,7 +217,7 @@ const getUserList = async () => {
 // 获取角色列表
 const getRoleList = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.role.roleList)
+    const res = await http.request('get', apiMap.role.roleList)
     if (res.success) {
       roleList.value = res.data.data
     } else {
@@ -187,7 +231,7 @@ const getRoleList = async () => {
 // 获取权限列表
 const getPermissionList = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.permission.permissionList)
+    const res = await http.request('get', apiMap.permission.permissionList)
     if (res.success) {
       permissionList.value = res.data.data
     } else {
@@ -224,7 +268,7 @@ const handleDelete = (row: UserGroupForm) => {
     type: 'warning'
   }).then(async () => {
     try {
-      await http.request('delete', import.meta.env.VITE_BACKEND_URL + apiMap.group.group, {
+      await http.request('delete', apiMap.group.group, {
         data: { uuid: row.uuid }
       })
       ElMessage.success('删除成功')
@@ -243,14 +287,14 @@ const handleSubmit = async () => {
     if (valid) {
       try {
         if (dialogType.value === 'add') {
-          const res = await http.request('post', import.meta.env.VITE_BACKEND_URL + apiMap.group.group, { data: form.value })
+          const res = await http.request('post', apiMap.group.group, { data: form.value })
           if (res.success) {
             ElMessage.success('新增成功')
           } else {
             ElMessage.error(res.msg)
           }
         } else {
-          const res = await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.group.group, {
+          const res = await http.request('put', apiMap.group.group, {
             data: {
               ...form.value,
               uuid: form.value.uuid
@@ -285,7 +329,7 @@ const handleBatchDelete = async () => {
       type: 'warning'
     })
     
-    const res = await http.request('delete', import.meta.env.VITE_BACKEND_URL + apiMap.group.groupList, {
+    const res = await http.request('delete', apiMap.group.groupList, {
       data: { uuids: selectedGroups.value }
     })
     
@@ -301,6 +345,32 @@ const handleBatchDelete = async () => {
       ElMessage.error('删除失败')
     }
   }
+}
+
+// 处理搜索
+const handleSearch = () => {
+  page.value = 1
+  getUserGroupList()
+}
+
+// 处理页码改变
+const handleCurrentChange = (val: number) => {
+  page.value = val
+  getUserGroupList()
+}
+
+// 处理每页条数改变
+const handleSizeChange = (val: number) => {
+  pageSize.value = val
+  page.value = 1
+  getUserGroupList()
+}
+
+// 重置搜索
+const resetSearch = () => {
+  searchForm.value.keyword = ''
+  page.value = 1
+  getUserGroupList()
 }
 
 onMounted(() => {
@@ -327,5 +397,14 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.search-box {
+  margin: 0 20px;
+}
+
+.pagination-container {
+  margin-top: 20px;
+  text-align: right;
 }
 </style> 

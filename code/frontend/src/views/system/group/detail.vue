@@ -41,7 +41,10 @@
             v-model="form.users"
             multiple
             filterable
-            placeholder="请选择用户"
+            remote
+            :remote-method="getUserList"
+            :loading="loading"
+            placeholder="请输入用户名搜索"
             style="width: 100%"
           >
             <el-option
@@ -182,6 +185,7 @@ const groupList = ref([])
 const userList = ref([])
 const roleList = ref([])
 const permissionList = ref([])
+const loading = ref(false)
 
 const parentGroupName = computed(() => {
   if (!groupInfo.value.parent) return '无'
@@ -198,7 +202,7 @@ const rules = {
 // 获取用户组详情
 const getGroupDetail = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.group.group, {
+    const res = await http.request('get', apiMap.group.group, {
       params: { uuid: route.query.uuid }
     })
     if (res.success) {
@@ -214,7 +218,7 @@ const getGroupDetail = async () => {
 // 获取用户组列表
 const getGroupList = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.group.groupList)
+    const res = await http.request('get', apiMap.group.groupList)
     if (res.success) {
       groupList.value = res.data.data
     } else {
@@ -226,23 +230,32 @@ const getGroupList = async () => {
 }
 
 // 获取用户列表
-const getUserList = async () => {
-  try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.user.userList)
-    if (res.success) {
-      userList.value = res.data.data
-    } else {
-      ElMessage.error(res.msg)
+const getUserList = async (query: string) => {
+  if (query) {
+    loading.value = true
+    try {
+      const response = await http.request('get', apiMap.user.userList, {
+        params: { search: query }
+      })
+      if (response.success) {
+        userList.value = response.data.data
+      } else {
+        ElMessage.error('搜索用户失败')
+      }
+    } catch (error) {
+      ElMessage.error('搜索用户失败')
+    } finally {
+      loading.value = false
     }
-  } catch (error) {
-    ElMessage.error('获取用户列表失败')
+  } else {
+    userList.value = []
   }
 }
 
 // 获取角色列表
 const getRoleList = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.role.roleList)
+    const res = await http.request('get', apiMap.role.roleList)
     if (res.success) {
       roleList.value = res.data.data
     } else {
@@ -256,7 +269,7 @@ const getRoleList = async () => {
 // 获取权限列表
 const getPermissionList = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.permission.permissionList)
+    const res = await http.request('get', apiMap.permission.permissionList)
     if (res.success) {
       permissionList.value = res.data.data
     } else {
@@ -266,6 +279,7 @@ const getPermissionList = async () => {
     ElMessage.error('获取权限列表失败')
   }
 }
+
 
 // 编辑
 const handleEdit = () => {
@@ -293,7 +307,7 @@ const handleSubmit = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        const res = await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.group.group, {
+        const res = await http.request('put', apiMap.group.group, {
           data: form.value
         })
         if (res.success) {

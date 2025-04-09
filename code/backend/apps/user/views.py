@@ -5,6 +5,7 @@ from .models import User, UserGroup
 from apps.perm.models import Role, Permission
 from lib.paginator_tool import pub_paging_tool
 from lib.log import color_logger
+from django.db.models import Q
 
 # Create your views here.
 
@@ -18,9 +19,18 @@ def user_list(request):
 
             page = int(body.get('page', 1))
             page_size = int(body.get('page_size', 20))
-            
+            search = body.get('search', '')
+
             user_list = User.objects.all()
-                
+            # 添加搜索功能
+            if search:
+                user_list = user_list.filter(
+                    Q(username__icontains=search) |
+                    Q(nickname__icontains=search) |
+                    Q(phone__icontains=search) |
+                    Q(email__icontains=search)
+                )
+
             # 分页查询
             has_next, next_page, page_list, all_num, result = pub_paging_tool(page, user_list, page_size)
             
@@ -118,10 +128,17 @@ def user_group_list(request):
 
             page = int(body.get('page', 1))
             page_size = int(body.get('page_size', 20))
+            search = body.get('search', '')
 
             # 分页查询
-            has_next, next_page, page_list, all_num, result = pub_paging_tool(page, UserGroup.objects.all(), page_size)
-
+            user_group_list = UserGroup.objects.all()
+            # 添加搜索功能
+            if search:
+                user_group_list = user_group_list.filter(
+                    Q(name__icontains=search) |
+                    Q(code__icontains=search)
+                )
+            has_next, next_page, page_list, all_num, result = pub_paging_tool(page, user_group_list, page_size)
             # 格式化返回数据
             result = [format_user_group_data(user_group) for user_group in result]
 

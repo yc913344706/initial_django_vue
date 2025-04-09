@@ -3,6 +3,7 @@ from lib.request_tool import pub_get_request_body, pub_success_response, pub_err
 from .models import Permission, Role
 from lib.paginator_tool import pub_paging_tool
 from lib.log import color_logger
+from django.db.models import Q
 # Create your views here.
 
 def permission_list(request):
@@ -15,8 +16,15 @@ def permission_list(request):
 
             page = int(body.get('page', 1))
             page_size = int(body.get('page_size', 20))
+            search = body.get('search', '')
             
             permission_list = Permission.objects.all().order_by('name')
+            # 添加搜索功能
+            if search:
+                permission_list = permission_list.filter(
+                    Q(name__icontains=search) |
+                    Q(code__icontains=search)
+                )
                 
             # 分页查询
             has_next, next_page, page_list, all_num, result = pub_paging_tool(page, permission_list, page_size)
@@ -95,8 +103,15 @@ def role_list(request):
 
             page = int(body.get('page', 1))
             page_size = int(body.get('page_size', 20))
-            
+            search = body.get('search', '')
+
             role_list = Role.objects.all().order_by('name')
+            # 添加搜索功能
+            if search:
+                role_list = role_list.filter(
+                    Q(name__icontains=search) |
+                    Q(code__icontains=search)
+                )
                 
             # 分页查询
             has_next, next_page, page_list, all_num, result = pub_paging_tool(page, role_list, page_size)

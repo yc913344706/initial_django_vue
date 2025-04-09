@@ -1,13 +1,15 @@
-from apps.user.utils import format_user_data
 from apps.user.models import User, UserGroup
 from .models import Permission, Role
 from lib.log import color_logger
 from lib.json_tools import merge_jsons
 from lib.time_tools import utc_obj_to_time_zone_str
+from backend.settings import config_data
+if config_data.get('HAS_REDIS', False):
+    from lib.redis_tool import delete_redis_value, get_redis_value, set_redis_value
 
-def format_permission_data(permission: Permission):
+def format_permission_data(permission: Permission, only_basic=False):
     """格式化权限数据"""
-    return {
+    res = {
         'uuid': permission.uuid,
         'created_time': utc_obj_to_time_zone_str(permission.create_time),
         'updated_time': utc_obj_to_time_zone_str(permission.update_time),
@@ -16,15 +18,20 @@ def format_permission_data(permission: Permission):
         'code': permission.code,
         'permission_json': permission.permission_json,
         'description': permission.description,
-
-        'roles': [{'uuid': role.uuid, 'name': role.name, 'description': role.description} for role in permission.role_set.all()],
-        'users': [{'uuid': user.uuid, 'username': user.username, 'nickname': user.nickname, 'is_active': user.is_active} for user in permission.user_set.all()],
-        'groups': [{'uuid': group.uuid, 'name': group.name, 'description': group.description} for group in permission.usergroup_set.all()]
     }
 
-def format_role_data(role: Role):
+    if not only_basic:
+        from apps.user.utils import format_user_data, format_user_group_data
+        res.update({
+            'roles': [format_role_data(role, only_basic=True) for role in permission.role_set.all()],
+            'users': [format_user_data(user, from_ldap=False, only_basic=True) for user in permission.user_set.all()],
+            'groups': [format_user_group_data(group, only_basic=True) for group in permission.usergroup_set.all()]
+        })
+    return res
+
+def format_role_data(role: Role, only_basic=False):
     """格式化角色数据"""
-    return {
+    res = {
         'uuid': role.uuid,
         'created_time': utc_obj_to_time_zone_str(role.create_time),
         'updated_time': utc_obj_to_time_zone_str(role.update_time),
@@ -32,11 +39,16 @@ def format_role_data(role: Role):
         'name': role.name,
         'code': role.code,
         'description': role.description,
-
-        'permissions': [{'uuid': permission.uuid, 'name': permission.name, 'description': permission.description} for permission in role.permissions.all()],
-        'users': [{'uuid': user.uuid, 'username': user.username, 'nickname': user.nickname, 'is_active': user.is_active} for user in role.user_set.all()],
-        'groups': [{'uuid': group.uuid, 'name': group.name, 'description': group.description} for group in role.usergroup_set.all()]
     }
+
+    if not only_basic:
+        from apps.user.utils import format_user_data, format_user_group_data
+        res.update({
+            'permissions': [format_permission_data(permission, only_basic=True) for permission in role.permissions.all()],
+            'users': [format_user_data(user, from_ldap=False, only_basic=True) for user in role.user_set.all()],
+            'groups': [format_user_group_data(group, only_basic=True) for group in role.usergroup_set.all()]
+        })
+    return res
 
 def get_user_perm_json_all(user_uuid, is_user_name=False):
     """获取所有用户权限组成的json
@@ -50,6 +62,16 @@ def get_user_perm_json_all(user_uuid, is_user_name=False):
     - 用户所在用户组的所有父级用户组的角色包含的权限
     """
     try:
+        redis_key = f"user_perm_json_all:{user_uuid}"
+        
+        if config_data.get('HAS_REDIS', False):
+            user_perm_json_all = get_redis_value(
+                redis_db_name='default',
+                redis_key_name=redis_key
+            )
+            if user_perm_json_all:
+                return user_perm_json_all
+
         # color_logger.debug(f"获取用户权限JSON: {user_uuid}")
         if is_user_name:
             user = User.objects.get(username=user_uuid)
@@ -61,6 +83,7 @@ def get_user_perm_json_all(user_uuid, is_user_name=False):
         # color_logger.debug(f"获取用户直接拥有的权限JSON: {user.permissions.all()}")
         user_permission_jsons = [p.permission_json for p in user.permissions.all()]
         
+        # 所有用户都拥有的权限
         everyone_base_perm = Permission.objects.filter(code='everyone_base_perm').first()
         if everyone_base_perm:
             user_permission_jsons.append(everyone_base_perm.permission_json)
@@ -97,6 +120,14 @@ def get_user_perm_json_all(user_uuid, is_user_name=False):
         merged_permission_json = merge_jsons(all_permission_jsons)
         # color_logger.debug(f"({user_uuid})合并后的权限JSON: {merged_permission_json}")
         
+        if config_data.get('HAS_REDIS', False):
+            set_redis_value(
+                redis_db_name='default',
+                redis_key_name=redis_key,
+                redis_key_value=merged_permission_json,
+                set_expire=60
+            )
+
         return merged_permission_json
         
     except User.DoesNotExist:

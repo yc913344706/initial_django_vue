@@ -161,7 +161,7 @@ function validateJson(rule: any, value: string, callback: any) {
 // 获取权限详情
 const getPermissionDetail = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.permission.permission, {
+    const res = await http.request('get', apiMap.permission.permission, {
       params: { uuid: route.query.uuid }
     })
     if (res.success) {
@@ -212,7 +212,7 @@ const handleSubmit = async () => {
           ...form.value,
           permission_json: JSON.parse(form.value.permission_json)
         }
-        const res = await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.permission.permission, {
+        const res = await http.request('put', apiMap.permission.permission, {
           data: submitData
         })
         if (res.success) {

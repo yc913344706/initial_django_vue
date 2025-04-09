@@ -11,11 +11,12 @@ import type {
 } from "./types.d";
 import { stringify } from "qs";
 import NProgress from "../progress";
-import { formatToken, setToken } from "@/utils/auth";
+import { formatToken, setToken, removeToken } from "@/utils/auth";
 import Cookies from "js-cookie";
 import { useUserStoreHook } from "@/store/modules/user";
 import { apiMap } from "@/config/api";
 import logger from "@/utils/logger";
+import router from "@/router";
 
 // 相关配置请参考：www.axios-js.com/zh-cn/docs/#axios-request-config-1
 const defaultConfig: AxiosRequestConfig = {
@@ -26,6 +27,7 @@ const defaultConfig: AxiosRequestConfig = {
     "Content-Type": "application/json",
     "X-Requested-With": "XMLHttpRequest"
   },
+  withCredentials: true,
   // 数组格式参数序列化（https://github.com/axios/axios/issues/5142）
   paramsSerializer: {
     serialize: stringify as unknown as CustomParamsSerializer
@@ -68,84 +70,172 @@ class PureHttp {
   /** 请求拦截 */
   private httpInterceptorsRequest(): void {
     PureHttp.axiosInstance.interceptors.request.use(
-      async (config: PureHttpRequestConfig): Promise<any> => {
-        logger.debug('进入请求拦截器...')
-        logger.debug('请求配置:', {
-          url: config.url,
-          method: config.method,
-          headers: config.headers
-        })
-        
-        // 开启进度条动画
+      async (_config: PureHttpRequestConfig): Promise<any> => {
+        this.logRequestDetails(_config);
         NProgress.start();
         
-        // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
-        if (typeof config.beforeRequestCallback === "function") {
-          logger.debug('执行请求回调...')
-          config.beforeRequestCallback(config);
-          return config;
-        }
-        if (PureHttp.initConfig.beforeRequestCallback) {
-          logger.debug('执行初始化请求回调...')
-          PureHttp.initConfig.beforeRequestCallback(config);
-          return config;
+        // 处理请求回调
+        if (this.handleRequestCallbacks(_config)) {
+          return _config;
         }
         
-        /** 请求白名单，放置一些不需要`token`的接口（通过设置请求白名单，防止`token`过期后再请求造成的死循环问题） */
-        const whiteList = [apiMap.refreshToken, apiMap.login];
-        if (whiteList.some(url => config.url.endsWith(url))) {
-          logger.debug('白名单请求，跳过token检查')
-          return config;
+        // 检查是否需要token
+        if (this.isTokenNotRequired(_config)) {
+          const accessToken = Cookies.get(import.meta.env.VITE_ACCESS_TOKEN_NAME);
+          _config.headers["Authorization"] = formatToken(accessToken);
+          return _config;
         }
 
-        return new Promise(resolve => {
-          logger.debug('获取token...')
-          const accessToken = Cookies.get(import.meta.env.VITE_ACCESS_TOKEN_NAME);
-          const refreshToken = Cookies.get(import.meta.env.VITE_REFRESH_TOKEN_NAME);
-          if (accessToken) {
-            logger.debug('token未过期，直接使用')
-            config.headers["Authorization"] = formatToken(
-              accessToken
-            );
-            resolve(config);
-          } else {
-            logger.debug('token已过期，开始刷新流程...')
-            if (!PureHttp.isRefreshing) {
-              logger.debug('开始刷新token...')
-              PureHttp.isRefreshing = true;
-              // token过期刷新
-              useUserStoreHook()
-                .handRefreshToken({ refreshToken: refreshToken })
-                .then(res => {
-                  logger.debug('刷新token成功')
-                  const token = res.data.accessToken;
-                  config.headers["Authorization"] = formatToken(token);
-                  logger.debug('更新请求头中的token')
-                  PureHttp.requests.forEach(cb => {
-                    logger.debug('执行队列中的请求回调')
-                    cb(token)
-                  });
-                  PureHttp.requests = [];
-                })
-                .catch(error => {
-                  logger.error('刷新token失败:', error)
-                })
-                .finally(() => {
-                  logger.debug('刷新token流程结束')
-                  PureHttp.isRefreshing = false;
-                });
-            } else {
-              logger.debug('token正在刷新中，将请求加入队列')
-            }
-            resolve(PureHttp.retryOriginalRequest(config));
-          }
-        });
+        // 处理token逻辑
+        return this.handleTokenLogic(_config);
       },
       error => {
         logger.error('请求拦截器错误:', error)
+        PureHttp.isRefreshing = false;
         return Promise.reject(error);
       }
     );
+  }
+
+  /** 记录请求详情 */
+  private logRequestDetails(_config: PureHttpRequestConfig): void {
+    logger.debug('进入请求拦截器...')
+    logger.debug('请求配置:', {
+      url: _config.url,
+      method: _config.method,
+      headers: _config.headers,
+    })
+  }
+
+  /** 处理请求回调 */
+  private handleRequestCallbacks(_config: PureHttpRequestConfig): boolean {
+    if (typeof _config.beforeRequestCallback === "function") {
+      logger.debug('执行请求回调...')
+      _config.beforeRequestCallback(_config);
+      return true;
+    }
+    if (PureHttp.initConfig.beforeRequestCallback) {
+      logger.debug('执行初始化请求回调...')
+      PureHttp.initConfig.beforeRequestCallback(_config);
+      return true;
+    }
+    return false;
+  }
+
+  /** 检查是否需要token */
+  private isTokenNotRequired(_config: PureHttpRequestConfig): boolean {
+    /** 请求白名单，放置一些不需要`token`的接口（通过设置请求白名单，防止`token`过期后再请求造成的死循环问题） */
+    // const notNeedTokenRequestList = [
+    //   apiMap.refreshToken, 
+    //   apiMap.login, 
+    //   apiMap.logout,
+    // ];
+    // if (notNeedTokenRequestList.some(url => _config.url.endsWith(url))) {
+    //   logger.debug('白名单后缀请求，跳过token检查')
+    //   return true;
+    // }
+
+
+    const uri = _config.url.substring(import.meta.env.VITE_BACKEND_URL.length)
+    const uriWhiteList = [
+      apiMap.refreshToken,
+      apiMap.login, 
+      apiMap.logout,
+    ]
+    if (uriWhiteList.includes(uri)) {
+      logger.debug(`白名单请求(${uri})，跳过token检查`)
+      return true;
+    }
+
+
+    const uriWhitePrefixList = [
+    ]
+    if (uriWhitePrefixList.some(prefix => uri.startsWith(prefix))) {
+      logger.debug(`白名单前缀请求(${uri})，跳过token检查`)
+      return true;
+    }
+
+    const url_module = uri.split('/')[1];
+    logger.debug('url_module:', url_module)
+    const whiteModuleList = []
+    if (whiteModuleList.includes(url_module)) {
+      logger.debug(`白名单模块(${url_module})，跳过token检查`)
+      return true;
+    }
+
+    return false;
+  }
+
+  /** 处理token逻辑 */
+  private handleTokenLogic(_config: PureHttpRequestConfig): Promise<any> {
+    return new Promise(resolve => {
+      logger.debug('获取token...')
+      const accessToken = Cookies.get(import.meta.env.VITE_ACCESS_TOKEN_NAME);
+      const refreshToken = Cookies.get(import.meta.env.VITE_REFRESH_TOKEN_NAME);
+      
+      if (accessToken) {
+        this.handleValidAccessToken(_config, accessToken, resolve);
+      } else {
+        this.handleExpiredAccessToken(_config, refreshToken, resolve);
+      }
+    });
+  }
+
+  /** 处理有效的accessToken */
+  private handleValidAccessToken(_config: PureHttpRequestConfig, accessToken: string, resolve: (value: any) => void): void {
+    logger.debug('accessToken未过期，直接使用')
+    _config.headers["Authorization"] = formatToken(accessToken);
+    resolve(_config);
+  }
+
+  /** 处理过期的accessToken */
+  private handleExpiredAccessToken(_config: PureHttpRequestConfig, refreshToken: string | undefined, resolve: (value: any) => void): void {
+    logger.debug('accessToken已过期，开始刷新流程...')
+    if (!refreshToken) {
+      logger.error('未找到refreshToken，无法刷新')
+      removeToken();
+      router.push(apiMap.login);
+      throw new Error('未找到refreshToken，无法刷新');
+    }
+    
+    if (!PureHttp.isRefreshing) {
+      this.refreshToken(_config, refreshToken);
+    } else {
+      logger.debug('token正在刷新中，将请求加入队列')
+    }
+    
+    resolve(PureHttp.retryOriginalRequest(_config));
+  }
+
+  /** 刷新token */
+  private refreshToken(_config: PureHttpRequestConfig, refreshToken: string): void {
+    logger.debug('开始刷新token...')
+    PureHttp.isRefreshing = true;
+    // token过期刷新
+    useUserStoreHook()
+      .handRefreshToken({ refreshToken: refreshToken })
+      .then(res => {
+        logger.debug('刷新token成功')
+        const token = res.data.accessToken;
+        _config.headers["Authorization"] = formatToken(token);
+        logger.debug('更新请求头中的token')
+        PureHttp.requests.forEach(cb => {
+          logger.debug('执行队列中的请求回调')
+          cb(token)
+        });
+        PureHttp.requests = [];
+      })
+      .catch(error => {
+        logger.error('刷新token失败:', error)
+        removeToken();
+        router.push(apiMap.login);
+
+        return Promise.reject(error);
+      })
+      .finally(() => {
+        logger.debug('刷新token流程结束')
+        PureHttp.isRefreshing = false;
+      });
   }
 
   /** 响应拦截 */
@@ -169,8 +259,8 @@ class PureHttp {
         if (!response.data.success) {
           logger.debug('业务处理失败:', response.data)
           // 处理token过期错误
-          if (response.data.code === 99998) {
-            logger.debug('检测到token过期错误(99998)')
+          if (response.data.code === 99999) {
+            logger.debug('检测到accessToken过期错误(99999)')
             // 如果已经在刷新token，将请求加入队列
             if (PureHttp.isRefreshing) {
               logger.debug('token正在刷新中，将请求加入队列')
@@ -180,17 +270,18 @@ class PureHttp {
               });
             }
 
-            PureHttp.isRefreshing = true;
             const refreshToken = Cookies.get(import.meta.env.VITE_REFRESH_TOKEN_NAME);
             
             if (!refreshToken) {
               logger.error('未找到refreshToken，无法刷新')
               PureHttp.isRefreshing = false;
-              useUserStoreHook().logOut();
+              removeToken();
+              router.push(apiMap.login);
               return Promise.reject(response.data);
             }
 
             logger.debug('开始刷新token...')
+            PureHttp.isRefreshing = true;
             return useUserStoreHook()
               .handRefreshToken({ refreshToken: refreshToken })
               .then(res => {
@@ -218,7 +309,8 @@ class PureHttp {
               .catch(error => {
                 logger.error('刷新token失败:', error)
                 // 刷新token失败，清除用户信息
-                useUserStoreHook().logOut();
+                removeToken();
+                router.push(apiMap.login);
                 return Promise.reject(response.data);
               })
               .finally(() => {
@@ -237,6 +329,12 @@ class PureHttp {
                   }
                 }
               });
+          }
+          if (response.data.code === 99998) {
+            logger.debug('检测到refreshToken过期错误(99998)')
+            removeToken();
+            router.push(apiMap.login);
+            return Promise.reject(response.data);
           }
           return Promise.reject(response.data);
         }
@@ -293,7 +391,8 @@ class PureHttp {
     if (status === 401) {
       // 只有在token确实无效时才清除
       if (data?.detail === 'Token is invalid or expired') {
-        useUserStoreHook().logOut();
+        removeToken();
+        router.push(apiMap.login);
       }
       return;
     }
@@ -327,17 +426,19 @@ class PureHttp {
     param?: AxiosRequestConfig,
     axiosConfig?: PureHttpRequestConfig
   ): Promise<T> {
-    const config = {
+    const _url = import.meta.env.VITE_BACKEND_URL + url;
+    const _config = {
       method,
-      url,
+      url: _url,
       ...param,
       ...axiosConfig
     } as PureHttpRequestConfig;
 
     // 单独处理自定义请求/响应回调
     return new Promise((resolve, reject) => {
+      logger.debug('enter request common')
       PureHttp.axiosInstance
-        .request(config)
+        .request(_config)
         .then((response: undefined) => {
           resolve(response);
         })
@@ -351,18 +452,32 @@ class PureHttp {
   public post<T, P>(
     url: string,
     params?: AxiosRequestConfig<P>,
-    config?: PureHttpRequestConfig
+    _config?: PureHttpRequestConfig
   ): Promise<T> {
-    return this.request<T>("post", url, params, config);
+    logger.debug('enter post request')
+    const _url = import.meta.env.VITE_BACKEND_URL + url;
+    logger.debug('post请求:', {
+      url: _url,
+      params: params,
+      _config: _config
+    })
+    return this.request<T>("post", _url, params, _config);
   }
 
   /** 单独抽离的`get`工具函数 */
   public get<T, P>(
     url: string,
     params?: AxiosRequestConfig<P>,
-    config?: PureHttpRequestConfig
+    _config?: PureHttpRequestConfig
   ): Promise<T> {
-    return this.request<T>("get", url, params, config);
+    logger.debug('enter get request')
+    const _url = import.meta.env.VITE_BACKEND_URL + url;
+    logger.debug('get请求:', {
+      url: _url,
+      params: params,
+      _config: _config
+    })
+    return this.request<T>("get", _url, params, _config);
   }
 }
 

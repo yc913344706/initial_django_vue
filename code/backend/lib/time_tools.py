@@ -446,18 +446,16 @@ def get_realtime_year_month_holidays(year, month):
 
 def current_is_worktime():
     """判断当前是否处于工作时间"""
-    if config_data.get('ORDER', {}).get('ORDER_DEBUG_MODE', False):
-        return True
 
     now = django_timezone.now().astimezone(pytz.timezone('Asia/Shanghai'))
     
     # 解析工作时间配置
     workday_start = datetime.strptime(
-        config_data.get('ORDER', {}).get('WORKDAY_START_TIME', '09:00'),
+        '09:00',
         '%H:%M'
     ).time()
     workday_end = datetime.strptime(
-        config_data.get('ORDER', {}).get('WORKDAY_END_TIME', '19:00'),
+        '19:00',
         '%H:%M'
     ).time()
 
@@ -484,11 +482,11 @@ def calculate_working_minutes(start_time: datetime, end_time: datetime) -> int:
 
     # 获取工作时间配置
     workday_start_time = datetime.strptime(
-        config_data.get('ORDER', {}).get('WORKDAY_START_TIME', '09:00'),
+        '09:00',
         '%H:%M'
     ).time()
     workday_end_time = datetime.strptime(
-        config_data.get('ORDER', {}).get('WORKDAY_END_TIME', '19:00'),
+        '19:00',
         '%H:%M'
     ).time()
 

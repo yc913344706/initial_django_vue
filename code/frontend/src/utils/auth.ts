@@ -1,6 +1,7 @@
 import Cookies from "js-cookie";
 import { useUserStoreHook } from "@/store/modules/user";
 import { storageLocal, isString, isIncludeAllChildren } from "@pureadmin/utils";
+import logger from "@/utils/logger";
 
 export interface DataInfo<T> {
   /** token */
@@ -44,15 +45,15 @@ export function setToken(data: DataInfo<Date>) {
   const { accessToken, accessTokenExpires, refreshToken, refreshTokenExpires } = data;
   const { isRemembered, loginDay } = useUserStoreHook();
 
-  const _accessTokenExpires = new Date(accessTokenExpires).getTime();
-  const _refreshTokenExpires = new Date(refreshTokenExpires).getTime();
+  // const _accessTokenExpires = new Date(accessTokenExpires).getTime();
+  // const _refreshTokenExpires = new Date(refreshTokenExpires).getTime();
 
-  Cookies.set(import.meta.env.VITE_ACCESS_TOKEN_NAME, accessToken, {
-    expires: (_accessTokenExpires - Date.now()) / 86400000
-  })
-  Cookies.set(import.meta.env.VITE_REFRESH_TOKEN_NAME, refreshToken, {
-    expires: (_refreshTokenExpires - Date.now()) / 86400000
-  })
+  // Cookies.set(import.meta.env.VITE_ACCESS_TOKEN_NAME, accessToken, {
+  //   expires: (_accessTokenExpires - Date.now()) / 86400000
+  // })
+  // Cookies.set(import.meta.env.VITE_REFRESH_TOKEN_NAME, refreshToken, {
+  //   expires: (_refreshTokenExpires - Date.now()) / 86400000
+  // })
 
   Cookies.set(
     multipleTabsKey,
@@ -107,8 +108,21 @@ export function setToken(data: DataInfo<Date>) {
 
 /** 删除`token`以及key值为`user-info`的localStorage信息 */
 export function removeToken() {
-  Cookies.remove(import.meta.env.VITE_ACCESS_TOKEN_NAME);
+  logger.debug('removeToken')
+  if (import.meta.env.VITE_COOKIE_DOMAIN) {
+    Cookies.remove(import.meta.env.VITE_ACCESS_TOKEN_NAME, { domain: import.meta.env.VITE_COOKIE_DOMAIN, path: '/' });
+    Cookies.remove(import.meta.env.VITE_REFRESH_TOKEN_NAME, { domain: import.meta.env.VITE_COOKIE_DOMAIN, path: '/' });
+    Cookies.remove(import.meta.env.VITE_COOKIE_USERNAME_NAME, { domain: import.meta.env.VITE_COOKIE_DOMAIN, path: '/' });
+  } else {
+    Cookies.remove(import.meta.env.VITE_ACCESS_TOKEN_NAME);
+    Cookies.remove(import.meta.env.VITE_REFRESH_TOKEN_NAME);
+    Cookies.remove(import.meta.env.VITE_COOKIE_USERNAME_NAME);
+  }
   Cookies.remove(multipleTabsKey);
+  logger.debug('after remove token. accessToken', Cookies.get(import.meta.env.VITE_ACCESS_TOKEN_NAME))
+  logger.debug('after remove token. refreshToken', Cookies.get(import.meta.env.VITE_REFRESH_TOKEN_NAME))
+  logger.debug('after remove token. cookieUsername', Cookies.get(import.meta.env.VITE_COOKIE_USERNAME_NAME))
+
   storageLocal().removeItem(userKey);
 }
 

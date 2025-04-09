@@ -1,50 +1,77 @@
 <template>
-  <div class="app-container">
-    <el-card class="box-card">
-      <template #header>
-        <div class="card-header">
-          <span>用户管理</span>
-          <div>
-            <el-button type="danger" @click="handleBatchDelete" :disabled="!selectedUsers.length"
-            v-if="hasPerms('system.userList:delete')"
-            >批量删除</el-button>
-            <el-button type="primary" @click="handleAdd"
-            v-if="hasPerms('system.userList:create')"
-            >新增</el-button>
-          </div>
+  <div class="system-page" v-if="hasPerms('system.userList:read')">
+    <!-- 搜索区域 -->
+    <el-card class="search-card">
+      <div class="search-form">
+        <div class="form-item">
+          <span class="label">关键词</span>
+          <el-input
+            v-model="searchForm.keyword"
+            placeholder="搜索用户名/昵称/手机号/邮箱"
+            clearable
+            class="search-input"
+            @keyup.enter="handleSearch"
+          />
         </div>
-      </template>
 
+        <div class="form-item button-group">
+          <el-button type="primary" @click="handleSearch">
+            <el-icon><Search /></el-icon>
+            搜索
+          </el-button>
+          <el-button @click="resetSearch">重置</el-button>
+          <el-button 
+            type="danger" 
+            @click="handleBatchDelete" 
+            :disabled="!selectedUsers.length"
+            v-if="hasPerms('system.userList:delete')"
+          >批量删除</el-button>
+          <el-button 
+            type="primary" 
+            @click="handleAdd"
+            v-if="hasPerms('system.userList:create')"
+          >新增</el-button>
+        </div>
+      </div>
+    </el-card>
+
+    <!-- 表格区域 -->
+    <el-card class="table-card">
       <el-table
         v-loading="loading"
         :data="userList"
         style="width: 100%"
         @selection-change="handleSelectionChange"
-        v-if="hasPerms('system.userList:read')"
       >
         <el-table-column type="selection" width="55" />
         <el-table-column prop="username" label="用户名" />
         <el-table-column prop="nickname" label="昵称" />
         <el-table-column prop="phone" label="手机号" />
         <el-table-column prop="email" label="邮箱" />
-        <el-table-column prop="is_active" label="状态">
-          <template #default="scope">
-            <el-tag :type="scope.row.is_active ? 'success' : 'danger'">
-              {{ scope.row.is_active ? '启用' : '禁用' }}
-            </el-tag>
-          </template>
-        </el-table-column>
         <el-table-column label="操作" width="400">
           <template #default="scope">
-            <!-- <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-button type="success" size="small" @click="handleManageAuth(scope.row)">管理权限</el-button> -->
             <el-button type="info" size="small" @click="handleViewDetail(scope.row)">查看详情</el-button>
-            <el-button type="danger" size="small" @click="handleDelete(scope.row)"
-            v-if="hasPerms('system.user:delete')"
+            <el-button 
+              type="danger" 
+              size="small" 
+              @click="handleDelete(scope.row)" 
+              v-if="hasPerms('system.user:delete')"
             >删除</el-button>
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="page"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="total"
+          layout="total, sizes, prev, pager, next"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </el-card>
 
     <!-- 新增/编辑对话框 -->
@@ -139,6 +166,8 @@ import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
 import { hasPerms } from "@/utils/auth";
 import router from '@/router'
+import { Search } from '@element-plus/icons-vue'
+import '@/style/system.scss'
 
 interface UserForm {
   uuid?: string
@@ -192,13 +221,29 @@ const rules = {
 
 const loading = ref(false)
 
+// 分页相关
+const page = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+
+// 搜索相关
+const searchForm = ref({
+  keyword: ''
+})
+
 // 获取用户列表
 const getUserList = async () => {
   try {
     loading.value = true
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.user.userList)
+    const params = {
+      page: page.value,
+      page_size: pageSize.value,
+      search: searchForm.value.keyword
+    }
+    const res = await http.request('get', apiMap.user.userList, { params: params })
     if (res.success) {
       userList.value = res.data.data
+      total.value = res.data.total
     } else {
       ElMessage.error(res.msg)
     }
@@ -212,7 +257,7 @@ const getUserList = async () => {
 // 获取角色列表
 const getRoleList = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.role.roleList)
+    const res = await http.request('get', apiMap.role.roleList)
     if (res.success) {
       roleList.value = res.data.data
     } else {
@@ -226,7 +271,7 @@ const getRoleList = async () => {
 // 获取权限列表
 const getPermissionList = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.permission.permissionList)
+    const res = await http.request('get', apiMap.permission.permissionList)
     if (res.success) {
       permissionList.value = res.data.data
     } else {
@@ -265,7 +310,7 @@ const handleDelete = (row: UserForm) => {
     type: 'warning'
   }).then(async () => {
     try {
-      await http.request('delete', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, {
+      await http.request('delete', apiMap.user.user, {
         data: { uuid: row.uuid }
       })
       ElMessage.success('删除成功')
@@ -284,14 +329,14 @@ const handleSubmit = async () => {
     if (valid) {
       try {
         if (dialogType.value === 'add') {
-          const res = await http.request('post', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: form.value })
+          const res = await http.request('post', apiMap.user.user, { data: form.value })
           if (res.success) {
             ElMessage.success('新增成功')
           } else {
             ElMessage.error(res.msg)
           }
         } else {
-          const res = await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, { data: { ...form.value, uuid: form.value.uuid } })
+          const res = await http.request('put', apiMap.user.user, { data: { ...form.value, uuid: form.value.uuid } })
           if (res.success) {
             ElMessage.success('编辑成功')
           } else {
@@ -310,7 +355,7 @@ const handleSubmit = async () => {
 // 提交权限表单
 const handleSubmitAuth = async () => {
   try {
-    const res = await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, {
+    const res = await http.request('put', apiMap.user.user, {
       data: {
         uuid: authForm.value.uuid,
         roles: authForm.value.roles,
@@ -343,7 +388,7 @@ const handleBatchDelete = async () => {
       type: 'warning'
     })
     
-    const res = await http.request('delete', import.meta.env.VITE_BACKEND_URL + apiMap.user.userList, {
+    const res = await http.request('delete', apiMap.user.userList, {
       data: { uuids: selectedUsers.value }
     })
     
@@ -359,6 +404,32 @@ const handleBatchDelete = async () => {
       ElMessage.error('删除失败')
     }
   }
+}
+
+// 处理搜索
+const handleSearch = () => {
+  page.value = 1
+  getUserList()
+}
+
+// 处理页码改变
+const handleCurrentChange = (val: number) => {
+  page.value = val
+  getUserList()
+}
+
+// 处理每页条数改变
+const handleSizeChange = (val: number) => {
+  pageSize.value = val
+  page.value = 1
+  getUserList()
+}
+
+// 重置搜索
+const resetSearch = () => {
+  searchForm.value.keyword = ''
+  page.value = 1
+  getUserList()
 }
 
 onMounted(() => {
@@ -381,5 +452,14 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.search-box {
+  margin-left: 20px;
+}
+
+.pagination-container {
+  margin-top: 20px;
+  text-align: right;
 }
 </style> 

@@ -81,11 +81,13 @@ class TokenManager:
     def refresh_access_token(self, refresh_token):
         """使用refresh token刷新access token"""
         try:
+            color_logger.debug(f"开始refresh_access_token: {refresh_token}")
             payload = jwt.decode(
                 refresh_token,
                 config_data.get('AUTH', {}).get('JWT_SECRET'),
                 algorithms=[config_data.get('AUTH', {}).get('JWT_ALGORITHM')]
             )
+            color_logger.debug(f"refresh_access_token payload: {payload}")
             
             # 验证refresh token
             if config_data.get('HAS_REDIS', False):
@@ -94,6 +96,7 @@ class TokenManager:
                     redis_key_name=f"refresh_token:{payload['username']}"
                 )
                 if not stored_refresh or stored_refresh != refresh_token:
+                    color_logger.error(f"refresh_access_token refresh_token校验失败: 与redis中不一致")
                     return None, None
                 
             # 生成新的access token
@@ -101,6 +104,7 @@ class TokenManager:
                 payload['username'],
                 config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE')
             )
+            color_logger.debug(f"refresh_access_token 生成access_token")
             
             if config_data.get('HAS_REDIS', False):
                 # 更新Redis
@@ -110,6 +114,7 @@ class TokenManager:
                     redis_key_value=access_token,
                     set_expire=config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE')
                 )
+                color_logger.debug(f"refresh_access_token 更新Redis")
             
             return access_token, payload['username']
         except Exception as e:

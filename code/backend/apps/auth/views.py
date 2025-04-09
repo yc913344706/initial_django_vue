@@ -1,27 +1,28 @@
-from django.shortcuts import render
-from django.http import HttpResponse
-
+from datetime import datetime, timedelta, timezone as dt_timezone
+from lib.time_tools import get_now_time_utc_obj
+from lib.request_tool import get_authorization_token, pub_success_response, pub_error_response
+from lib.request_tool import pub_get_request_body
 from apps.user.models import User
-from apps.perm.utils import get_user_perm_json_all
-from .token_utils import TokenManager
-from lib.route_tool import RouteTool
-from lib.request_tool import get_authorization_token, pub_get_request_body, pub_success_response, pub_error_response
-from lib.log import color_logger
-from lib.password_tools import aes
-from mock.fake_data import fake_user_login_data_list, fake_async_routes, fake_refresh_token_data
-
 from backend.settings import config_data
-from lib.time_tools import get_now_time_utc_obj, timedelta, utc_obj_to_time_zone_str
+from .token_utils import TokenManager
+from lib.log import color_logger
+from apps.perm.utils import get_user_perm_json_all
+from lib.route_tool import RouteTool
+from apps.user.utils import format_user_data
+from django.http import HttpResponse
+from lib.password_tools import aes
+
 # Create your views here.
 
 def index(request):
     return HttpResponse("Hello, world. You're at the auth index.")
 
 def login(request):
+    """登录接口"""
     try:
-        if request.method != "POST":
-            return pub_error_response(f"请求方法错误")
-
+        if request.method != 'POST':
+            return pub_error_response(10001, msg="仅支持POST请求")
+            
         body = pub_get_request_body(request)
         username = body.get('username')
         password = body.get('password')
@@ -37,75 +38,151 @@ def login(request):
         # 生成token
         token_manager = TokenManager()
         access_token, refresh_token = token_manager.generate_tokens(username)
-
-        access_expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE'))
-        refresh_expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE'))
-
-
+        
         user_permission_json = get_user_perm_json_all(user_obj.uuid)
-        # color_logger.debug(f"获取用户权限JSON: {user_permission_json}")
 
-        res = {
-            # "avatar": user_obj.avatar,
-            "username": user_obj.username,
-            "nickname": user_obj.nickname,
+        res = format_user_data(user_obj, from_ldap=False, only_basic=True)
 
-            # "roles": ["common"],
+        res.update({
             "permissions": user_permission_json.get('frontend', {}).get('resources', []),
 
             "accessToken": access_token,
             "refreshToken": refresh_token,
-            "accessTokenExpires": access_expires,
-            "refreshTokenExpires": refresh_expires,
-        }
+            "accessTokenExpires": config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE'),
+            "refreshTokenExpires": config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE'),
+        })
 
+        response = pub_success_response(res)
         
-        return pub_success_response(data=res)
-        # return pub_success_response(data=fake_user_login_data_list[1])
+        # 设置cookie
+        cookie_options = {
+            'max_age': config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE'),
+            'httponly': config_data.get('AUTH', {}).get('COOKIE_HTTPONLY', True),
+            'secure': config_data.get('AUTH', {}).get('COOKIE_SECURE', True),
+            'path': '/'
+        }
+        if config_data.get('AUTH', {}).get('COOKIE_SAMESITE'):
+            cookie_options['samesite'] = config_data.get('AUTH', {}).get('COOKIE_SAMESITE')
+        if config_data.get('AUTH', {}).get('COOKIE_DOMAIN'):
+            cookie_options['domain'] = config_data.get('AUTH', {}).get('COOKIE_DOMAIN')
+        
+        # 调试日志
+        color_logger.debug(f'Setting cookie with options: {cookie_options}')
+        color_logger.debug(f'Access token: {access_token[:10]}...')
+        
+        response.set_cookie(
+            config_data.get('AUTH', {}).get('COOKIE_ACCESS_TOKEN_NAME'),
+            access_token,
+            **cookie_options
+        )
+        response.set_cookie(
+            config_data.get('AUTH', {}).get('COOKIE_REFRESH_TOKEN_NAME'),
+            refresh_token,
+            **{**cookie_options, 'max_age': config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE')}
+        )
+        
+        return response
+        
     except Exception as e:
-        color_logger.error(f"登录失败: {e}")
-        return pub_error_response(f"登录失败: {e}")
+        color_logger.error(f"登录失败: {str(e)}")
+        return pub_error_response(10001, msg=f"登录失败: {str(e)}")
+
+def logout(request):
+    """退出登录"""
+    try:
+        if request.method != 'POST':
+            return pub_error_response(10001, msg="仅支持POST请求")
+            
+        # 获取当前用户
+        token_manager = TokenManager()
+        access_token = request.COOKIES.get(config_data.get('AUTH', {}).get('COOKIE_ACCESS_TOKEN_NAME'))
+        username = token_manager.get_username_from_access_token(access_token)
+        
+        if username:
+            # 使token失效
+            token_manager.invalidate_tokens(username)
+            
+        # 创建响应
+        response = pub_success_response('退出成功')
+        
+        # 删除所有认证相关的cookie
+        response.delete_cookie(config_data.get('AUTH', {}).get('COOKIE_ACCESS_TOKEN_NAME'))
+        response.delete_cookie(config_data.get('AUTH', {}).get('COOKIE_REFRESH_TOKEN_NAME'))
+        
+        response.content = pub_success_response("退出成功").content
+        return response
+        
+    except Exception as e:
+        color_logger.error(f"退出失败: {str(e)}")
+        return pub_error_response(10001, msg=f"退出失败: {str(e)}")
 
 def refresh_token(request):
+    """刷新token"""
     try:
-        if request.method != "POST":
-            return pub_error_response(f"请求方法错误")
-
+        if request.method != 'POST':
+            return pub_error_response(10001, msg='仅支持POST请求')
+        
+        color_logger.debug(f"enter request: refresh_token")
         body = pub_get_request_body(request)
-        refresh_token = body.get('refreshToken')
-        assert refresh_token, f"refreshToken不能为空"
-
+        
+        color_logger.debug(f"获取 request中的refresh_token")
+        refresh_token = request.COOKIES.get(config_data.get('AUTH', {}).get('COOKIE_REFRESH_TOKEN_NAME'))
+        if not refresh_token:
+            return pub_error_response(10001, msg='refresh token不存在')
+            
+        color_logger.debug(f"开始刷新token")
         token_manager = TokenManager()
         new_access_token, user_name = token_manager.refresh_access_token(refresh_token)
         assert new_access_token, f"刷新token失败"
 
+        color_logger.debug(f"刷新token成功")
         access_expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE'))
         refresh_expires = get_now_time_utc_obj() + timedelta(seconds=config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE'))
         
         user_obj = User.objects.filter(username=user_name).first()
         assert user_obj, f"用户名({user_name})对应用户不存在"
 
+        color_logger.debug(f"获取用户权限JSON")
         user_permission_json = get_user_perm_json_all(user_obj.uuid)
         # color_logger.debug(f"获取用户权限JSON: {user_permission_json}")
 
-        res = {
-            # "avatar": user_obj.avatar,
-            "username": user_obj.username,
-            "nickname": user_obj.nickname,
+        res = format_user_data(user_obj, from_ldap=False, only_basic=True)
 
-            # "roles": ["common"],
+        res.update({
             "permissions": user_permission_json.get('frontend', {}).get('resources', []),
 
             "accessToken": new_access_token,
             "refreshToken": refresh_token,
             "accessTokenExpires": access_expires,
             "refreshTokenExpires": refresh_expires,
+        })
+
+        color_logger.debug(f"准备返回response")
+        response = pub_success_response(res)
+
+        color_logger.debug(f"设置cookie")
+        cookie_options = {
+            'max_age': config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE'),
+            'httponly': config_data.get('AUTH', {}).get('COOKIE_HTTPONLY', True),
+            'secure': config_data.get('AUTH', {}).get('COOKIE_SECURE', False),
+            'path': '/'
         }
+        if config_data.get('AUTH', {}).get('COOKIE_SAMESITE'):
+            cookie_options['samesite'] = config_data.get('AUTH', {}).get('COOKIE_SAMESITE')
+        if config_data.get('AUTH', {}).get('COOKIE_DOMAIN'):
+            cookie_options['domain'] = config_data.get('AUTH', {}).get('COOKIE_DOMAIN')
+
+        response.set_cookie(
+            config_data.get('AUTH', {}).get('COOKIE_ACCESS_TOKEN_NAME'),
+            new_access_token,
+            **cookie_options
+        )
         
-        return pub_success_response(data=res)
+        color_logger.debug(f"返回response")
+        return response
     except Exception as e:
-        color_logger.error(f"刷新token失败: {e}")
-        return pub_error_response(f"刷新token失败: {e}")
+        return pub_error_response(99998, msg=f"刷新token失败: {e.args}")
+
 
 def get_async_routes(request):
     try:

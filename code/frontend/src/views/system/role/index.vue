@@ -1,31 +1,47 @@
 <template>
-  <div class="app-container">
-    <el-card class="box-card">
-      <template #header>
-        <div class="card-header">
-          <span>角色管理</span>
-          <div>
-            <el-button 
+  <div class="system-page" v-if="hasPerms('system.roleList:read')">
+    <!-- 搜索区域 -->
+    <el-card class="search-card">
+      <div class="search-form">
+        <div class="form-item">
+          <span class="label">关键词</span>
+          <el-input
+            v-model="searchForm.keyword"
+            placeholder="搜索角色名称/角色代码"
+            clearable
+            class="search-input"
+            @keyup.enter="handleSearch"
+          />
+        </div>
+
+        <div class="form-item button-group">
+          <el-button type="primary" @click="handleSearch">
+            <el-icon><Search /></el-icon>
+            搜索
+          </el-button>
+          <el-button @click="resetSearch">重置</el-button>
+          <el-button 
             type="danger" 
             @click="handleBatchDelete" 
             :disabled="!selectedRoles.length"
             v-if="hasPerms('system.roleList:delete')"
-            >批量删除</el-button>
-            <el-button 
+          >批量删除</el-button>
+          <el-button 
             type="primary" 
             @click="handleAdd"
             v-if="hasPerms('system.roleList:create')"
-            >新增</el-button>
-          </div>
+          >新增</el-button>
         </div>
-      </template>
+      </div>
+    </el-card>
 
+    <!-- 表格区域 -->
+    <el-card class="table-card">
       <el-table
         v-loading="loading"
         :data="roleList"
         style="width: 100%"
         @selection-change="handleSelectionChange"
-        v-if="hasPerms('system.roleList:read')"
       >
         <el-table-column type="selection" width="55" />
         <el-table-column prop="name" label="角色名称" />
@@ -33,7 +49,6 @@
         <el-table-column prop="description" label="描述" />
         <el-table-column label="操作" width="300">
           <template #default="scope">
-            <!-- <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button> -->
             <el-button type="info" size="small" @click="handleViewDetail(scope.row)">查看详情</el-button>
             <el-button type="danger" size="small" @click="handleDelete(scope.row)"
             v-if="hasPerms('system.role:delete')"
@@ -41,6 +56,18 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="page"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="total"
+          layout="total, sizes, prev, pager, next"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </el-card>
 
     <!-- 新增/编辑对话框 -->
@@ -51,15 +78,16 @@
     >
       <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
         <el-form-item label="角色名称" prop="name">
-          <el-input v-model="form.name" />
+          <el-input v-model="form.name" placeholder="请输入角色名称" />
         </el-form-item>
         <el-form-item label="角色代码" prop="code">
-          <el-input v-model="form.code" />
+          <el-input v-model="form.code" placeholder="请输入角色代码" />
         </el-form-item>
-        <el-form-item label="权限列表" prop="permissions">
+        <el-form-item label="权限" prop="permissions">
           <el-select
             v-model="form.permissions"
             multiple
+            filterable
             placeholder="请选择权限"
             style="width: 100%"
           >
@@ -71,8 +99,8 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="描述">
-          <el-input v-model="form.description" type="textarea" :rows="2" />
+        <el-form-item label="描述" prop="description">
+          <el-input v-model="form.description" type="textarea" placeholder="请输入描述" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -93,6 +121,8 @@ import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
 import { hasPerms } from "@/utils/auth";
 import router from '@/router'
+import { Search } from '@element-plus/icons-vue'
+import '@/style/system.scss'
 
 const roleList = ref([])
 const permissionList = ref([])
@@ -121,16 +151,33 @@ const rules = {
 
 const loading = ref(false)
 
+// 分页相关
+const page = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+
+// 搜索相关
+const searchForm = ref({
+  keyword: ''
+})
+
 // 获取角色列表
 const getRoleList = async () => {
   try {
     loading.value = true
+    const params = {
+      page: page.value,
+      page_size: pageSize.value,
+      search: searchForm.value.keyword
+    }
     const res = await http.request(
       "get",
-      import.meta.env.VITE_BACKEND_URL + apiMap.role.roleList
+      apiMap.role.roleList,
+      { params: params }
     );
     if (res.success) {
       roleList.value = res.data.data;
+      total.value = res.data.total;
     } else {
       ElMessage.error(res.msg);
     }
@@ -146,7 +193,7 @@ const getPermissionList = async () => {
   try {
     const res = await http.request(
       "get",
-      import.meta.env.VITE_BACKEND_URL + apiMap.permission.permissionList
+      apiMap.permission.permissionList
     );
     if (res.success) {
       permissionList.value = res.data.data;
@@ -186,7 +233,7 @@ const handleDelete = (row) => {
     try {
       const res = await http.request(
         "delete",
-        import.meta.env.VITE_BACKEND_URL + apiMap.role.role,
+        apiMap.role.role,
         { data: { uuid: row.uuid } }
       );
       if (res.success) {
@@ -211,7 +258,7 @@ const handleSubmit = async () => {
         if (dialogType.value === 'add') {
           const res = await http.request(
             "post",
-            import.meta.env.VITE_BACKEND_URL + apiMap.role.role,
+            apiMap.role.role,
             { data: form.value }
           );
           if (res.success) {
@@ -224,7 +271,7 @@ const handleSubmit = async () => {
         } else {
           const res = await http.request(
             "put",
-            import.meta.env.VITE_BACKEND_URL + apiMap.role.role,
+            apiMap.role.role,
             { data: form.value }
           );
           if (res.success) {
@@ -256,7 +303,7 @@ const handleBatchDelete = async () => {
       type: 'warning'
     })
     
-    const res = await http.request('delete', import.meta.env.VITE_BACKEND_URL + apiMap.role.roleList, {
+    const res = await http.request('delete', apiMap.role.roleList, {
       data: { uuids: selectedRoles.value }
     })
     
@@ -272,6 +319,32 @@ const handleBatchDelete = async () => {
       ElMessage.error('删除失败')
     }
   }
+}
+
+// 处理搜索
+const handleSearch = () => {
+  page.value = 1
+  getRoleList()
+}
+
+// 处理页码改变
+const handleCurrentChange = (val: number) => {
+  page.value = val
+  getRoleList()
+}
+
+// 处理每页条数改变
+const handleSizeChange = (val: number) => {
+  pageSize.value = val
+  page.value = 1
+  getRoleList()
+}
+
+// 重置搜索
+const resetSearch = () => {
+  searchForm.value.keyword = ''
+  page.value = 1
+  getRoleList()
 }
 
 onMounted(() => {
@@ -291,5 +364,14 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.search-box {
+  margin: 0 20px;
+}
+
+.pagination-container {
+  margin-top: 20px;
+  text-align: right;
 }
 </style> 

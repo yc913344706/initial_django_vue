@@ -176,7 +176,7 @@ const rules = {
 // 获取用户详情
 const getUserDetail = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, {
+    const res = await http.request('get', apiMap.user.user, {
       params: { uuid: route.query.uuid }
     })
     if (res.success) {
@@ -192,7 +192,7 @@ const getUserDetail = async () => {
 // 获取角色列表
 const getRoleList = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.role.roleList)
+    const res = await http.request('get', apiMap.role.roleList)
     if (res.success) {
       roleList.value = res.data.data
     } else {
@@ -206,7 +206,7 @@ const getRoleList = async () => {
 // 获取权限列表
 const getPermissionList = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.permission.permissionList)
+    const res = await http.request('get', apiMap.permission.permissionList)
     if (res.success) {
       permissionList.value = res.data.data
     } else {
@@ -220,7 +220,7 @@ const getPermissionList = async () => {
 // 获取用户权限JSON
 const getUserPermissionJson = async () => {
   try {
-    const res = await http.request('get', import.meta.env.VITE_BACKEND_URL + apiMap.permission.userPermissionJson, {
+    const res = await http.request('get', apiMap.permission.userPermissionJson, {
       params: { uuid: route.query.uuid }
     })
     if (res.success) {
@@ -260,7 +260,7 @@ const handleSubmit = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        const res = await http.request('put', import.meta.env.VITE_BACKEND_URL + apiMap.user.user, {
+        const res = await http.request('put', apiMap.user.user, {
           data: form.value
         })
         if (res.success) {
