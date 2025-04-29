@@ -1,7 +1,7 @@
 ARG BASE_IMAGE=yc913344706/ubuntu:20.04_python3.8
 FROM ${BASE_IMAGE}
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 # 安装uwsgi
 RUN apt update && apt install -y libldap2-dev libsasl2-dev uwsgi
