@@ -23,6 +23,7 @@ pymdown-extensions
 pymysql
 pypinyin
 python-dateutil
+python-ldap
 pytz
 PyYAML
 requests

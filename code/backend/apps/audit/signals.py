@@ -1,18 +1,17 @@
 from django.db.models.signals import pre_save, post_save, pre_delete, m2m_changed
 from django.dispatch import receiver
 from django.db.models import Model
-from django.core.serializers.json import DjangoJSONEncoder
 
 from apps.auth.token_utils import TokenManager
 from lib.time_tools import utc_obj_to_time_zone_str
 from .models import AuditLog
 from lib.request_tool import get_authorization_token, get_current_request, get_client_ip
 from lib.log import color_logger
-from backend.settings import config_data
 from datetime import datetime
 import uuid
 from django.db import transaction
 from threading import local
+from decimal import Decimal
 
 # https://docs.djangoproject.com/zh-hans/5.1/ref/signals/
 # 创建一个线程本地存储来存储临时变更
@@ -74,6 +73,8 @@ def serialize_value(value):
         return str(value.uuid)
     if hasattr(value, 'pk'):  # 处理外键关联对象
         return str(value.pk)
+    if isinstance(value, Decimal):  # 处理 Decimal 类型
+        return float(value)  # 转换为 float 类型
     return value
 
 def get_relation_changes(field, old_instance, new_instance):

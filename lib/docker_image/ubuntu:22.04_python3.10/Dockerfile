@@ -4,7 +4,7 @@ FROM ${BASE_IMAGE}
 # 拉取基础镜像、海外镜像、海外基础镜像
 # [root@k8s-server-45-151 ~/yuc7]#./download_common_image.sh
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update
 RUN apt install -y ca-certificates
@@ -36,7 +36,7 @@ ENV LANG=zh_CN.UTF-8 LANGUAGE=zh_CN.UTF-8 LC_ALL=zh_CN.UTF-8
 
 # 安装基础包
 RUN apt update
-RUN apt install -y vim curl netcat git
+RUN apt install -y vim curl netcat git inetutils-ping telnet net-tools wget
 
 # 清理缓存
 RUN apt clean all
