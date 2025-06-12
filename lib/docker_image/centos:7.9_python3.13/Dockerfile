@@ -3,6 +3,8 @@ FROM ${BASE_IMAGE}
 
 RUN mkdir /etc/yum.repos.d/bak
 RUN mv /etc/yum.repos.d/*.repo /etc/yum.repos.d/bak/
+# 阿里云对 CentOS 7.9.2009 的 YUM 源支持方案
+# https://www.cnblogs.com/sinlang5778/p/18764676
 COPY root/etc/yum.repos.d/centos.repo /etc/yum.repos.d/centos.repo
 RUN yum makecache
 
@@ -35,8 +37,7 @@ RUN source /opt/rh/devtoolset-9/enable && \
     ./configure \
         --prefix=/opt/python$PYTHON_VERSION \
         --enable-optimizations \
-        --disable-test-modules \
-        --with-openssl=/opt/openssl  && \
+        --disable-test-modules && \
     make -j$(nproc) && \
     make install
     # --without-pymalloc \
