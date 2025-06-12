@@ -26,4 +26,4 @@ build_image() {
 
 build_image
 push_image_with_manifest_for_arch "${DOCKER_IMAGE_NAME}" "${DOCKER_IMAGE_TAG}"
-# push_image
+# push_image "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
