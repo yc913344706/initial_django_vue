@@ -115,6 +115,8 @@ push_image_with_manifest_for_arch() {
 push_image()
 {
   need_push=false
+
+  _docker_image_name=$1
   read -p "do you want to push this? [y|yes]" ans
 
   ans=$(echo "$ans" | tr '[:upper:]' '[:lower:]')
@@ -127,7 +129,7 @@ push_image()
     return
   }
 
-  docker push "${DOCKER_IMAGE_NAME}"
+  docker push "${_docker_image_name}"
 }
 
 stop_rm_docker_container() {
