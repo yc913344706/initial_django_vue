@@ -9,6 +9,46 @@ RUN yum makecache
 # 配置dns服务器
 RUN bash -c 'echo "223.5.5.5 >> /etc/resolv.conf"'
 
+RUN yum groupinstall -y "Development Tools"
+RUN yum install -y gcc zlib-devel bzip2 bzip2-devel \
+    readline-devel sqlite sqlite-devel openssl-devel \
+    xz xz-devel libffi-devel wget make vim 
+
+RUN yum clean all && yum makecache && yum repolist
+RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+RUN yum install -y gcc-c++ \
+    tk-devel gdbm-devel \
+    libuuid-devel libnsl2-devel libtirpc-devel \
+    findutils patch devtoolset-9
+
+ENV PYTHON_VERSION=3.13.4
+
+# 后续每个 RUN 前加
+SHELL ["/bin/bash", "-c"]
+RUN source /opt/rh/devtoolset-9/enable && \
+    cd /usr/src && \
+    wget https://mirrors.aliyun.com/python-release/source/Python-$PYTHON_VERSION.tgz && \
+    tar xvf Python-$PYTHON_VERSION.tgz && \
+    rm -f Python-$PYTHON_VERSION.tgz && \
+    cd Python-$PYTHON_VERSION && \
+    ./configure \
+        --prefix=/opt/python$PYTHON_VERSION \
+        --enable-optimizations \
+        --disable-test-modules \
+        --with-openssl=/opt/openssl  && \
+    make -j$(nproc) && \
+    make install
+    # --without-pymalloc \
+    # --without-static-libpython && \
+
+RUN ln -sf /opt/python$PYTHON_VERSION/bin/python3 /usr/local/sbin/python$PYTHON_VERSION && \
+    ln -sf /opt/python$PYTHON_VERSION/bin/pip3 /usr/local/sbin/pip$PYTHON_VERSION && \
+    ln -sf /opt/python$PYTHON_VERSION/bin/python3 /usr/local/sbin/python3 && \
+    ln -sf /opt/python$PYTHON_VERSION/bin/pip3 /usr/local/sbin/pip3 && \
+    ln -sf /opt/python$PYTHON_VERSION/bin/python3 /usr/local/sbin/python && \
+    ln -sf /opt/python$PYTHON_VERSION/bin/pip3 /usr/local/sbin/pip
+
 
 # RUN apt update
 # RUN apt install -y python3 python3-pip
@@ -22,19 +62,18 @@ RUN bash -c 'echo "223.5.5.5 >> /etc/resolv.conf"'
 # RUN bash -c 'pip3 install --upgrade setuptools'
 # RUN python3 -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --upgrade pip
 
-# # 时区
-# RUN apt-get install -y locales tzdata xfonts-wqy && \
-#     locale-gen zh_CN.UTF-8 && \
-#     update-locale LANG=zh_CN.UTF-8 LANGUAGE=zh_CN.UTF-8 LC_ALL=zh_CN.UTF-8 && \
-#     ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-#     dpkg-reconfigure --frontend noninteractive tzdata
-# ENV LANG=zh_CN.UTF-8 LANGUAGE=zh_CN.UTF-8 LC_ALL=zh_CN.UTF-8
+# 设置时区和中文
+RUN yum install -y glibc-common tzdata wqy-zenhei-fonts && \
+    localedef -c -f UTF-8 -i zh_CN zh_CN.UTF-8 && \
+    ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo 'LANG=zh_CN.UTF-8' > /etc/locale.conf
 
-# # 安装基础包
-# RUN apt update
-# RUN apt install -y vim curl netcat git inetutils-ping telnet net-tools wget
+ENV LANG=zh_CN.UTF-8
+ENV LANGUAGE=zh_CN:zh
+ENV LC_ALL=zh_CN.UTF-8
 
-# # 清理缓存
-# RUN apt clean all
-# RUN find /var/lib/apt/lists -type f -delete && \
-#     find /var/cache -type f -delete
+# 安装基础包
+RUN yum install -y vim curl nc git iputils telnet net-tools wget
+
+# 清理缓存
+RUN yum clean all && rm -rf /var/cache/yum

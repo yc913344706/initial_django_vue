@@ -1,33 +1,84 @@
+# CentOS-Base.repo
+#
+# The mirror system uses the connecting IP address of the client and the
+# update status of each mirror to pick mirrors that are updated to and
+# geographically close to the client.  You should use this for CentOS updates
+# unless you are manually picking other mirrors.
+#
+# If the mirrorlist= does not work for you, as a fall back you can try the 
+# remarked out baseurl= line instead.
+#
+#
+ 
 [base]
-name=CentOS-$releasever-$basearch-Base-yum.ziroom.com
-baseurl=http://yum.ziroom.com/centos/$releasever/os/$basearch/
-#baseurl=http://mirrors.aliyun.com/centos/$releasever/os/$basearch/
-enabled=1
-gpgcheck=0
-
+name=CentOS-$releasever - Base - mirrors.aliyun.com
+failovermethod=priority
+baseurl=http://mirrors.aliyun.com/centos/$releasever/os/$basearch/
+        http://mirrors.aliyuncs.com/centos/$releasever/os/$basearch/
+        http://mirrors.cloud.aliyuncs.com/centos/$releasever/os/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+ 
+#released updates 
 [updates]
-name=CentOS-$releasever-$basearch-Updates-yum.ziroom.com
-baseurl=http://yum.ziroom.com/centos/$releasever/updates/$basearch/
-#baseurl=http://mirrors.aliyun.com/centos/$releasever/updates/$basearch/
-enabled=1
-gpgcheck=0
-
+name=CentOS-$releasever - Updates - mirrors.aliyun.com
+failovermethod=priority
+baseurl=http://mirrors.aliyun.com/centos/$releasever/updates/$basearch/
+        http://mirrors.aliyuncs.com/centos/$releasever/updates/$basearch/
+        http://mirrors.cloud.aliyuncs.com/centos/$releasever/updates/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+ 
+#additional packages that may be useful
 [extras]
-name=CentOS-$releasever-$basearch-Extras-yum.ziroom.com
-baseurl=http://yum.ziroom.com/centos/$releasever/extras/$basearch/
-#baseurl=http://mirrors.aliyun.com/centos/$releasever/extras/$basearch/
-enabled=1
-gpgcheck=0
+name=CentOS-$releasever - Extras - mirrors.aliyun.com
+failovermethod=priority
+baseurl=http://mirrors.aliyun.com/centos/$releasever/extras/$basearch/
+        http://mirrors.aliyuncs.com/centos/$releasever/extras/$basearch/
+        http://mirrors.cloud.aliyuncs.com/centos/$releasever/extras/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+ 
+#additional packages that extend functionality of existing packages
+[centosplus]
+name=CentOS-$releasever - Plus - mirrors.aliyun.com
+failovermethod=priority
+baseurl=http://mirrors.aliyun.com/centos/$releasever/centosplus/$basearch/
+        http://mirrors.aliyuncs.com/centos/$releasever/centosplus/$basearch/
+        http://mirrors.cloud.aliyuncs.com/centos/$releasever/centosplus/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+ 
+#contrib - packages by Centos Users
+[contrib]
+name=CentOS-$releasever - Contrib - mirrors.aliyun.com
+failovermethod=priority
+baseurl=http://mirrors.aliyun.com/centos/$releasever/contrib/$basearch/
+        http://mirrors.aliyuncs.com/centos/$releasever/contrib/$basearch/
+        http://mirrors.cloud.aliyuncs.com/centos/$releasever/contrib/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
 
-[epel]
-name=CentOS-$releasever-$basearch-Epel-yum.ziroom.com
-baseurl=http://yum.ziroom.com/epel/$releasever/$basearch/
-#baseurl=http://mirrors.aliyun.com/epel/$releasever/$basearch/
-enabled=1
-gpgcheck=0
 
-[agent]
-name=CentOS-$releasever-$basearch-Agent-yum.ziroom.com
-baseurl=http://yum.ziroom.com/agent
-enabled=1
+# CentOS-SCLo-sclo.repo
+#
+# Please see http://wiki.centos.org/SpecialInterestGroup/SCLo for more
+# information
+
+[centos-sclo-sclo]
+name=CentOS-7 - SCLo sclo
+baseurl=https://mirrors.aliyun.com/centos/7.9.2009/sclo/x86_64/sclo/
 gpgcheck=0
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-SCLo
+#gpgkey=https://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+
+[centos-sclo-rh]
+name=CentOS-7 - SCLo rh
+baseurl=https://mirrors.aliyun.com/centos/7.9.2009/sclo/x86_64/rh/
+gpgcheck=0
+enabled=1
+#gpgkey=https://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-SCLo
