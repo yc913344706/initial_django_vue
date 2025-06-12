@@ -14,7 +14,10 @@ RUN bash -c 'echo "223.5.5.5 >> /etc/resolv.conf"'
 
 COPY root/etc/apt/sources.list /etc/apt/sources.list
 
+# 安装基础包
 RUN apt update
+RUN apt install -y vim curl netcat git inetutils-ping telnet net-tools wget \
+    build-essential libreadline-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev
 
 ENV PYTHON_VERSION=3.13.4
 
@@ -56,10 +59,6 @@ RUN apt-get install -y locales tzdata xfonts-wqy && \
     ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     dpkg-reconfigure --frontend noninteractive tzdata
 ENV LANG=zh_CN.UTF-8 LANGUAGE=zh_CN.UTF-8 LC_ALL=zh_CN.UTF-8
-
-# 安装基础包
-RUN apt update
-RUN apt install -y vim curl netcat git inetutils-ping telnet net-tools wget
 
 # 清理缓存
 RUN apt clean all
