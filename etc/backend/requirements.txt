@@ -36,3 +36,9 @@ urllib3
 uuid
 uwsgi
 xmltodict
+fastapi
+uvicorn[standard]
+python-dotenv
+httpx
+pytest
+websockets
