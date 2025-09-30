@@ -1,9 +1,6 @@
 ARG BASE_IMAGE=ubuntu:22.04
 FROM ${BASE_IMAGE}
 
-# 拉取基础镜像、海外镜像、海外基础镜像
-# [root@k8s-server-45-151 ~/yuc7]#./download_common_image.sh
-
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update
@@ -19,7 +16,7 @@ RUN apt update
 RUN apt install -y vim curl netcat git inetutils-ping telnet net-tools wget \
     build-essential libreadline-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev
 
-ENV PYTHON_VERSION=3.13.4
+ARG PYTHON_VERSION=x.x.x
 
 # 后续每个 RUN 前加
 RUN cd /usr/src && \
