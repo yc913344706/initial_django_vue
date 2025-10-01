@@ -22,11 +22,11 @@ BUILD_BASE_IMAGE="${DOCKER_PROXY_DOCKER_IO}library/ubuntu:22.04"
 DOCKER_IMAGE_NAME="${PRIVATE_HARBOR_PREFIX}yc913344706/ubuntu"
 
 
-# TARGET_PYTHON_VERSION="3.12.10" # python版本
-# DOCKER_IMAGE_TAG="22.04_python3.12" # 制作成的目标镜像--TAG
+TARGET_PYTHON_VERSION="3.12.10" # python版本
+DOCKER_IMAGE_TAG="22.04_python3.12" # 制作成的目标镜像--TAG
 
-TARGET_PYTHON_VERSION="3.13.4" # python版本
-DOCKER_IMAGE_TAG="22.04_python3.13" # 制作成的目标镜像--TAG
+# TARGET_PYTHON_VERSION="3.13.4" # python版本
+# DOCKER_IMAGE_TAG="22.04_python3.13" # 制作成的目标镜像--TAG
 
 ##########################
 

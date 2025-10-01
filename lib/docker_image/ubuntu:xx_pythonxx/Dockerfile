@@ -7,7 +7,9 @@ RUN apt update
 RUN apt install -y ca-certificates
 
 # 配置dns服务器
+# https://www.jianshu.com/p/a3cd2f4278a9
 RUN bash -c 'echo "223.5.5.5 >> /etc/resolv.conf"'
+RUN bash -c 'echo "119.29.29.29 >> /etc/resolv.conf"'
 
 COPY root/etc/apt/sources.list /etc/apt/sources.list
 
@@ -40,6 +42,9 @@ RUN ln -sf /opt/python$PYTHON_VERSION/bin/python3 /usr/local/sbin/python$PYTHON_
     ln -sf /opt/python$PYTHON_VERSION/bin/python3 /usr/local/sbin/python && \
     ln -sf /opt/python$PYTHON_VERSION/bin/pip3 /usr/local/sbin/pip
 
+RUN bash -c 'echo "export PATH=/opt/python$PYTHON_VERSION/bin:$PATH" >> /etc/profile'
+RUN bash -c 'echo "export PATH=/opt/python$PYTHON_VERSION/bin:$PATH" >> /etc/bash.bashrc'
+
 
 # 解决问题: Can‘t start new thread
 RUN pip config --user set global.progress_bar off
@@ -56,6 +61,9 @@ RUN apt-get install -y locales tzdata xfonts-wqy && \
     ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     dpkg-reconfigure --frontend noninteractive tzdata
 ENV LANG=zh_CN.UTF-8 LANGUAGE=zh_CN.UTF-8 LC_ALL=zh_CN.UTF-8
+
+# 默认shell
+RUN bash -c 'ln -sf /bin/bash /bin/sh'
 
 # 清理缓存
 RUN apt clean all
