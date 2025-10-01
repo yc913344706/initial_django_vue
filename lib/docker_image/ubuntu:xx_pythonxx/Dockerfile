@@ -68,4 +68,5 @@ RUN bash -c 'ln -sf /bin/bash /bin/sh'
 # 清理缓存
 RUN apt clean all
 RUN find /var/lib/apt/lists -type f -delete && \
-    find /var/cache -type f -delete
+    find /var/cache -type f -delete && \
+    rm -rf /var/lib/apt/lists/*

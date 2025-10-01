@@ -56,11 +56,11 @@ MIDDLEWARE_WHITE_LIST: {
 }
 
 MYSQL: {
-  "HOST": "127.0.0.1",
-  "PORT": 13306,
+  "HOST": "db_mysql",
+  "PORT": 3306,
   "USER": "root",
   "PASSWORD": "Admin@123",
-  "DB": "backend"
+  "DB": "initial_django_vue"
 }
 
 HAS_REDIS: true

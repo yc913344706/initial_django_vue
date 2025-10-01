@@ -1,0 +1,70 @@
+services:
+  backend:
+    # build:
+    #   context: ./code/backend
+    #   dockerfile: Dockerfile
+    container_name: initial_django_vue_backend
+    image: yc913344706/python:3.13_django
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./code/backend:/app
+      - ./data/backend:/data/persistent
+      - ./logs/backend:/var/log/backend
+    env_file:
+      - ./code/backend/.dev.env
+    depends_on:
+      - db_mysql
+    command: >
+      bash -c "
+        source /etc/profile &&
+        cd /app &&
+        pip3 install -r requirements.txt &&
+        python3 manage.py migrate &&
+        gunicorn backend.wsgi:application --bind 0.0.0.0:8000"
+
+  frontend:
+    # Docker 构建镜像时，会根据 Dockerfile 的每一步（每个指令）缓存结果。
+    # 如果某一步的内容没变（比如 package.json 没变），Docker 会复用缓存，不会重新执行 npm install，也不会重新下载 node_modules。
+    # 如果你修改了 package.json 或 package-lock.json，这一层的缓存失效，npm install 会重新执行，重新下载依赖。
+    # build:
+    #   context: ./code/frontend
+    #   dockerfile: Dockerfile
+    image: yc913344706/node:22-alpine-pnpm
+    container_name: initial_django_vue_frontend
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./code/frontend:/app
+    environment:
+      - NODE_ENV=development
+      - ENV NEXT_TELEMETRY_DISABLED=1
+    depends_on:
+      - backend
+    command: >
+      sh -c "
+        cd /app &&
+        pnpm install &&
+        pnpm dev"
+
+  db_mysql:
+    image: mysql:8.0.39
+    container_name: initial_django_vue_db
+    ports:
+      - "3306:3306"
+    restart: always
+    # 容器日志大小配置
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '5g'
+    environment:
+      # 配置root密码
+      MYSQL_ROOT_PASSWORD: Admin@123
+    volumes:
+      # 挂载数据目录
+      - "./data/mysql/data:/var/lib/mysql" 
+      # 挂载配置文件目录
+      - "./data/mysql/config:/etc/mysql/conf.d" 
+      # 挂载 mysql 初始化 sql 文件目录
+      - "./etc/mysql/init:/docker-entrypoint-initdb.d"

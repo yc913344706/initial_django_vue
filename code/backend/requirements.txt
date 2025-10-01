@@ -42,3 +42,4 @@ python-dotenv
 httpx
 pytest
 websockets
+gunicorn

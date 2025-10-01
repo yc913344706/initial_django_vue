@@ -44,7 +44,11 @@
 > - 个人电脑使用，配置不高的情况下，电脑负载会很高。
 
 ```bash
-./bin/prod/start_all_in_one.sh -E dev
+docker-compose -f docker-compose.dev.yaml up -d
+
+docker-compose -f docker-compose.dev.yaml up db_mysql -d
+docker-compose -f docker-compose.dev.yaml up backend -d
+docker-compose -f docker-compose.dev.yaml up frontend -d
 ```
 
 ### 启动api文档

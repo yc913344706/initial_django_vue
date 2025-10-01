@@ -17,9 +17,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 from lib.log import set_color_logger_level
+import os
 
 from yaml import safe_load
-f2 = open(f"{BASE_DIR}/config.yaml", 'rb')
+f2 = open(f"{BASE_DIR}/.{os.environ['INITIAL_DJANGO_VUE_ENV']}.yaml", 'rb')
 config_data = safe_load(f2.read())
 f2.close()
 
@@ -133,8 +134,12 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',  # 默认
+        'NAME': config_data["MYSQL"]["DB"],  # 连接的数据库
+        'HOST': config_data["MYSQL"]["HOST"],  # mysql的ip地址
+        'PORT': config_data["MYSQL"]["PORT"],  # mysql的端口
+        'USER': config_data["MYSQL"]["USER"],  # mysql的用户名
+        'PASSWORD': config_data["MYSQL"]["PASSWORD"]  # mysql的密码
     }
 }
 
