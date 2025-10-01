@@ -5,8 +5,8 @@ services:
     #   dockerfile: Dockerfile
     container_name: initial_django_vue_backend
     image: yc913344706/python:3.13_django
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     volumes:
       - ./code/backend:/app
       - ./data/backend:/data/persistent
@@ -21,6 +21,7 @@ services:
         cd /app &&
         pip3 install -r requirements.txt &&
         python3 manage.py migrate &&
+        python3 manage.py create_admin_user &&
         gunicorn backend.wsgi:application --bind 0.0.0.0:8000"
 
   frontend:
@@ -32,8 +33,8 @@ services:
     #   dockerfile: Dockerfile
     image: yc913344706/node:22-alpine-pnpm
     container_name: initial_django_vue_frontend
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     volumes:
       - ./code/frontend:/app
     environment:
@@ -46,6 +47,18 @@ services:
         cd /app &&
         pnpm install &&
         pnpm dev"
+
+  nginx:
+    image: nginx:alpine
+    container_name: initial_django_vue_nginx
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./etc/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
 
   db_mysql:
     image: mysql:8.0.39
@@ -68,3 +81,17 @@ services:
       - "./data/mysql/config:/etc/mysql/conf.d" 
       # 挂载 mysql 初始化 sql 文件目录
       - "./etc/mysql/init:/docker-entrypoint-initdb.d"
+
+  redis:
+    # https://developer.aliyun.com/article/1293182
+    image: redis:latest
+    container_name: initial_django_vue_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+      - ./etc/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./logs/redis:/logs
+    #配置文件启动
+    command: redis-server /usr/local/etc/redis/redis.conf

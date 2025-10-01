@@ -9,7 +9,7 @@
 
 | 角色 | 账号 | 密码 |
 | ---- | ---- | ---- |
-| 管理员 | admin | admin123 |
+| 管理员 | admin | Admin@123 |
 | 普通用户 | normal | normal123 |
 
 

@@ -63,11 +63,10 @@ MYSQL: {
   "DB": "initial_django_vue"
 }
 
-HAS_REDIS: true
 REDIS: {
-  "HOST": "172.17.0.1",
-  "PORT": 16379,
-  "PASSWORD": "123456",
+  "HOST": "redis",
+  "PORT": 6379,
+  "PASSWORD": "Admin@123",
   "DB": {
     "DEFAULT": 0,
     # celery

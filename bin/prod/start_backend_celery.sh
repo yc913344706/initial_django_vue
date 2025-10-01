@@ -36,9 +36,8 @@ pre_check() {
   check_file_exists "${WORKSPACE}/etc/docker_env_files/${ENV}.env"
   check_file_exists "${WORKSPACE}/etc/config_dir/${ENV}.yaml"
 
-  # 检查HAS_REDIS
-  HAS_REDIS=$(read_yaml_key_docker "${WORKSPACE}/etc/config_dir/${ENV}.yaml" "HAS_REDIS")
-  $HAS_REDIS || die "HAS_REDIS is false, please set HAS_REDIS to true in ${WORKSPACE}/etc/config_dir/${ENV}.yaml"
+  # # 检查HAS_REDIS
+  # HAS_REDIS=$(read_yaml_key_docker "${WORKSPACE}/etc/config_dir/${ENV}.yaml" "HAS_REDIS")
 
   # 准备配置文件
   prepare_config_file \

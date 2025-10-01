@@ -146,33 +146,32 @@ DATABASES = {
 # cache
 # https://cloud.tencent.com/developer/article/2123441
 
-if config_data.get('HAS_REDIS', False):
-    CACHES = {
-        "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": 'redis://:{}@{}:{}/{}'.format(
-                config_data['REDIS']['PASSWORD'],
-                config_data['REDIS']['HOST'],
-                config_data['REDIS']['PORT'],
-                config_data['REDIS']['DB']['DEFAULT'],
-            ),
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            }
-        },
-        "AUTH": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": 'redis://:{}@{}:{}/{}'.format(
-                config_data['REDIS']['PASSWORD'],
-                config_data['REDIS']['HOST'],
-                config_data['REDIS']['PORT'],
-                config_data['REDIS']['DB']['AUTH'],
-            ),
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            }
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": 'redis://:{}@{}:{}/{}'.format(
+            config_data['REDIS']['PASSWORD'],
+            config_data['REDIS']['HOST'],
+            config_data['REDIS']['PORT'],
+            config_data['REDIS']['DB']['DEFAULT'],
+        ),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    "AUTH": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": 'redis://:{}@{}:{}/{}'.format(
+            config_data['REDIS']['PASSWORD'],
+            config_data['REDIS']['HOST'],
+            config_data['REDIS']['PORT'],
+            config_data['REDIS']['DB']['AUTH'],
+        ),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     }
+}
 
 
 # Password validation

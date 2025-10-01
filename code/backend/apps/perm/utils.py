@@ -4,8 +4,7 @@ from lib.log import color_logger
 from lib.json_tools import merge_jsons
 from lib.time_tools import utc_obj_to_time_zone_str
 from backend.settings import config_data
-if config_data.get('HAS_REDIS', False):
-    from lib.redis_tool import delete_redis_value, get_redis_value, set_redis_value
+from lib.redis_tool import get_redis_value, set_redis_value
 
 def format_permission_data(permission: Permission, only_basic=False):
     """格式化权限数据"""
@@ -64,13 +63,12 @@ def get_user_perm_json_all(user_uuid, is_user_name=False):
     try:
         redis_key = f"user_perm_json_all:{user_uuid}"
         
-        if config_data.get('HAS_REDIS', False):
-            user_perm_json_all = get_redis_value(
-                redis_db_name='default',
-                redis_key_name=redis_key
-            )
-            if user_perm_json_all:
-                return user_perm_json_all
+        user_perm_json_all = get_redis_value(
+            redis_db_name='default',
+            redis_key_name=redis_key
+        )
+        if user_perm_json_all:
+            return user_perm_json_all
 
         # color_logger.debug(f"获取用户权限JSON: {user_uuid}")
         if is_user_name:
@@ -120,13 +118,12 @@ def get_user_perm_json_all(user_uuid, is_user_name=False):
         merged_permission_json = merge_jsons(all_permission_jsons)
         # color_logger.debug(f"({user_uuid})合并后的权限JSON: {merged_permission_json}")
         
-        if config_data.get('HAS_REDIS', False):
-            set_redis_value(
-                redis_db_name='default',
-                redis_key_name=redis_key,
-                redis_key_value=merged_permission_json,
-                set_expire=60
-            )
+        set_redis_value(
+            redis_db_name='default',
+            redis_key_name=redis_key,
+            redis_key_value=merged_permission_json,
+            set_expire=60
+        )
 
         return merged_permission_json
         

@@ -12,8 +12,7 @@ from django.utils import timezone as django_timezone
 from collections import OrderedDict
 from backend.settings import config_data
 
-if config_data.get('HAS_REDIS', False):
-    from lib.redis_tool import get_redis_value, set_redis_value
+from lib.redis_tool import get_redis_value, set_redis_value
 
 def get_now_time_utc_obj():
     """获取当前时间UTC对象"""
