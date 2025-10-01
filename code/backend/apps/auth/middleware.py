@@ -24,10 +24,20 @@ class AuthMiddleware:
             current_path = request.path
             current_method = request.method
             
+            # 如果开发环境配置了不需要登录验证，直接放行
+            if not config_data.get('NEED_LOGIN', False):
+                color_logger.debug('process_request: 不需要校验token')
+                return None
+            
             # 如果是公开路径，直接放行
             current_path_prefix = current_path.split('?')[0]
             if current_path_prefix in config_data.get('MIDDLEWARE_WHITE_LIST', []):
                 color_logger.debug(f'白名单，跳过中间件校验token：{current_path}')
+                return None
+
+            # 处理Django admin相关路径
+            if current_path.startswith('/admin/'):
+                color_logger.debug(f'admin路径，跳过中间件校验token：{current_path}')
                 return None
             
             color_logger.debug(f'开始中间件校验token：{current_path}, {request.method}')

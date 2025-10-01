@@ -6,7 +6,6 @@ from lib.log import color_logger
 from lib.redis_tool import delete_redis_value, get_redis_value, set_redis_value
 
 class TokenManager:
-        
     def _generate_token(self, username, expire_time):
         """生成JWT token"""
         payload = {

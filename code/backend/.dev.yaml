@@ -32,15 +32,17 @@ AES_KEY: "dTDR80ClnxN93QmX"
 
 # Token配置
 AUTH: {
-  "ACCESS_TOKEN_EXPIRE": 7200,  # 2小时
-  "REFRESH_TOKEN_EXPIRE": 604800,  # 7天
   "COOKIE_ACCESS_TOKEN_NAME": "dev_idv_accessToken",  # accessToken name
   "COOKIE_REFRESH_TOKEN_NAME": "dev_idv_refreshToken",  # refreshToken name
+  "COOKIE_USERNAME_NAME": "dev_idv_username_prod",
+  
+  "ACCESS_TOKEN_EXPIRE": 7200,  # 2小时
+  "REFRESH_TOKEN_EXPIRE": 604800,  # 7天
   
   "JWT_SECRET": "JbzhCpYqofMDBb9A8AWte7jXiwp1FxI0TGWoq8FSI6DMrdPqtt",
   "JWT_ALGORITHM": "HS256",
 
-  "COOKIE_DOMAIN": ".ycley.com",  # 允许所有 ycley.com 的子域名访问
+  # "COOKIE_DOMAIN": ".ycley.com",  # 允许所有 ycley.com 的子域名访问
   "COOKIE_HTTPONLY": false,
   "COOKIE_SECURE": true,  # HTTPS 环境下设为 true
   # https://www.ruanyifeng.com/blog/2019/09/cookie-samesite.html
@@ -49,10 +51,10 @@ AUTH: {
 }
 
 MIDDLEWARE_WHITE_LIST: {
+    "/api/v1/demo/health/": ["GET"],
     "/api/v1/auth/login/": ["POST"],
-    "/api/v1/auth/refresh-token/": ["POST"],
     "/api/v1/auth/logout/": ["POST"],
-    "/api/v1/demo": ["GET"]
+    "/api/v1/auth/refresh-token/": ["POST"],
 }
 
 MYSQL: {
