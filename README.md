@@ -1,15 +1,10 @@
 ## 是什么
 
-- 基于 `Python 3.13`、`Django 5.2`、`Vue 3.5` 的微服务RBAC 权限管理系统。
-- 一个最小化的管理界面。包括前端+后端。
+- 最小化全栈开发基础框架，支持 RBAC 权限管理系统。包括前端、后端、nginx、mysql、redis。
+- 技术栈： `Python 3.13`、`Django 5.2`、`Vue 3.5`。
+- 环境要求：`Docker Engine 18.06.0`、`Docker Compose 3.7+` 。
 
 ## 如何使用
-
-### 内置用户
-
-| 角色 | 账号 | 密码 |
-| ---- | ---- | ---- |
-| 管理员 | admin | Admin@123 |
 
 ### 启动
 
@@ -21,6 +16,12 @@
 ```bash
 docker-compose -f docker-compose.dev.yaml up -d
 ```
+
+### 内置用户
+
+| 角色 | 账号 | 密码 |
+| ---- | ---- | ---- |
+| 管理员 | admin | Admin@123 |
 
 ### 更多命令
 
