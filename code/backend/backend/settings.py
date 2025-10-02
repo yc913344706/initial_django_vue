@@ -105,7 +105,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    'apps.auth.middleware.AuthMiddleware',
+    'apps.myAuth.middleware.AuthMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'

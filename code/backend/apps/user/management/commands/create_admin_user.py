@@ -243,15 +243,15 @@ class Command(BaseCommand):
                 }
             )
         ]:
-            prem_obj = Permission.objects.filter(code=perm[0]).first()
-            if prem_obj is None:
+            perm_obj = Permission.objects.filter(code=perm[0]).first()
+            if perm_obj is None:
                 perm_obj = Permission.objects.create(
                     code=perm[0],
                     name=perm[1],
                     description=perm[2],
                     permission_json=perm[3]
                 )
-            if perm[0]in ['system_admin', 'system_audit']:
+            if perm[0] in ['system_admin', 'system_audit']:
                 admin_group.permissions.add(perm_obj)
 
         color_logger.info(f'Admin user check completed. User exists: {admin_user is not None}')

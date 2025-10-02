@@ -7,6 +7,7 @@ cryptography
 Django
 django-cors-headers
 django-redis
+drf-spectacular
 et-xmlfile
 idna
 mkdocs

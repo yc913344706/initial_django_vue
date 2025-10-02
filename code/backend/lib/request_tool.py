@@ -7,7 +7,7 @@ from datetime import datetime
 
 import xmltodict
 
-from apps.auth.token_utils import TokenManager
+from apps.myAuth.token_utils import TokenManager
 from lib.log import color_logger
 from backend.settings import config_data
 import threading

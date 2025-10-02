@@ -16,6 +16,8 @@ services:
     depends_on:
       db_mysql:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     command: >
       bash -c "
         source /etc/profile &&

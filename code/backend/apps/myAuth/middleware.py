@@ -1,5 +1,5 @@
 import re
-from apps.auth.token_utils import TokenManager
+from apps.myAuth.token_utils import TokenManager
 from apps.perm.utils import check_user_api_permission
 from lib.request_tool import get_authorization_token, pub_error_response, set_current_request
 from backend.settings import config_data

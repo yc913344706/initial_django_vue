@@ -9,7 +9,6 @@ from django.db.models import Q
 
 # Create your views here.
 
-
 def user_list(request):
     """用户列表"""
 
