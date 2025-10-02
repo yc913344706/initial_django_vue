@@ -80,7 +80,7 @@ class PureHttp {
         }
         
         // 检查是否需要token
-        if (this.isTokenNotRequired(_config)) {
+        if (this.isTokenNotRequired(_config.url)) {
           const accessToken = Cookies.get(import.meta.env.VITE_ACCESS_TOKEN_NAME);
           _config.headers["Authorization"] = formatToken(accessToken);
           return _config;
@@ -123,7 +123,7 @@ class PureHttp {
   }
 
   /** 检查是否需要token */
-  private isTokenNotRequired(_config: PureHttpRequestConfig): boolean {
+  private isTokenNotRequired(_url): boolean {
     /** 请求白名单，放置一些不需要`token`的接口（通过设置请求白名单，防止`token`过期后再请求造成的死循环问题） */
     // const notNeedTokenRequestList = [
     //   apiMap.refreshToken, 
@@ -135,15 +135,26 @@ class PureHttp {
     //   return true;
     // }
 
-
-    const uri = _config.url.substring(import.meta.env.VITE_BACKEND_URL.length)
+    logger.debug('检查请求url:', _url)
+    // const url_tmp = new URL(_url);
+    // const path = url_tmp.pathname; // 结果: "/api/v1/chat"
+    let uri = '';
+    if (_url.startsWith(import.meta.env.VITE_BACKEND_URL)) {
+      uri = _url.slice(import.meta.env.VITE_BACKEND_URL.length);
+      // 如果 prefix 结尾没有 '/'，而 path 后面有，去掉多余的斜杠
+      if (uri.startsWith('/')) {
+        // 保持前导斜杠（比如 "/chat"），或者用 rest = rest.slice(1) 去掉斜杠
+        // 视你的需求而定
+      }
+    }
+    // const uri = path.replace(/^\/api\/v1/, '');
     const uriWhiteList = [
       apiMap.refreshToken,
       apiMap.login, 
       apiMap.logout,
     ]
     if (uriWhiteList.includes(uri)) {
-      logger.debug(`白名单请求(${uri})，跳过token检查`)
+      logger.debug('白名单请求，跳过token检查')
       return true;
     }
 
@@ -151,7 +162,7 @@ class PureHttp {
     const uriWhitePrefixList = [
     ]
     if (uriWhitePrefixList.some(prefix => uri.startsWith(prefix))) {
-      logger.debug(`白名单前缀请求(${uri})，跳过token检查`)
+      logger.debug('白名单前缀请求，跳过token检查')
       return true;
     }
 
@@ -159,7 +170,7 @@ class PureHttp {
     logger.debug('url_module:', url_module)
     const whiteModuleList = []
     if (whiteModuleList.includes(url_module)) {
-      logger.debug(`白名单模块(${url_module})，跳过token检查`)
+      logger.debug('白名单模块', url_module, '，跳过token检查')
       return true;
     }
 
@@ -195,7 +206,7 @@ class PureHttp {
       logger.error('未找到refreshToken，无法刷新')
       removeToken();
       router.push(apiMap.login);
-      throw new Error('未找到refreshToken，无法刷新');
+      // throw new Error('未找到refreshToken，无法刷新');
     }
     
     if (!PureHttp.isRefreshing) {
@@ -229,7 +240,6 @@ class PureHttp {
         logger.error('刷新token失败:', error)
         removeToken();
         router.push(apiMap.login);
-
         return Promise.reject(error);
       })
       .finally(() => {
@@ -260,6 +270,12 @@ class PureHttp {
           logger.debug('业务处理失败:', response.data)
           // 处理token过期错误
           if (response.data.code === 99999) {
+            // 检查是否需要token
+            if (this.isTokenNotRequired($config.url)) {
+              logger.debug('白名单请求返回99999，删除localstorage:user-info')
+              localStorage.removeItem('user-info');
+              return Promise.reject(response.data);
+            }
             logger.debug('检测到accessToken过期错误(99999)')
             // 如果已经在刷新token，将请求加入队列
             if (PureHttp.isRefreshing) {

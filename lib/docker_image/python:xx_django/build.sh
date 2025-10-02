@@ -15,31 +15,35 @@ WORKSPACE="$(dirname $(dirname $(dirname $(dirname $(realpath $0)))))"
 analyze_params $*
 
 ##########################
+
+# python版本
+# PYTHON_VERSION="3.10"
+PYTHON_VERSION="3.13"
+
 # 制作依赖的基础镜像
-BUILD_BASE_IMAGE="${DOCKER_PROXY_DOCKER_IO}library/ubuntu:22.04"
+BUILD_BASE_IMAGE="${DOCKER_PROXY_DOCKER_IO}yc913344706/ubuntu:22.04_python${PYTHON_VERSION}"  
 
 # 制作成的目标镜像--NAME
-DOCKER_IMAGE_NAME="${PRIVATE_HARBOR_PREFIX}yc913344706/ubuntu"
+DOCKER_IMAGE_NAME="${PRIVATE_HARBOR_PREFIX}yc913344706/python"
 
-
-TARGET_PYTHON_VERSION="3.12.10" # python版本
-DOCKER_IMAGE_TAG="22.04_python3.12" # 制作成的目标镜像--TAG
-
-TARGET_PYTHON_VERSION="3.13.4" # python版本
-DOCKER_IMAGE_TAG="22.04_python3.13" # 制作成的目标镜像--TAG
+# 制作成的目标镜像--TAG
+DOCKER_IMAGE_TAG="${PYTHON_VERSION}_django" 
 
 ##########################
 
-get_os_arch
-cp -a ${CURRENT_DIR}/root/etc/apt/sources.list.${OS_ARCH} ${CURRENT_DIR}/root/etc/apt/sources.list
+mkdir -p ./tmp
+if [ -f ${WORKSPACE}/code/backend/requirements.txt ]; then
+  cp -a ${WORKSPACE}/code/backend/requirements.txt ./tmp/requirements.txt
+fi
 
 build_image() {
   docker build \
     --build-arg BASE_IMAGE="${BUILD_BASE_IMAGE}" \
-    --build-arg PYTHON_VERSION="${TARGET_PYTHON_VERSION}" \
     -t "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}" . || die "docker build failed"
 }
 
 build_image
 push_image_with_manifest_for_arch "${DOCKER_IMAGE_NAME}" "${DOCKER_IMAGE_TAG}"
-# push_image "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
+# push_image
+
+rm -rf ./tmp/

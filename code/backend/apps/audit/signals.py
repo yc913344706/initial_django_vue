@@ -2,7 +2,7 @@ from django.db.models.signals import pre_save, post_save, pre_delete, m2m_change
 from django.dispatch import receiver
 from django.db.models import Model
 
-from apps.auth.token_utils import TokenManager
+from apps.myAuth.token_utils import TokenManager
 from lib.time_tools import utc_obj_to_time_zone_str
 from .models import AuditLog
 from lib.request_tool import get_authorization_token, get_current_request, get_client_ip
