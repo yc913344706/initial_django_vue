@@ -17,6 +17,10 @@
 docker-compose -f docker-compose.dev.yaml up -d
 ```
 
+### 访问
+
+http://localhost:8080/
+
 ### 内置用户
 
 | 角色 | 账号 | 密码 |
