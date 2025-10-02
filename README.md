@@ -11,7 +11,6 @@
 | ---- | ---- | ---- |
 | 管理员 | admin | Admin@123 |
 
-
 ### 启动
 
 > 注意：
@@ -34,21 +33,16 @@ docker-compose -f docker-compose.dev.yaml down
 rm -rf ./data/
 ```
 
-### 启动api文档
-
-```bash
-./bin/start_backend_api_doc.sh
-```
-
 ## 一些配置
 
 ### 环境变量配置
 
 | 作用 | 文件 |
 | ---- | ---- |
-| 【前端】配置 | `code/frontend/.env.development` |
+| 【前端】vue工程配置 | `code/frontend/.env.development` |
 | 【前端】Pure Admin配置 | `code/frontend/public/platform-config.json` |
-| 【后端】配置 | `code/backend/.dev.yaml` |
+| 【后端】业务配置 | `code/backend/.dev.yaml` |
+| 【后端】全量路由定义文件 | `code/backend/base_routes.json` |
 | 【后端】docker环境变量 | `code/backend/.dev.env` |
 
 ### 前端图标
@@ -56,9 +50,3 @@ rm -rf ./data/
 - 图标：`code/frontend/public/favicon.ico`
 - logo：`code/frontend/public/logo.png`
 - user-avatar：`code/frontend/src/assets/user.jpg`
-
-## 更多
-
-### 关于接口文档
-
-MkDocs: https://zhuanlan.zhihu.com/p/423998740

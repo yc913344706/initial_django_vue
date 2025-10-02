@@ -1,3 +1,2 @@
-config.yaml
-base_routes.json
 db.sqlite3
+celerybeat-*

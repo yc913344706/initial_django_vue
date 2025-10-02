@@ -19,15 +19,40 @@ services:
       redis:
         condition: service_healthy
     command: >
+      bash -c "cd /app && ./entrypoint.sh"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/demo/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  backend_celery:
+    container_name: initial_django_vue_backend_celery
+    image: yc913344706/python:3.13_django
+    # expose:
+    #   - "8000"
+    volumes:
+      - ./code/backend:/app
+      - ./data/backend:/data/persistent
+      - ./logs/backend:/var/log/backend
+    env_file:
+      - ./code/backend/.dev.env
+    depends_on:
+      db_mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    command: >
       bash -c "
         source /etc/profile &&
         cd /app &&
         pip3 install -r requirements.txt &&
-        python3 manage.py migrate &&
-        python3 manage.py create_admin_user &&
-        gunicorn --reload backend.wsgi:application --bind 0.0.0.0:8000"
+        celery -A backend worker -l info -B --logfile /var/log/backend/celery.log"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/demo/health/"]
+      test: ["CMD-SHELL", "ps aux | grep -q '[c]elery -A backend worker' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -51,6 +76,8 @@ services:
       - ENV NEXT_TELEMETRY_DISABLED=1
     depends_on:
       backend:
+        condition: service_healthy
+      backend_celery:
         condition: service_healthy
     command: >
       sh -c "
