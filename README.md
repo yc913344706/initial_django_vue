@@ -55,3 +55,8 @@ rm -rf ./data/
 - 图标：`code/frontend/public/favicon.ico`
 - logo：`code/frontend/public/logo.png`
 - user-avatar：`code/frontend/src/assets/user.jpg`
+
+### 系统标题
+
+- `code/frontend/public/platform-config.json`: Title
+- `code/frontend/src/views/monitor/dashboard/index.vue`: title
