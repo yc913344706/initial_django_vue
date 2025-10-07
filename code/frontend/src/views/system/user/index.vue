@@ -46,6 +46,13 @@
         <el-table-column type="selection" width="55" />
         <el-table-column prop="username" label="用户名" />
         <el-table-column prop="nickname" label="昵称" />
+        <el-table-column prop="is_active" label="状态">
+            <template #default="{ row }">
+              <el-tag :type="row.is_active ? 'success' : 'danger'">
+                {{ row.is_active ? '启用' : '禁用' }}
+              </el-tag>
+            </template>
+          </el-table-column>
         <el-table-column prop="phone" label="手机号" />
         <el-table-column prop="email" label="邮箱" />
         <el-table-column label="操作" width="400">
