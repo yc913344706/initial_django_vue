@@ -57,9 +57,7 @@ class Command(BaseCommand):
                 {
                     "backend": {
                         "api": {
-                            "/api/v1/auth/get-async-routes/": [
-                                "GET"
-                            ]
+                            "/api/v1/auth/get-async-routes/": ["GET"]
                         }
                     }
                 }
@@ -71,49 +69,15 @@ class Command(BaseCommand):
                 {
                     "backend": {
                         "api": {
-                            "/api/v1/perm/role/": [
-                                "GET",
-                                "POST",
-                                "PUT",
-                                "DELETE"
-                            ],
-                            "/api/v1/user/user/": [
-                                "GET",
-                                "POST",
-                                "PUT",
-                                "DELETE"
-                            ],
-                            "/api/v1/perm/roles/": [
-                                "GET",
-                                "DELETE"
-                            ],
-                            "/api/v1/user/group/": [
-                                "GET",
-                                "POST",
-                                "PUT",
-                                "DELETE"
-                            ],
-                            "/api/v1/user/users/": [
-                                "GET",
-                                "DELETE"
-                            ],
-                            "/api/v1/user/groups/": [
-                                "GET",
-                                "DELETE"
-                            ],
-                            "/api/v1/perm/permission/": [
-                                "GET",
-                                "POST",
-                                "PUT",
-                                "DELETE"
-                            ],
-                            "/api/v1/perm/permissions/": [
-                                "GET",
-                                "DELETE"
-                            ],
-                            "/api/v1/perm/user-permission-json/": [
-                                "GET"
-                            ]
+                            "/api/v1/perm/role/": ["GET", "POST", "PUT", "DELETE"],
+                            "/api/v1/user/user/": ["GET", "POST", "PUT", "DELETE"],
+                            "/api/v1/perm/roles/": ["GET", "DELETE"],
+                            "/api/v1/user/group/": ["GET", "POST", "PUT", "DELETE"],
+                            "/api/v1/user/users/": ["GET", "DELETE"],
+                            "/api/v1/user/groups/": ["GET", "DELETE"],
+                            "/api/v1/perm/permission/": ["GET", "POST", "PUT", "DELETE"],
+                            "/api/v1/perm/permissions/": ["GET", "DELETE"],
+                            "/api/v1/perm/user-permission-json/": ["GET"]
                         }
                     },
                     "frontend": {
@@ -167,33 +131,15 @@ class Command(BaseCommand):
                 {
                     "backend": {
                         "api": {
-                            "/api/v1/perm/role/": [
-                                "GET"
-                            ],
-                            "/api/v1/user/user/": [
-                                "GET"
-                            ],
-                            "/api/v1/perm/roles/": [
-                                "GET"
-                            ],
-                            "/api/v1/user/group/": [
-                                "GET"
-                            ],
-                            "/api/v1/user/users/": [
-                                "GET"
-                            ],
-                            "/api/v1/user/groups/": [
-                                "GET"
-                            ],
-                            "/api/v1/perm/permission/": [
-                                "GET"
-                            ],
-                            "/api/v1/perm/permissions/": [
-                                "GET"
-                            ],
-                            "/api/v1/perm/user-permission-json/": [
-                                "GET"
-                            ]
+                            "/api/v1/perm/role/": ["GET"],
+                            "/api/v1/user/user/": ["GET"],
+                            "/api/v1/perm/roles/": ["GET"],
+                            "/api/v1/user/group/": ["GET"],
+                            "/api/v1/user/users/": ["GET"],
+                            "/api/v1/user/groups/": ["GET"],
+                            "/api/v1/perm/permission/": ["GET"],
+                            "/api/v1/perm/permissions/": ["GET"],
+                            "/api/v1/perm/user-permission-json/": ["GET"]
                         }
                     },
                     "frontend": {
@@ -226,11 +172,9 @@ class Command(BaseCommand):
                 "初始化创建系统审计日志查看权限",
                 {
                     "backend": {
-                        "api": {
-                            "/api/v1/audit/audit-logs/": [
-                                "GET"
-                            ]
-                        }
+                    "api": {
+                        "/api/v1/audit/audit-logs/": ["GET"]
+                    }
                     },
                     "frontend": {
                         "routes": [
