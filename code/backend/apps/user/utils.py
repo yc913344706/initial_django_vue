@@ -32,6 +32,7 @@ def format_user_data(user_data: Dict[str, Any],
             # 'display_name': user_data.display_name,
             'nickname': user_data.nickname,
             'email': user_data.email,
+            'is_active': user_data.is_active,
             # 'last_sync': utc_obj_to_time_zone_str(user_data.last_sync) if user_data.last_sync else None,
             
         }
