@@ -39,14 +39,14 @@ class Command(BaseCommand):
                 )
             )
         
-        admin_group = UserGroup.objects.filter(code='system_admin_group').first()
-        if admin_group is None:
-            admin_group = UserGroup.objects.create(
-                name='系统管理员组',
+        system_admin_group = UserGroup.objects.filter(code='system_admin_group').first()
+        if system_admin_group is None:
+            system_admin_group = UserGroup.objects.create(
+                name='【系统模块】管理员组',
                 code='system_admin_group',
-                description='系统管理员组',
+                description='初始化创建系统管理员组',
             )
-            admin_group.users.add(admin_user)
+            system_admin_group.users.add(admin_user)
             color_logger.info(f'创建系统管理员组成功')
 
         for perm in [
@@ -252,6 +252,6 @@ class Command(BaseCommand):
                     permission_json=perm[3]
                 )
             if perm[0] in ['system_admin', 'system_audit']:
-                admin_group.permissions.add(perm_obj)
+                system_admin_group.permissions.add(perm_obj)
 
         color_logger.info(f'Admin user check completed. User exists: {admin_user is not None}')
