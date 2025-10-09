@@ -11,7 +11,7 @@ const TITLE = getConfig("Title");
     Copyright © 2020-present
     <a
       class="hover:text-primary"
-      href="https://github.com/pure-admin"
+      href="https://github.com/yc913344706/initial_django_vue.git"
       target="_blank"
     >
       &nbsp;{{ TITLE }}
