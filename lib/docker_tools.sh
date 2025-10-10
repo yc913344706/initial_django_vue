@@ -70,7 +70,13 @@ push_image_with_manifest_for_arch() {
 
   # 检查是否已存在 manifest
   amend_str="--amend"
-  docker manifest inspect ${_image_name}:${_image_tag} || amend_str=""
+  if docker manifest inspect ${_image_name}:${_image_tag} >/dev/null 2>&1; then
+    log_info "Existing manifest found for ${_image_name}:${_image_tag}, will be updated"
+    amend_str="--amend"
+  else
+    log_info "No existing manifest found for ${_image_name}:${_image_tag}, creating new one"
+    amend_str=""
+  fi
 
   # 获取所有已知架构
   already_known_archs="arm64 amd64"
@@ -87,12 +93,22 @@ push_image_with_manifest_for_arch() {
       _manifest_args="${_manifest_args} ${_arch_image_tag}"
       _archs_to_annotate="${_archs_to_annotate} ${_arch}"
     else
-      # 对于其他架构，检查是否存在于远程仓库
+      # 对于其他架构，检查是否存在于远程仓库且非空
       # 使用 docker manifest inspect 来检查远程镜像是否存在
       if docker manifest inspect ${_arch_image_tag} >/dev/null 2>&1; then
         log_info "Found remote image for architecture ${_arch}: ${_arch_image_tag}"
-        _manifest_args="${_manifest_args} ${_arch_image_tag}"
-        _archs_to_annotate="${_archs_to_annotate} ${_arch}"
+        
+        # 为了更安全，我们可以尝试拉取该镜像的清单并检查其大小
+        # 以确保它不是空的或损坏的镜像
+        remote_image_size=$(docker manifest inspect ${_arch_image_tag} 2>/dev/null | jq '.manifests[0].size // .size' 2>/dev/null)
+        
+        if [ -n "$remote_image_size" ] && [ "$remote_image_size" -gt 0 ]; then
+          log_info "Remote image for architecture ${_arch} has valid size: ${remote_image_size}"
+          _manifest_args="${_manifest_args} ${_arch_image_tag}"
+          _archs_to_annotate="${_archs_to_annotate} ${_arch}"
+        else
+          log_info "Remote image for architecture ${_arch} has invalid or zero size, skipping: ${_arch_image_tag}"
+        fi
       else
         log_info "Remote image for architecture ${_arch} not found: ${_arch_image_tag}"
       fi
@@ -105,10 +121,18 @@ push_image_with_manifest_for_arch() {
     _archs_to_annotate="${OS_ARCH}"
   fi
 
+  log_info "Creating manifest with images: ${_manifest_args}"
+  
   # 创建或更新 manifest
-  docker manifest create ${amend_str} \
-    ${_image_name}:${_image_tag} \
-    ${_manifest_args}
+  if [ -n "${amend_str}" ]; then
+    docker manifest create ${amend_str} \
+      ${_image_name}:${_image_tag} \
+      ${_manifest_args}
+  else
+    docker manifest create \
+      ${_image_name}:${_image_tag} \
+      ${_manifest_args}
+  fi
 
   # 为每个架构添加注解
   for _arch in ${_archs_to_annotate}; do
@@ -125,6 +149,8 @@ push_image_with_manifest_for_arch() {
 
   # 推送更新后的 manifest
   docker manifest push ${_image_name}:${_image_tag}
+  
+  log_info "Successfully pushed manifest for ${_image_name}:${_image_tag}"
 }
 
 push_image()
