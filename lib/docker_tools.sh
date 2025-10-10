@@ -72,19 +72,34 @@ push_image_with_manifest_for_arch() {
   amend_str="--amend"
   docker manifest inspect ${_image_name}:${_image_tag} || amend_str=""
 
-  # 获取所有已存在的架构镜像
+  # 获取所有已知架构
   already_known_archs="arm64 amd64"
   _manifest_args=""
   _archs_to_annotate=""
   
   for _arch in ${already_known_archs}; do
-    if docker manifest inspect ${_image_name}:${_arch}_${_image_tag} >/dev/null 2>&1; then
-      _manifest_args="${_manifest_args} ${_image_name}:${_arch}_${_image_tag}"
+    # 构建当前架构的镜像标签
+    _arch_image_tag="${_image_name}:${_arch}_${_image_tag}"
+    
+    # 检查当前架构是否是我们刚推送的架构
+    if [ "${_arch}" = "${OS_ARCH}" ]; then
+      # 这是我们刚刚推送的架构，直接使用
+      _manifest_args="${_manifest_args} ${_arch_image_tag}"
       _archs_to_annotate="${_archs_to_annotate} ${_arch}"
+    else
+      # 对于其他架构，检查是否存在于远程仓库
+      # 使用 docker manifest inspect 来检查远程镜像是否存在
+      if docker manifest inspect ${_arch_image_tag} >/dev/null 2>&1; then
+        log_info "Found remote image for architecture ${_arch}: ${_arch_image_tag}"
+        _manifest_args="${_manifest_args} ${_arch_image_tag}"
+        _archs_to_annotate="${_archs_to_annotate} ${_arch}"
+      else
+        log_info "Remote image for architecture ${_arch} not found: ${_arch_image_tag}"
+      fi
     fi
   done
 
-  # 如果没有找到任何架构的镜像，使用当前架构
+  # 如果没有找到任何其他架构的镜像，只使用当前架构
   if [ -z "${_manifest_args}" ]; then
     _manifest_args="${_image_name}:${OS_ARCH}_${_image_tag}"
     _archs_to_annotate="${OS_ARCH}"
