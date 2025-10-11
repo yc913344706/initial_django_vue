@@ -68,12 +68,19 @@ push_image_with_manifest_for_arch() {
   docker tag ${_image_name}:${_image_tag} ${_image_name}:${OS_ARCH}_${_image_tag}
   docker push ${_image_name}:${OS_ARCH}_${_image_tag}
 
-  # 如果已存在 manifest，删除它以确保创建全新的 manifest
+  # 检查是否已存在 manifest
+  manifest_exists=false
   if docker manifest inspect ${_image_name}:${_image_tag} >/dev/null 2>&1; then
-    log_info "Existing manifest found for ${_image_name}:${_image_tag}, removing it first"
-    docker manifest rm ${_image_name}:${_image_tag}
+    log_info "Existing manifest found for ${_image_name}:${_image_tag}"
+    manifest_exists=true
   else
     log_info "No existing manifest found for ${_image_name}:${_image_tag}, creating new one"
+  fi
+
+  # 如果存在 manifest，则删除它
+  if [ "$manifest_exists" = true ]; then
+    log_info "Removing existing manifest for ${_image_name}:${_image_tag}"
+    docker manifest rm ${_image_name}:${_image_tag} 2>/dev/null || true
   fi
 
   # 获取所有已知架构
