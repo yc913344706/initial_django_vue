@@ -68,14 +68,12 @@ push_image_with_manifest_for_arch() {
   docker tag ${_image_name}:${_image_tag} ${_image_name}:${OS_ARCH}_${_image_tag}
   docker push ${_image_name}:${OS_ARCH}_${_image_tag}
 
-  # 检查是否已存在 manifest
-  amend_str="--amend"
+  # 如果已存在 manifest，删除它以确保创建全新的 manifest
   if docker manifest inspect ${_image_name}:${_image_tag} >/dev/null 2>&1; then
-    log_info "Existing manifest found for ${_image_name}:${_image_tag}, will be updated"
-    amend_str="--amend"
+    log_info "Existing manifest found for ${_image_name}:${_image_tag}, removing it first"
+    docker manifest rm ${_image_name}:${_image_tag}
   else
     log_info "No existing manifest found for ${_image_name}:${_image_tag}, creating new one"
-    amend_str=""
   fi
 
   # 获取所有已知架构
@@ -123,16 +121,10 @@ push_image_with_manifest_for_arch() {
 
   log_info "Creating manifest with images: ${_manifest_args}"
   
-  # 创建或更新 manifest
-  if [ -n "${amend_str}" ]; then
-    docker manifest create ${amend_str} \
-      ${_image_name}:${_image_tag} \
-      ${_manifest_args}
-  else
-    docker manifest create \
-      ${_image_name}:${_image_tag} \
-      ${_manifest_args}
-  fi
+  # 创建 manifest
+  docker manifest create \
+    ${_image_name}:${_image_tag} \
+    ${_manifest_args}
 
   # 为每个架构添加注解
   for _arch in ${_archs_to_annotate}; do
