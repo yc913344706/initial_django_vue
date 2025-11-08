@@ -14,7 +14,7 @@
 > - 个人电脑使用，配置不高的情况下，前端打包时，电脑负载会很高。
 
 ```bash
-docker-compose -f docker-compose.dev.yaml up -d
+docker-compose -f docker-compose.prod.yaml up -d
 ```
 
 ### 访问
@@ -30,11 +30,13 @@ http://localhost:8080/
 ### 更多命令
 
 ```bash
-docker-compose -f docker-compose.dev.yaml up db_mysql -d
-docker-compose -f docker-compose.dev.yaml up backend -d
-docker-compose -f docker-compose.dev.yaml up frontend -d
+docker-compose -f docker-compose.prod.yaml up db_mysql -d
+docker-compose -f docker-compose.prod.yaml up backend -d
+docker-compose -f docker-compose.prod.yaml up frontend -d
 
-docker-compose -f docker-compose.dev.yaml down
+# 停止
+docker-compose -f docker-compose.prod.yaml down
+# 清理数据
 rm -rf ./data/
 ```
 
@@ -44,11 +46,11 @@ rm -rf ./data/
 
 | 作用 | 文件 |
 | ---- | ---- |
-| 【前端】vue工程配置 | `code/frontend/.env.development` |
+| 【前端】vue工程配置 | `code/frontend/.env.production` |
 | 【前端】Pure Admin配置 | `code/frontend/public/platform-config.json` |
-| 【后端】业务配置 | `code/backend/.dev.yaml` |
+| 【后端】业务配置 | `code/backend/.prod.yaml` |
 | 【后端】全量路由定义文件 | `code/backend/base_routes.json` |
-| 【后端】docker环境变量 | `code/backend/.dev.env` |
+| 【后端】docker环境变量 | `code/backend/.prod.env` |
 
 ### 前端图标
 
