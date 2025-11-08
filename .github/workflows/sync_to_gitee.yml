@@ -1,3 +1,4 @@
+# https://jishuzhan.net/article/1963550237630971905
 name: Sync GitHub to Gitee  # 工作流名称
 
 # 触发条件：当代码推送到 GitHub 的 main 分支时触发
