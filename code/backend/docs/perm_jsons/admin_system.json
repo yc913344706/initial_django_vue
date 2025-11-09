@@ -20,6 +20,7 @@
       "routes": [
         "system.user",
         "system.user.detail",
+        "system.user.config",
         "system.ldap",
         "system.permission",
         "system.permission.detail",

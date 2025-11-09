@@ -31,38 +31,19 @@ class RouteTool:
         返回前端需要的路由
         """
         user_permissions = list(set(user_permissions))
+        color_logger.debug(f"用户权限: {user_permissions}")
         filtered_routes = []
 
-        def has_permission(route: Dict, route_key: str) -> bool:
-            """检查路由是否有权限访问"""
-            # 检查路由key是否在用户权限中
-            if route_key in user_permissions:
-                return True
-            
-            # 检查父级权限
-            parts = route_key.split('.')
-            for i in range(len(parts) - 1):
-                parent = '.'.join(parts[:i + 1])
-                if parent in user_permissions:
-                    return True
-            
-            # 检查子权限
-            for permission in user_permissions:
-                if permission.startswith(route_key):
-                    return True
-            
-            return False
+        def has_permission(route_key: str) -> bool:
+            """检查路由是否有权限访问 - 精确匹配，不考虑父子权限关系"""
+            return route_key in user_permissions
 
         def filter_route(route: Dict, route_key: str) -> Optional[Dict]:
             """过滤路由配置"""
-            color_logger.debug(f"检查权限: {route}, {route_key}")
-            if not has_permission(route, route_key):
-                color_logger.debug(f"无权限访问: {route}, {route_key}")
-                return None
-
             filtered_route = route.copy()
             
             # 处理子路由
+            has_accessible_children = False
             if 'children' in filtered_route:
                 filtered_children = {}
                 for key, child in filtered_route['children'].items():
@@ -70,13 +51,20 @@ class RouteTool:
                     filtered_child = filter_route(child, child_key)
                     if filtered_child:
                         filtered_children[key] = filtered_child
+                        has_accessible_children = True
                 if filtered_children:
                     filtered_route['children'] = list(filtered_children.values())
-                else:
-                    return None
 
-            color_logger.debug(f"有权限访问: {route}, {route_key}")
-            return filtered_route
+            # 如果路由本身有权限 或者 有权限访问的子路由，则返回该路由
+            route_has_permission = has_permission(route_key)
+            color_logger.debug(f"检查权限: {route}, {route_key}, 有权限: {route_has_permission}, 有子路由权限: {has_accessible_children}")
+            
+            if route_has_permission or has_accessible_children:
+                color_logger.debug(f"有权限访问: {route}, {route_key}")
+                return filtered_route
+            else:
+                color_logger.debug(f"无权限访问: {route}, {route_key}")
+                return None
 
         # 过滤路由
         for key, route in self.base_routes.items():
