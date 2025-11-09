@@ -20,7 +20,7 @@ from lib.log import set_color_logger_level
 import os
 
 from yaml import safe_load
-f2 = open(f"{BASE_DIR}/.{os.environ['INITIAL_DJANGO_VUE_ENV']}.yaml", 'rb')
+f2 = open(f"{BASE_DIR}/.{os.environ.get('INITIAL_DJANGO_VUE_ENV', 'dev')}.yaml", 'rb')
 config_data = safe_load(f2.read())
 f2.close()
 
@@ -88,6 +88,7 @@ INSTALLED_APPS = [
     'apps.user',
     'apps.perm',
     'apps.audit',
+    'apps.ldapauth',
 ]
 
 MIDDLEWARE = [

@@ -11,6 +11,9 @@ from apps.perm.utils import get_user_perm_json_all
 from lib.route_tool import RouteTool
 from apps.user.utils import format_user_data
 from lib.password_tools import aes
+from apps.ldapauth.models import LdapConfig
+from apps.ldapauth.views import record_user_login_failed, get_user_is_lock
+from apps.ldapauth.ldap_utils import LdapAuthBackend
 
 # Create your views here.
 
@@ -35,60 +38,77 @@ def record_user_login_failed(user_name):
         # set_expire=3600*24*7
     )
 
-
-def get_user_is_lock(user_name):
-    """只有有redis时，才会生效
-    """
-    limit_failed_num = 5
-
-    redis_key_name = f"user_login_frequency_{user_name}"
-
-    already_login_failed_times = get_redis_value(
-        redis_db_name='AUTH',
-        redis_key_name=redis_key_name
-    )
-    if already_login_failed_times is not None:
-        already_login_failed_times = int(already_login_failed_times)
-    else:
-        already_login_failed_times = 0
-
-    if already_login_failed_times > limit_failed_num:
-        return True
-    
-    return False            
-    
-
 def login(request):
     """登录接口"""
     try:
         if request.method != 'POST':
             return pub_error_response(10001, msg="仅支持POST请求")
-            
+
         body = pub_get_request_body(request)
         username = body.get('username')
         password = body.get('password')
 
         if not username or not password:
-            return pub_error_response(f"用户名或密码不能为空")
+            return pub_error_response(10002, msg=f"用户名或密码不能为空")
 
-        # color_logger.debug(f"未加密密码: {password}")
-        _encrypt_password = aes.encrypt(password)
-        # color_logger.debug(f"加密密码: {_encrypt_password}")
-        user_obj = User.objects.filter(username=username, password=_encrypt_password).first()
-        assert user_obj, f"用户名或密码错误"
-        
         if get_user_is_lock(username):
-            return pub_error_response(10001, msg="错误过多，被锁定，请联系管理员")
-        
+            return pub_error_response(10003, msg="错误过多，被锁定，请联系管理员")
+
+        # 检查LDAP配置是否启用
+        ldap_config = LdapConfig.objects.filter(enabled=True).first()
+        user_obj = None
+
+        if ldap_config:
+            # 首先检查本地数据库中是否已有该用户
+            local_user = User.objects.filter(username=username).first()
+
+            if local_user and local_user.is_ldap:
+                # 该用户是LDAP用户，使用LDAP认证
+                ldap_backend = LdapAuthBackend()
+                user_obj = ldap_backend.authenticate(username=username, password=password)
+
+                if not user_obj:
+                    # LDAP认证失败，记录失败次数
+                    record_user_login_failed(username)
+                    return pub_error_response(10004, msg=f"用户名或密码错误")
+            elif local_user and not local_user.is_ldap:
+                # 该用户是本地用户，使用本地认证
+                _encrypt_password = aes.encrypt(password)
+                user_obj = User.objects.filter(username=username, password=_encrypt_password).first()
+                
+                if not user_obj:
+                    # 本地认证失败，记录失败次数
+                    record_user_login_failed(username)
+                    return pub_error_response(10005, msg=f"用户名或密码错误")
+            else:
+                # 用户在本地数据库中不存在，尝试LDAP认证
+                ldap_backend = LdapAuthBackend()
+                user_obj = ldap_backend.authenticate(username=username, password=password)
+
+                if not user_obj:
+                    # LDAP认证失败，记录失败次数
+                    record_user_login_failed(username)
+                    return pub_error_response(10006, msg=f"用户名或密码错误")
+        else:
+            # 没有启用LDAP，只使用本地认证
+            _encrypt_password = aes.encrypt(password)
+            user_obj = User.objects.filter(username=username, password=_encrypt_password).first()
+
+            if not user_obj:
+                # 本地认证失败，记录失败次数
+                record_user_login_failed(username)
+                return pub_error_response(10007, msg=f"用户名或密码错误")
+
         # 生成token
         color_logger.debug(f"generate_tokens: {username}")
         token_manager = TokenManager()
         access_token, refresh_token = token_manager.generate_tokens(username)
-        
+
         color_logger.debug(f"get_user_perm_json_all: {user_obj.uuid}")
         user_permission_json = get_user_perm_json_all(user_obj.uuid)
 
-        res = format_user_data(user_obj, from_ldap=False, only_basic=True)
+        # 使用新的is_ldap属性来区分用户类型
+        res = format_user_data(user_obj, from_ldap=user_obj.is_ldap, only_basic=True)
 
         res.update({
             "permissions": user_permission_json.get('frontend', {}).get('resources', []),
@@ -100,7 +120,7 @@ def login(request):
         })
 
         response = pub_success_response(res)
-        
+
         # 设置cookie
         cookie_options = {
             'max_age': config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE'),
@@ -112,11 +132,11 @@ def login(request):
             cookie_options['samesite'] = config_data.get('AUTH', {}).get('COOKIE_SAMESITE')
         if config_data.get('AUTH', {}).get('COOKIE_DOMAIN'):
             cookie_options['domain'] = config_data.get('AUTH', {}).get('COOKIE_DOMAIN')
-        
+
         # 调试日志
         color_logger.debug(f'Setting cookie with options: {cookie_options}')
         color_logger.debug(f'Access token: {access_token[:10]}...')
-        
+
         response.set_cookie(
             config_data.get('AUTH', {}).get('COOKIE_ACCESS_TOKEN_NAME'),
             access_token,
@@ -127,25 +147,25 @@ def login(request):
             refresh_token,
             **{**cookie_options, 'max_age': config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE')}
         )
-        
+
         # 设置用户名cookie
         response.set_cookie(
             config_data.get('AUTH', {}).get('COOKIE_USERNAME_NAME'),
             username,
             **{**cookie_options, 'max_age': config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE')}
         )
-        
+
         return response
-        
+
     except Exception as e:
         color_logger.error(f"登录失败: {str(e)}", exc_info=True)
-        return pub_error_response(10001, msg=f"登录失败: {str(e)}")
+        return pub_error_response(10008, msg=f"登录失败: {str(e)}")
 
 def logout(request):
     """退出登录"""
     try:
         if request.method != 'POST':
-            return pub_error_response(10001, msg="仅支持POST请求")
+            return pub_error_response(10009, msg="仅支持POST请求")
             
         # 获取当前用户
         token_manager = TokenManager()
@@ -169,13 +189,13 @@ def logout(request):
         
     except Exception as e:
         color_logger.error(f"退出失败: {str(e)}")
-        return pub_error_response(10001, msg=f"退出失败: {str(e)}")
+        return pub_error_response(10010, msg=f"退出失败: {str(e)}")
 
 def refresh_token(request):
     """刷新token"""
     try:
         if request.method != 'POST':
-            return pub_error_response(10001, msg='仅支持POST请求')
+            return pub_error_response(10011, msg='仅支持POST请求')
         
         color_logger.debug(f"enter request: refresh_token")
         body = pub_get_request_body(request)
@@ -183,7 +203,7 @@ def refresh_token(request):
         color_logger.debug(f"获取 request中的refresh_token")
         refresh_token = request.COOKIES.get(config_data.get('AUTH', {}).get('COOKIE_REFRESH_TOKEN_NAME'))
         if not refresh_token:
-            return pub_error_response(10001, msg='refresh token不存在')
+            return pub_error_response(10012, msg='refresh token不存在')
             
         color_logger.debug(f"开始刷新token")
         token_manager = TokenManager()
@@ -249,7 +269,7 @@ def refresh_token(request):
 def get_async_routes(request):
     try:
         if request.method != "GET":
-            return pub_error_response(f"请求方法错误")
+            return pub_error_response(10013, msg=f"请求方法错误")
 
         # color_logger.debug(f"request: {request}")
         # color_logger.debug(f"获取异步路由请求cookie: {request.COOKIES}")
@@ -298,5 +318,5 @@ def get_async_routes(request):
         })
     except Exception as e:
         color_logger.error(f"获取异步路由失败: {e}")
-        return pub_error_response(f"获取异步路由失败: {e}")
+        return pub_error_response(10014, msg=f"获取异步路由失败: {e}")
     

@@ -255,7 +255,7 @@ const getUserList = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error('获取用户列表失败')
+    ElMessage.error(`获取用户列表失败。${error.msg || error}`)
   } finally {
     loading.value = false
   }
@@ -271,7 +271,7 @@ const getRoleList = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error('获取角色列表失败')
+    ElMessage.error(`获取角色列表失败。${error.msg || error}`)
   }
 }
 
@@ -285,7 +285,7 @@ const getPermissionList = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error('获取权限列表失败')
+    ElMessage.error(`获取权限列表失败。${error.msg || error}`)
   }
 }
 
@@ -323,7 +323,7 @@ const handleDelete = (row: UserForm) => {
       ElMessage.success('删除成功')
       getUserList()
     } catch (error) {
-      ElMessage.error('删除失败')
+      ElMessage.error(`删除失败。${error.msg || error}`)
     }
   })
 }
@@ -353,7 +353,7 @@ const handleSubmit = async () => {
         dialogVisible.value = false
         getUserList()
       } catch (error) {
-        ElMessage.error(dialogType.value === 'add' ? '新增失败' : '编辑失败')
+        ElMessage.error(dialogType.value === 'add' ? `新增失败。${error.msg || error}` : `编辑失败。${error.msg || error}`)
       }
     }
   })
@@ -377,7 +377,7 @@ const handleSubmitAuth = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error('更新失败')
+    ElMessage.error(`更新失败。${error.msg || error}`)
   }
 }
 
@@ -408,7 +408,7 @@ const handleBatchDelete = async () => {
     }
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('删除失败')
+      ElMessage.error(`删除失败。${error.msg || error}`)
     }
   }
 }

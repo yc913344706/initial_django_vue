@@ -50,10 +50,10 @@ def user_list(request):
                 user.delete()
             return pub_success_response()
         else:
-            return pub_error_response('请求方法错误')
+            return pub_error_response(13001, msg='请求方法错误')
     except Exception as e:
         color_logger.error(f"用户列表操作失败: {e.args}")
-        return pub_error_response(f"用户列表操作失败: {e.args}")
+        return pub_error_response(13002, msg=f"用户列表操作失败: {e.args}")
 
 
 def user(request):
@@ -111,10 +111,10 @@ def user(request):
             user.delete()
             return pub_success_response()
         else:
-            return pub_error_response('请求方法错误')
+            return pub_error_response(13003, msg='请求方法错误')
     except Exception as e:
         color_logger.error(f"用户操作失败: {e.args}")
-        return pub_error_response(f"用户操作失败: {e.args}")
+        return pub_error_response(13004, msg=f"用户操作失败: {e.args}")
 
 
 def user_group_list(request):
@@ -155,10 +155,10 @@ def user_group_list(request):
                 user_group.delete()
             return pub_success_response()
         else:
-            return pub_error_response('请求方法错误')
+            return pub_error_response(13008, msg='请求方法错误')
     except Exception as e:
         color_logger.error(f"获取用户组列表失败: {e.args}")
-        return pub_error_response(f"获取用户组列表失败: {e.args}")
+        return pub_error_response(13005, msg=f"获取用户组列表失败: {e.args}")
 
 
 def user_group(request):
@@ -235,7 +235,7 @@ def user_group(request):
             user_group.delete()
             return pub_success_response()
         else:
-            return pub_error_response('请求方法错误')
+            return pub_error_response(13006, msg='请求方法错误')
     except Exception as e:
         color_logger.error(f"用户组操作失败: {e.args}")
-        return pub_error_response(f"用户组操作失败: {e.args}")
+        return pub_error_response(13007, msg=f"用户组操作失败: {e.args}")

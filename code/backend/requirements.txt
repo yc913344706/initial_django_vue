@@ -25,6 +25,7 @@ pymysql
 pypinyin
 python-dateutil
 python-ldap
+ldap3
 pytz
 PyYAML
 requests

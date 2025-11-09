@@ -25,4 +25,6 @@ urlpatterns = [
     re_path('^api/v1/user/', include('apps.user.urls')),
     re_path('^api/v1/perm/', include('apps.perm.urls')),
     re_path('^api/v1/audit/', include('apps.audit.urls')),
+    re_path('^api/v1/ldap/', include('apps.ldapauth.urls')),
 ]
+

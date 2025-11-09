@@ -12,7 +12,7 @@ def get_audit_logs(request):
     """获取审计日志列表"""
     try:
         if request.method != 'GET':
-            return pub_error_response(10001, msg="只允许GET请求")
+            return pub_error_response(14001, msg="只允许GET请求")
 
         body = pub_get_request_body(request)
         
@@ -80,4 +80,4 @@ def get_audit_logs(request):
         
     except Exception as e:
         color_logger.error(f"获取审计日志失败: {str(e)}")
-        return pub_error_response(10001, msg=str(e))
+        return pub_error_response(14002, msg=str(e))

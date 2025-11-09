@@ -8,12 +8,14 @@ import uuid
 class User(BaseModel):
     """用户模型"""
     username = models.CharField(max_length=100, unique=True, verbose_name='用户名')
-    password = models.CharField(max_length=128, verbose_name='密码')
+    password = models.CharField(max_length=128, verbose_name='密码', null=True, blank=True)  # LDAP用户不需要本地密码
     email = models.EmailField(verbose_name='邮箱', null=True, blank=True)
     nickname = models.CharField(max_length=100, verbose_name='昵称')
     # avatar_url = models.CharField(max_length=255, verbose_name='头像url', null=True, blank=True)
     phone = models.CharField(max_length=11, verbose_name='手机号', null=True, blank=True)
     is_active = models.BooleanField(default=True, verbose_name='是否活跃')
+    is_ldap = models.BooleanField(default=False, verbose_name='是否为LDAP用户')
+    ldap_dn = models.CharField(max_length=255, verbose_name='LDAP DN', null=True, blank=True)
     permissions = models.ManyToManyField('perm.Permission', verbose_name='权限列表')
     roles = models.ManyToManyField('perm.Role', verbose_name='角色列表')
 

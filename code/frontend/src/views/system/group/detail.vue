@@ -211,7 +211,7 @@ const getGroupDetail = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error('获取用户组详情失败')
+    ElMessage.error(`获取用户组详情失败。${error.msg || error}`)
   }
 }
 
@@ -225,7 +225,7 @@ const getGroupList = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error('获取用户组列表失败')
+    ElMessage.error(`获取用户组列表失败。${error.msg || error}`)
   }
 }
 
@@ -243,7 +243,7 @@ const getUserList = async (query: string) => {
         ElMessage.error('搜索用户失败')
       }
     } catch (error) {
-      ElMessage.error('搜索用户失败')
+      ElMessage.error(`搜索用户失败。${error.msg || error}`)
     } finally {
       loading.value = false
     }
@@ -262,7 +262,7 @@ const getRoleList = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error('获取角色列表失败')
+    ElMessage.error(`获取角色列表失败。${error.msg || error}`)
   }
 }
 
@@ -276,7 +276,7 @@ const getPermissionList = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error('获取权限列表失败')
+    ElMessage.error(`获取权限列表失败。${error.msg || error}`)
   }
 }
 
@@ -318,7 +318,7 @@ const handleSubmit = async () => {
           ElMessage.error(res.msg)
         }
       } catch (error) {
-        ElMessage.error('更新失败')
+        ElMessage.error(`更新失败。${error.msg || error}`)
       }
     }
   })

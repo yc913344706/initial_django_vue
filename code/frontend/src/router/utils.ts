@@ -218,7 +218,7 @@ function initRouter() {
           handleAsyncRoutes(asyncRouteObject);
           resolve(router);
         } catch (error) {
-          logger.debug('initRouter: 处理动态路由缓存本地localStorage失败...' + error)
+          logger.debug(`initRouter: 处理动态路由缓存本地localStorage失败。${error.msg || error}`)
           // 不再清除token，只记录错误
           reject(error);
         }
@@ -239,13 +239,13 @@ function initRouter() {
               reject(new Error('获取到的后端动态路由为空'));
             }
           } catch (error) {
-            logger.debug('initRouter: 处理后端动态路由失败...' + error)
+            logger.debug(`initRouter: 处理后端动态路由失败。${error.msg || error}`)
             // removeToken();
             router.push(apiMap.login);
             reject(error);
           }
         }).catch(error => {
-          logger.debug('initRouter: 获取后端动态路由失败...' + error)
+          logger.debug(`initRouter: 获取后端动态路由失败。${error.msg || error}`)
           // removeToken();
           // router.push(apiMap.login);
           reject(error);
@@ -267,13 +267,13 @@ function initRouter() {
             reject(new Error('获取到的后端动态路由为空'));
           }
         } catch (error) {
-          logger.debug('initRouter: 处理后端动态路由失败...' + error)
+          logger.debug(`initRouter: 处理后端动态路由失败。${error.msg || error}`)
           // removeToken();
           router.push(apiMap.login);
           reject(error);
         }
       }).catch(error => {
-        logger.debug('initRouter: 获取后端动态路由失败...' + error)
+        logger.debug(`initRouter: 获取后端动态路由失败。${error.msg || error}`)
         // removeToken();
         // router.push(apiMap.login);
         reject(error);

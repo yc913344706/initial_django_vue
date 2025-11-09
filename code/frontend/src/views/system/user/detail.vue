@@ -185,7 +185,7 @@ const getUserDetail = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error('获取用户详情失败')
+    ElMessage.error(`获取用户详情失败。${error.msg || error}`)
   }
 }
 
@@ -199,7 +199,7 @@ const getRoleList = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error('获取角色列表失败')
+    ElMessage.error(`获取角色列表失败。${error.msg || error}`)
   }
 }
 
@@ -213,7 +213,7 @@ const getPermissionList = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error('获取权限列表失败')
+    ElMessage.error(`获取权限列表失败。${error.msg || error}`)
   }
 }
 
@@ -229,7 +229,7 @@ const getUserPermissionJson = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error('获取用户权限JSON失败')
+    ElMessage.error(`获取用户权限JSON失败。${error.msg || error}`)
   }
 }
 
@@ -271,7 +271,7 @@ const handleSubmit = async () => {
           ElMessage.error(res.msg)
         }
       } catch (error) {
-        ElMessage.error('更新失败')
+        ElMessage.error(`更新失败。${error.msg || error}`)
       }
     }
   })

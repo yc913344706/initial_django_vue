@@ -220,7 +220,7 @@ const fetchAuditLogs = async () => {
     }
   } catch (error) {
     logger.error('获取审计日志失败:', error)
-    ElMessage.error('获取审计日志失败')
+    ElMessage.error(`获取审计日志失败。${error.msg || error}`)
   } finally {
     loading.value = false
   }

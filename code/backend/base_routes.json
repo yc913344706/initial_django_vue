@@ -78,6 +78,14 @@
           "title": "审计日志",
           "showParent": true
         }
+      },
+      "ldap": {
+        "path": "/system/ldap/config",
+        "name": "LdapConfig",
+        "meta": {
+          "title": "LDAP配置",
+          "showParent": true
+        }
       }
     }
   }

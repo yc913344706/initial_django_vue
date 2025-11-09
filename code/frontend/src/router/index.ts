@@ -256,7 +256,7 @@ const handleRouteInit = async (to: ToRouteType) => {
       router.push(to.fullPath);
     }
   } catch (error) {
-    logDebug('初始化路由失败...' + error)
+    logDebug(`初始化路由失败。${error.msg || error}`)
   }
 };
 

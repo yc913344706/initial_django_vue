@@ -38,4 +38,15 @@ export const apiMap = {
   audit: {
     auditLogs: "/audit/audit-logs/",
   },
+
+  // LDAP管理
+  ldap: {
+    config: "/ldap/config/",
+    testConnection: "/ldap/test-connection/",
+  },
+
+  // 安全配置
+  security: {
+    config: "/ldap/security/config/",
+  }
 }

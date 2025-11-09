@@ -10,13 +10,17 @@
         "/api/v1/user/users/": ["GET", "DELETE"],
         "/api/v1/user/user/": ["GET", "POST", "PUT", "DELETE"],
         "/api/v1/user/groups/": ["GET", "DELETE"],
-        "/api/v1/user/group/": ["GET", "POST", "PUT", "DELETE"]
+        "/api/v1/user/group/": ["GET", "POST", "PUT", "DELETE"],
+        "/api/v1/ldap/config/": ["GET", "POST"],
+        "/api/v1/ldap/test-connection/": ["POST"],
+        "/api/v1/ldap/security/config/": ["GET", "POST"]
       }
     },
     "frontend": {
       "routes": [
         "system.user",
         "system.user.detail",
+        "system.ldap",
         "system.permission",
         "system.permission.detail",
         "system.role",

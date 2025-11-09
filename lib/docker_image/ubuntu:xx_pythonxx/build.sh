@@ -15,23 +15,23 @@ WORKSPACE="$(dirname $(dirname $(dirname $(dirname $(realpath $0)))))"
 analyze_params $*
 
 ##########################
+
+UBUNTU_VERSION="22.04"
+# TARGET_PYTHON_VERSION="3.12.10" # python版本
+TARGET_PYTHON_VERSION="3.13.4" # python版本
+
 # 制作依赖的基础镜像
-BUILD_BASE_IMAGE="${DOCKER_PROXY_DOCKER_IO}library/ubuntu:22.04"
+BUILD_BASE_IMAGE="${DOCKER_PROXY_DOCKER_IO}library/ubuntu:${UBUNTU_VERSION}"
 
 # 制作成的目标镜像--NAME
 DOCKER_IMAGE_NAME="${PRIVATE_HARBOR_PREFIX}yc913344706/ubuntu"
 
-
-TARGET_PYTHON_VERSION="3.12.10" # python版本
-DOCKER_IMAGE_TAG="22.04_python3.12" # 制作成的目标镜像--TAG
-
-TARGET_PYTHON_VERSION="3.13.4" # python版本
-DOCKER_IMAGE_TAG="22.04_python3.13" # 制作成的目标镜像--TAG
+DOCKER_IMAGE_TAG="${UBUNTU_VERSION}_python${TARGET_PYTHON_VERSION%.*}" # 制作成的目标镜像--TAG
 
 ##########################
 
 get_os_arch
-cp -a ${CURRENT_DIR}/root/etc/apt/sources.list.${OS_ARCH} ${CURRENT_DIR}/root/etc/apt/sources.list
+cp -a ${CURRENT_DIR}/root/${UBUNTU_VERSION}/etc/apt/sources.list.${OS_ARCH} ${CURRENT_DIR}/root/etc/apt/sources.list
 
 build_image() {
   docker build \

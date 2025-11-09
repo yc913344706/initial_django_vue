@@ -171,7 +171,7 @@ const getPermissionList = async () => {
       ElMessage.error(res.msg);
     }
   } catch (error) {
-    ElMessage.error("获取权限列表失败");
+    ElMessage.error(`获取权限列表失败。${error.msg || error}`);
   } finally {
     loading.value = false
   }
@@ -222,7 +222,7 @@ const handleDelete = row => {
         ElMessage.error(res.msg);
       }
     } catch (error) {
-      ElMessage.error("删除失败");
+      ElMessage.error(`删除失败。${error.msg || error}`);
     }
   });
 };
@@ -274,7 +274,7 @@ const handleSubmit = async () => {
         getPermissionList();
       } catch (error) {
         logger.error(error)
-        ElMessage.error(dialogType.value === "add" ? "新增失败" : "编辑失败");
+        ElMessage.error(dialogType.value === "add" ? "新增失败。" + error.msg || error : "编辑失败。" + error.msg || error);
       }
     }
   });
@@ -307,7 +307,7 @@ const handleBatchDelete = async () => {
     }
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('删除失败')
+      ElMessage.error(`删除失败。${error.msg || error}`)
     }
   }
 }

@@ -25,7 +25,7 @@ class AuthMiddleware:
             current_method = request.method
             
             # 如果开发环境配置了不需要登录验证，直接放行
-            if not config_data.get('NEED_LOGIN', False):
+            if not config_data.get('NEED_LOGIN', True):
                 color_logger.debug('process_request: 不需要校验token')
                 return None
             

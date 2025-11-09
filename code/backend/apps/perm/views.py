@@ -47,10 +47,10 @@ def permission_list(request):
 
             return pub_success_response()
         else:
-            return pub_error_response('请求方法错误')
+            return pub_error_response(12001, msg='请求方法错误')
     except Exception as e:
         color_logger.error(f"权限列表操作失败: {e.args}")
-        return pub_error_response(f"权限列表操作失败: {e.args}")
+        return pub_error_response(12002, msg=f"权限列表操作失败: {e.args}")
 
 def permission(request):
     """权限"""
@@ -89,10 +89,10 @@ def permission(request):
             permission.delete()
             return pub_success_response()
         else:
-            return pub_error_response('请求方法错误')
+            return pub_error_response(12003, msg='请求方法错误')
     except Exception as e:
         color_logger.error(f"权限操作失败: {e.args}")
-        return pub_error_response(f"权限操作失败: {e.args}")
+        return pub_error_response(12004, msg=f"权限操作失败: {e.args}")
 
 def role_list(request):
     """角色列表"""
@@ -133,10 +133,10 @@ def role_list(request):
                 role.delete()
             return pub_success_response()
         else:
-            return pub_error_response('请求方法错误')
+            return pub_error_response(12005, msg='请求方法错误')
     except Exception as e:
         color_logger.error(f"角色列表操作失败: {e.args}")
-        return pub_error_response(f"角色列表操作失败: {e.args}")
+        return pub_error_response(12006, msg=f"角色列表操作失败: {e.args}")
 
 
 def role(request):
@@ -183,10 +183,10 @@ def role(request):
             role.delete()
             return pub_success_response()
         else:
-            return pub_error_response('请求方法错误')
+            return pub_error_response(12007, msg='请求方法错误')
     except Exception as e:
         color_logger.error(f"角色操作失败: {e.args}")
-        return pub_error_response(f"角色操作失败: {e.args}")
+        return pub_error_response(12008, msg=f"角色操作失败: {e.args}")
 
 def user_permission_json(request):
     """用户权限JSON"""
@@ -199,4 +199,4 @@ def user_permission_json(request):
         return pub_success_response(permission_json)
     except Exception as e:
         color_logger.error(f"用户权限JSON操作失败: {e.args}")
-        return pub_error_response(f"用户权限JSON操作失败: {e.args}")
+        return pub_error_response(12009, msg=f"用户权限JSON操作失败: {e.args}")

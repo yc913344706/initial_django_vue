@@ -171,7 +171,7 @@ const getPermissionDetail = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error('获取权限详情失败')
+    ElMessage.error(`获取权限详情失败。${error.msg || error}`)
   }
 }
 
@@ -223,7 +223,7 @@ const handleSubmit = async () => {
           ElMessage.error(res.msg)
         }
       } catch (error) {
-        ElMessage.error('更新失败')
+        ElMessage.error(`更新失败。${error.msg || error}`)
       }
     }
   })
