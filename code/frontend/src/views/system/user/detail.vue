@@ -16,14 +16,14 @@
             </el-button>
             
             <!-- 修改密码按钮（仅当前用户可见） -->
-            <el-button 
+            <!-- <el-button 
               type="primary" 
               @click="handleChangePassword" 
               v-if="userInfo.username === getCurrentUserUsername()"
               style="margin-right: 10px;"
             >
               修改密码
-            </el-button>
+            </el-button> -->
             
             <el-button type="primary" @click="handleEdit" v-if="!isEditing && hasPerms('system.user:update')">编辑</el-button>
             <el-button @click="$router.back()">返回</el-button>

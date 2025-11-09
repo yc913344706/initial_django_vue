@@ -10,8 +10,9 @@ import { router, remainingPaths } from "@/router";
 import { computed, type CSSProperties } from "vue";
 import { useAppStoreHook } from "@/store/modules/app";
 import { useUserStoreHook } from "@/store/modules/user";
-import { useGlobal, isAllEmpty } from "@pureadmin/utils";
+import { useGlobal, isAllEmpty, storageLocal } from "@pureadmin/utils";
 import { usePermissionStoreHook } from "@/store/modules/permission";
+import { userKey } from "@/utils/auth";
 import ExitFullscreen from "@iconify-icons/ri/fullscreen-exit-fill";
 import Fullscreen from "@iconify-icons/ri/fullscreen-fill";
 
@@ -53,6 +54,12 @@ export function useNav() {
 
   const avatarsStyle = computed(() => {
     return username.value ? { marginRight: "10px" } : "";
+  });
+
+  /** 是否为LDAP用户 */
+  const isLdapUser = computed(() => {
+    const userInfo = storageLocal().getItem<DataInfo<number>>(userKey);
+    return userInfo?.is_ldap || false;
   });
 
   const isCollapse = computed(() => {
@@ -153,6 +160,7 @@ export function useNav() {
     username,
     userAvatar,
     avatarsStyle,
-    tooltipEffect
+    tooltipEffect,
+    isLdapUser
   };
 }

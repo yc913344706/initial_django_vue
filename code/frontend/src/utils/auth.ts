@@ -22,6 +22,8 @@ export interface DataInfo<T> {
   roles?: Array<string>;
   /** 当前登录用户的按钮级别权限 */
   permissions?: Array<string>;
+  /** 是否为LDAP用户 */
+  is_ldap?: boolean;
 }
 
 export const userKey = "user-info";
@@ -65,7 +67,7 @@ export function setToken(data: DataInfo<Date>) {
       : {}
   );
 
-  function setUserKey({ avatar, username, nickname, permissions }) {
+  function setUserKey({ avatar, username, nickname, permissions, is_ldap }) {
     useUserStoreHook().SET_AVATAR(avatar);
     useUserStoreHook().SET_USERNAME(username);
     useUserStoreHook().SET_NICKNAME(nickname);
@@ -76,7 +78,8 @@ export function setToken(data: DataInfo<Date>) {
       avatar,
       username,
       nickname,
-      permissions
+      permissions,
+      is_ldap
     });
   }
 
@@ -86,7 +89,8 @@ export function setToken(data: DataInfo<Date>) {
       avatar: data?.avatar ?? "",
       username,
       nickname: data?.nickname ?? "",
-      permissions: data?.permissions ?? []
+      permissions: data?.permissions ?? [],
+      is_ldap: data?.is_ldap ?? false
     });
   } else {
     const avatar =
@@ -97,11 +101,14 @@ export function setToken(data: DataInfo<Date>) {
       storageLocal().getItem<DataInfo<number>>(userKey)?.nickname ?? "";
     const permissions =
       storageLocal().getItem<DataInfo<number>>(userKey)?.permissions ?? [];
+    const is_ldap =
+      storageLocal().getItem<DataInfo<number>>(userKey)?.is_ldap ?? false;
     setUserKey({
       avatar,
       username,
       nickname,
-      permissions
+      permissions,
+      is_ldap
     });
   }
 }
