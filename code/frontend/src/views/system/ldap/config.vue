@@ -43,13 +43,17 @@
         </el-form-item>
 
         <el-form-item label="服务器端口" prop="server_port">
-          <el-input-number
+          <el-input
+            v-model="ldapConfigForm.server_port"
+            placeholder="端口号"
+          />
+          <!-- <el-input-number
             v-model="ldapConfigForm.server_port"
             :min="1"
             :max="65535"
             placeholder="端口号"
             style="width: 100%"
-          />
+          /> -->
         </el-form-item>
 
         <el-form-item label="基础DN" prop="base_dn">

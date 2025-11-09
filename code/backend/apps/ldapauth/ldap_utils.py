@@ -30,6 +30,7 @@ class LdapAuthBackend:
                 
                 ad_client = ADLDAPClient(ad_config)
                 success, result = ad_client.verify_user(username, password)
+                color_logger.debug(f"LDAP认证结果: {success} {result}")
                 
                 if success:
                     user_info = result
@@ -67,6 +68,7 @@ class LdapAuthBackend:
                 
                 ldap_backend = LDAPBackend(openldap_config)
                 result = ldap_backend.auth_ldap_user_password(username, password)
+                color_logger.debug(f"LDAP认证结果: {result}")
                 
                 if result['status']:
                     # 用户验证成功，检查是否已在本地数据库中存在

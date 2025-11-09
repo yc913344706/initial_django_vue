@@ -328,7 +328,7 @@ class ADLDAPClient:
         try:
             color_logger.debug("开始测试AD LDAP连接...")
             results = self._search_users(limit_num=1)
-            results = self._search_users(search_term='yuc7', limit_num=1)
+            # results = self._search_users(search_term='*', limit_num=1)
             # results = self.get_all_users()
             
             color_logger.debug(f"LDAP连接测试成功，找到 {len(results)} 个用户。{results}")
