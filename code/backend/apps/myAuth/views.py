@@ -99,6 +99,9 @@ def login(request):
                 record_user_login_failed(username)
                 return pub_error_response(10007, msg=f"用户名或密码错误")
 
+        # 认证成功后，重置登录失败计数
+        reset_user_login_failed(username)
+        
         # 生成token
         color_logger.debug(f"generate_tokens: {username}")
         token_manager = TokenManager()
@@ -264,6 +267,18 @@ def refresh_token(request):
         return response
     except Exception as e:
         return pub_error_response(99998, msg=f"刷新token失败: {e.args}")
+
+
+def reset_user_login_failed(user_name):
+    """重置用户登录失败次数"""
+    redis_key_name = f"user_login_frequency_{user_name}"
+
+    # 将失败次数重置为0（也重置过期时间）
+    set_redis_value(
+        redis_db_name='AUTH',
+        redis_key_name=redis_key_name,
+        redis_key_value=0,
+    )
 
 
 def get_async_routes(request):

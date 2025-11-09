@@ -174,14 +174,19 @@ def record_user_login_failed(user_name):
     else:
         current_login_failed_num = 1
 
-    # 获取安全配置中的最大尝试次数
+    # 获取安全配置
     security_config = SecurityConfig.objects.first()
     max_attempts = security_config.max_login_attempts if security_config else 5
+    lockout_duration = security_config.lockout_duration if security_config else 60  # 分钟
+
+    # 设置过期时间（锁定时长的分钟数）
+    expire_time = lockout_duration * 60  # 转换为秒
     
     set_redis_value(
         redis_db_name='AUTH',
         redis_key_name=redis_key_name,
         redis_key_value=current_login_failed_num,
+        set_expire=expire_time  # 设置过期时间
     )
 
 
@@ -190,7 +195,6 @@ def get_user_is_lock(user_name):
     # 获取安全配置
     security_config = SecurityConfig.objects.first()
     max_attempts = security_config.max_login_attempts if security_config else 5
-    lockout_duration = security_config.lockout_duration if security_config else 60  # 分钟
 
     redis_key_name = f"user_login_frequency_{user_name}"
 
@@ -198,11 +202,13 @@ def get_user_is_lock(user_name):
         redis_db_name='AUTH',
         redis_key_name=redis_key_name
     )
+
     if already_login_failed_times is not None:
         already_login_failed_times = int(already_login_failed_times)
     else:
         already_login_failed_times = 0
 
+    # 检查是否达到最大尝试次数
     if already_login_failed_times >= max_attempts:
         return True
 
