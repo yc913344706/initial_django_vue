@@ -13,6 +13,10 @@ export const apiMap = {
   user: {
     userList: "/user/users/",
     user: "/user/user/",
+    changePassword: "/user/change-password/",
+    resetPassword: "/user/reset-password/",
+    passwordConfig: "/user/password-config/",
+    securityConfig: "/user/security-config/",
   },
 
   // 用户组管理

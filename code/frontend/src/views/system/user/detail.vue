@@ -5,9 +5,28 @@
         <div class="card-header">
           <span>用户详情</span>
           <div>
+            <!-- 重置密码按钮（仅管理员可见） -->
+            <el-button 
+              type="warning" 
+              @click="handleResetPassword" 
+              v-if="hasPerms('system.user:resetPassword') && route.query.uuid !== getCurrentUserUuid()"
+              style="margin-right: 10px;"
+            >
+              重置密码
+            </el-button>
+            
+            <!-- 修改密码按钮（仅当前用户可见） -->
+            <el-button 
+              type="primary" 
+              @click="handleChangePassword" 
+              v-if="route.query.uuid === getCurrentUserUuid()"
+              style="margin-right: 10px;"
+            >
+              修改密码
+            </el-button>
+            
             <el-button type="primary" @click="handleEdit" v-if="!isEditing && hasPerms('system.user:update')">编辑</el-button>
-            <el-button @click="$router.back()"
-            >返回</el-button>
+            <el-button @click="$router.back()">返回</el-button>
           </div>
         </div>
       </template>
@@ -119,6 +138,96 @@
         </el-card>
       </template>
     </el-card>
+
+    <!-- 修改密码对话框 -->
+    <el-dialog
+      v-model="changePasswordDialogVisible"
+      title="修改密码"
+      width="500px"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        :model="changePasswordForm"
+        :rules="changePasswordRules"
+        ref="changePasswordFormRef"
+        label-width="100px"
+      >
+        <el-form-item label="当前密码" prop="current_password">
+          <el-input
+            v-model="changePasswordForm.current_password"
+            type="password"
+            show-password
+            placeholder="请输入当前密码"
+          />
+        </el-form-item>
+        <el-form-item label="新密码" prop="new_password">
+          <el-input
+            v-model="changePasswordForm.new_password"
+            type="password"
+            show-password
+            placeholder="请输入新密码"
+          />
+        </el-form-item>
+        <el-form-item label="确认新密码" prop="confirm_password">
+          <el-input
+            v-model="changePasswordForm.confirm_password"
+            type="password"
+            show-password
+            placeholder="请再次输入新密码"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="changePasswordDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmChangePassword">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 重置密码对话框 -->
+    <el-dialog
+      v-model="resetPasswordDialogVisible"
+      title="重置密码"
+      width="500px"
+      :close-on-click-modal="false"
+    >
+      <el-alert
+        title="注意：此操作将为用户设置新密码，用户将无法使用旧密码登录。"
+        type="warning"
+        :closable="false"
+        style="margin-bottom: 20px;"
+      />
+      <el-form
+        :model="resetPasswordForm"
+        :rules="resetPasswordRules"
+        ref="resetPasswordFormRef"
+        label-width="100px"
+      >
+        <el-form-item label="新密码" prop="new_password">
+          <el-input
+            v-model="resetPasswordForm.new_password"
+            type="password"
+            show-password
+            placeholder="请输入新密码"
+          />
+        </el-form-item>
+        <el-form-item label="确认新密码" prop="confirm_password">
+          <el-input
+            v-model="resetPasswordForm.confirm_password"
+            type="password"
+            show-password
+            placeholder="请再次输入新密码"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="resetPasswordDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmResetPassword">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -163,6 +272,63 @@ const form = ref({
 const roleList = ref([])
 const permissionList = ref([])
 const permissionJson = ref({})
+
+// 密码相关变量
+const changePasswordDialogVisible = ref(false)
+const resetPasswordDialogVisible = ref(false)
+const changePasswordForm = ref({
+  current_password: '',
+  new_password: '',
+  confirm_password: ''
+})
+const resetPasswordForm = ref({
+  new_password: '',
+  confirm_password: '',
+  user_uuid: ''
+})
+
+const changePasswordRules = {
+  current_password: [
+    { required: true, message: '请输入当前密码', trigger: 'blur' }
+  ],
+  new_password: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, message: '新密码长度至少6位', trigger: 'blur' }
+  ],
+  confirm_password: [
+    { required: true, message: '请确认新密码', trigger: 'blur' },
+    {
+      validator: (rule: any, value: string, callback: any) => {
+        if (value !== changePasswordForm.value.new_password) {
+          callback(new Error('确认密码与新密码不一致'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
+}
+
+const resetPasswordRules = {
+  new_password: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, message: '新密码长度至少6位', trigger: 'blur' }
+  ],
+  confirm_password: [
+    { required: true, message: '请确认新密码', trigger: 'blur' },
+    {
+      validator: (rule: any, value: string, callback: any) => {
+        if (value !== resetPasswordForm.value.new_password) {
+          callback(new Error('确认密码与新密码不一致'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
+}
 
 const rules = {
   username: [
@@ -275,6 +441,75 @@ const handleSubmit = async () => {
       }
     }
   })
+}
+
+// 获取当前用户UUID
+const getCurrentUserUuid = () => {
+  const userStr = localStorage.getItem('user-info');
+  if (userStr) {
+    const user = JSON.parse(userStr);
+    return user.uuid;
+  }
+  return '';
+}
+
+// 修改密码
+const handleChangePassword = () => {
+  changePasswordDialogVisible.value = true
+  // 重置表单
+  changePasswordForm.value = {
+    current_password: '',
+    new_password: '',
+    confirm_password: ''
+  }
+}
+
+// 重置密码
+const handleResetPassword = () => {
+  resetPasswordDialogVisible.value = true
+  // 重置表单
+  resetPasswordForm.value = {
+    new_password: '',
+    confirm_password: '',
+    user_uuid: route.query.uuid as string
+  }
+}
+
+// 确认修改密码
+const confirmChangePassword = async () => {
+  try {
+    const res = await http.request('post', apiMap.user.changePassword, {
+      data: changePasswordForm.value
+    })
+    if (res.success) {
+      ElMessage.success(res.msg || '密码修改成功')
+      changePasswordDialogVisible.value = false
+    } else {
+      ElMessage.error(res.msg)
+    }
+  } catch (error) {
+    ElMessage.error(`密码修改失败。${error.msg || error}`)
+  }
+}
+
+// 确认重置密码
+const confirmResetPassword = async () => {
+  try {
+    const res = await http.request('post', apiMap.user.resetPassword, {
+      data: {
+        user_uuid: route.query.uuid,
+        ...resetPasswordForm.value
+      }
+    })
+    if (res.success) {
+      ElMessage.success(res.msg || '密码重置成功')
+      resetPasswordDialogVisible.value = false
+    } else {
+      ElMessage.error(res.msg)
+    }
+  } catch (error) {
+    ElMessage.error(`密码重置失败。${error.msg || error}`)
+  }
 }
 
 onMounted(() => {

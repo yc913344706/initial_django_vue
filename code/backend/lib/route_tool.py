@@ -55,7 +55,9 @@ class RouteTool:
 
         def filter_route(route: Dict, route_key: str) -> Optional[Dict]:
             """过滤路由配置"""
+            color_logger.debug(f"检查权限: {route}, {route_key}")
             if not has_permission(route, route_key):
+                color_logger.debug(f"无权限访问: {route}, {route_key}")
                 return None
 
             filtered_route = route.copy()
@@ -73,6 +75,7 @@ class RouteTool:
                 else:
                     return None
 
+            color_logger.debug(f"有权限访问: {route}, {route_key}")
             return filtered_route
 
         # 过滤路由
