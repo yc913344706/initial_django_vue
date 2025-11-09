@@ -57,7 +57,8 @@ class Command(BaseCommand):
                 {
                     "backend": {
                         "api": {
-                            "/api/v1/auth/get-async-routes/": ["GET"]
+                            "/api/v1/auth/get-async-routes/": ["GET"],
+                            "/api/v1/user/change-password/": ["POST"]
                         }
                     }
                 }

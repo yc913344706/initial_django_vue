@@ -9,7 +9,7 @@
             <el-button 
               type="warning" 
               @click="handleResetPassword" 
-              v-if="hasPerms('system.user:resetPassword') && userInfo.username !== getCurrentUserUsername()"
+              v-if="hasPerms('system.user:resetPassword') && (! userInfo.is_ldap)"
               style="margin-right: 10px;"
             >
               重置密码
@@ -185,46 +185,39 @@
       </template>
     </el-dialog>
 
-    <!-- 重置密码对话框 -->
+    <!-- 显示生成密码的对话框 -->
     <el-dialog
-      v-model="resetPasswordDialogVisible"
-      title="重置密码"
+      v-model="generatedPasswordDialogVisible"
+      title="重置密码成功"
       width="500px"
       :close-on-click-modal="false"
     >
       <el-alert
-        title="注意：此操作将为用户设置新密码，用户将无法使用旧密码登录。"
-        type="warning"
+        title="新密码已生成，请告知用户及时修改密码。"
+        type="info"
         :closable="false"
+        show-icon
         style="margin-bottom: 20px;"
       />
-      <el-form
-        :model="resetPasswordForm"
-        :rules="resetPasswordRules"
-        ref="resetPasswordFormRef"
-        label-width="100px"
-      >
-        <el-form-item label="新密码" prop="new_password">
-          <el-input
-            v-model="resetPasswordForm.new_password"
-            type="password"
-            show-password
-            placeholder="请输入新密码"
-          />
-        </el-form-item>
-        <el-form-item label="确认新密码" prop="confirm_password">
-          <el-input
-            v-model="resetPasswordForm.confirm_password"
-            type="password"
-            show-password
-            placeholder="请再次输入新密码"
-          />
-        </el-form-item>
-      </el-form>
+      <div style="display: flex; align-items: center;">
+        <el-input
+          v-model="generatedPassword"
+          readonly
+          show-password
+          placeholder="生成的密码"
+          style="flex: 1; margin-right: 10px;"
+        />
+        <el-button 
+          type="primary" 
+          @click="copyPassword"
+          :icon="CopyDocument"
+        >
+          复制
+        </el-button>
+      </div>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="resetPasswordDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="confirmResetPassword">确认</el-button>
+          <el-button type="primary" @click="generatedPasswordDialogVisible = false">确定</el-button>
         </span>
       </template>
     </el-dialog>
@@ -234,19 +227,42 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
 import { hasPerms } from "@/utils/auth";
 import router from '@/router'
 import { uuid } from '@pureadmin/utils'
+import { CopyDocument } from '@element-plus/icons-vue'
+
+// 复制密码到剪贴板
+const copyPassword = async () => {
+  try {
+    await navigator.clipboard.writeText(generatedPassword.value)
+    ElMessage.success('密码已复制到剪贴板')
+  } catch (err) {
+    // 如果浏览器不支持 navigator.clipboard，使用备用方案
+    const textArea = document.createElement('textarea')
+    textArea.value = generatedPassword.value
+    document.body.appendChild(textArea)
+    textArea.select()
+    try {
+      document.execCommand('copy')
+      ElMessage.success('密码已复制到剪贴板')
+    } catch (error) {
+      ElMessage.error('复制失败，请手动复制')
+    }
+    document.body.removeChild(textArea)
+  }
+}
 
 const route = useRoute()
 const isEditing = ref(false)
 const formRef = ref<FormInstance>()
 const userInfo = ref({
   uuid: '',
+  is_ldap: false,
   username: '',
   nickname: '',
   phone: '',
@@ -277,17 +293,14 @@ const permissionJson = ref({})
 
 // 密码相关变量
 const changePasswordDialogVisible = ref(false)
-const resetPasswordDialogVisible = ref(false)
+const generatedPasswordDialogVisible = ref(false)  // 显示生成密码的对话框
 const changePasswordForm = ref({
   current_password: '',
   new_password: '',
   confirm_password: ''
 })
-const resetPasswordForm = ref({
-  new_password: '',
-  confirm_password: '',
-  user_uuid: ''
-})
+// 生成的密码
+const generatedPassword = ref('')
 
 const changePasswordRules = {
   current_password: [
@@ -312,25 +325,7 @@ const changePasswordRules = {
   ]
 }
 
-const resetPasswordRules = {
-  new_password: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '新密码长度至少6位', trigger: 'blur' }
-  ],
-  confirm_password: [
-    { required: true, message: '请确认新密码', trigger: 'blur' },
-    {
-      validator: (rule: any, value: string, callback: any) => {
-        if (value !== resetPasswordForm.value.new_password) {
-          callback(new Error('确认密码与新密码不一致'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur'
-    }
-  ]
-}
+
 
 const rules = {
   username: [
@@ -466,14 +461,72 @@ const handleChangePassword = () => {
   }
 }
 
+// 生成安全密码
+const generateSecurePassword = (length = 12) => {
+  const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz'
+  const numberChars = '0123456789'
+  const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?'
+  
+  const allChars = uppercaseChars + lowercaseChars + numberChars + specialChars
+  let password = ''
+  
+  // 确保密码包含每种类型的字符
+  password += uppercaseChars[Math.floor(Math.random() * uppercaseChars.length)]
+  password += lowercaseChars[Math.floor(Math.random() * lowercaseChars.length)]
+  password += numberChars[Math.floor(Math.random() * numberChars.length)]
+  password += specialChars[Math.floor(Math.random() * specialChars.length)]
+  
+  // 填充剩余长度
+  for (let i = password.length; i < length; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)]
+  }
+  
+  // 打乱密码字符顺序
+  return password.split('').sort(() => Math.random() - 0.5).join('')
+}
+
 // 重置密码
-const handleResetPassword = () => {
-  resetPasswordDialogVisible.value = true
-  // 重置表单
-  resetPasswordForm.value = {
-    new_password: '',
-    confirm_password: '',
-    user_uuid: route.query.uuid as string
+const handleResetPassword = async () => {
+  // 询问用户是否确认重置密码
+  try {
+    await ElMessageBox.confirm(
+      '此操作将为用户生成新密码，用户将无法使用旧密码登录。是否继续？',
+      '确认重置密码',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    // 生成新密码
+    const newPassword = generateSecurePassword(12)
+    
+    // 调用后端API重置密码
+    try {
+      const res = await http.request('post', apiMap.user.resetPassword, {
+        data: {
+          user_uuid: route.query.uuid,
+          new_password: newPassword,
+          confirm_password: newPassword  // 确认密码与新密码相同
+        }
+      })
+      
+      if (res.success) {
+        // 显示生成的密码
+        generatedPassword.value = newPassword
+        generatedPasswordDialogVisible.value = true
+        ElMessage.success(res.msg || '密码重置成功')
+      } else {
+        ElMessage.error(res.msg)
+      }
+    } catch (error) {
+      ElMessage.error(`密码重置失败。${error.msg || error}`)
+    }
+  } catch {
+    // 用户取消操作
+    console.log('用户取消重置密码操作')
   }
 }
 
@@ -494,25 +547,7 @@ const confirmChangePassword = async () => {
   }
 }
 
-// 确认重置密码
-const confirmResetPassword = async () => {
-  try {
-    const res = await http.request('post', apiMap.user.resetPassword, {
-      data: {
-        user_uuid: route.query.uuid,
-        ...resetPasswordForm.value
-      }
-    })
-    if (res.success) {
-      ElMessage.success(res.msg || '密码重置成功')
-      resetPasswordDialogVisible.value = false
-    } else {
-      ElMessage.error(res.msg)
-    }
-  } catch (error) {
-    ElMessage.error(`密码重置失败。${error.msg || error}`)
-  }
-}
+
 
 onMounted(() => {
   if (!hasPerms('system.user:read')) {

@@ -264,16 +264,11 @@ def change_password(request):
             return pub_error_response(13011, msg='新密码与确认密码不一致')
 
         # 获取当前用户
-        from apps.myAuth.token_utils import TokenManager
-        token = TokenManager.get_token_from_request(request)
-        if not token:
-            return pub_error_response(13012, msg='未提供认证令牌')
-
-        user_uuid = TokenManager.get_user_uuid_from_token(token)
-        if not user_uuid:
+        current_username = request.user_name
+        if not current_username:
             return pub_error_response(13013, msg='无效的认证令牌')
 
-        user = User.objects.filter(uuid=user_uuid).first()
+        user = User.objects.filter(username=current_username).first()
         if not user:
             return pub_error_response(13014, msg='用户不存在')
 
@@ -323,17 +318,12 @@ def reset_password(request):
         if new_password != confirm_password:
             return pub_error_response(13021, msg='新密码与确认密码不一致')
 
-        # 获取当前用户（用于权限验证）
-        from apps.myAuth.token_utils import TokenManager
-        token = TokenManager.get_token_from_request(request)
-        if not token:
-            return pub_error_response(13022, msg='未提供认证令牌')
+        # 获取当前用户
+        current_username = request.user_name
+        if not current_username:
+            return pub_error_response(13013, msg='无效的认证令牌')
 
-        current_user_uuid = TokenManager.get_user_uuid_from_token(token)
-        if not current_user_uuid:
-            return pub_error_response(13023, msg='无效的认证令牌')
-
-        current_user = User.objects.filter(uuid=current_user_uuid).first()
+        current_user = User.objects.filter(username=current_username).first()
         if not current_user:
             return pub_error_response(13024, msg='当前用户不存在')
 
@@ -361,7 +351,7 @@ def reset_password(request):
         return pub_success_response(msg='密码重置成功')
 
     except Exception as e:
-        color_logger.error(f"管理员重置密码失败: {e.args}")
+        color_logger.error(f"管理员重置密码失败: {e.args}", exc_info=True)
         return pub_error_response(13028, msg=f"密码重置失败: {e.args}")
 
 
