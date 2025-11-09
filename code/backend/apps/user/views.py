@@ -35,10 +35,10 @@ def user_list(request):
 
             # 分页查询
             has_next, next_page, page_list, all_num, result = pub_paging_tool(page, user_list, page_size)
-            
+
             # 格式化返回数据
             result = [format_user_data(user) for user in result]
-            
+
             return pub_success_response({
                     'has_next': has_next,
                     'next_page': next_page,
@@ -248,57 +248,57 @@ def change_password(request):
     """用户修改自己密码"""
     try:
         body = pub_get_request_body(request)
-        
+
         if request.method != 'POST':
             return pub_error_response(13009, msg='请求方法错误')
-        
+
         # 验证必需参数
         current_password = body.get('current_password')
         new_password = body.get('new_password')
         confirm_password = body.get('confirm_password')
-        
+
         if not current_password or not new_password or not confirm_password:
             return pub_error_response(13010, msg='缺少必需参数：current_password, new_password, confirm_password')
-        
+
         if new_password != confirm_password:
             return pub_error_response(13011, msg='新密码与确认密码不一致')
-        
+
         # 获取当前用户
         from apps.myAuth.token_utils import TokenManager
         token = TokenManager.get_token_from_request(request)
         if not token:
             return pub_error_response(13012, msg='未提供认证令牌')
-        
+
         user_uuid = TokenManager.get_user_uuid_from_token(token)
         if not user_uuid:
             return pub_error_response(13013, msg='无效的认证令牌')
-        
+
         user = User.objects.filter(uuid=user_uuid).first()
         if not user:
             return pub_error_response(13014, msg='用户不存在')
-        
+
         # 检查LDAP用户不能修改密码
         if user.is_ldap:
             return pub_error_response(13015, msg='LDAP用户无法修改本地密码')
-        
+
         # 验证当前密码
         decrypted_password = aes.decrypt(user.password)
         if decrypted_password != current_password:
             return pub_error_response(13016, msg='当前密码不正确')
-        
+
         # 验证新密码强度
         is_valid, msg = validate_password_strength(new_password)
         if not is_valid:
             return pub_error_response(13017, msg=msg)
-        
+
         # 更新密码
         encrypted_new_password = aes.encrypt(new_password)
         user.password = encrypted_new_password
         user.save()
-        
+
         color_logger.info(f"用户 {user.username} 修改密码成功")
         return pub_success_response(msg='密码修改成功')
-    
+
     except Exception as e:
         color_logger.error(f"用户修改密码失败: {e.args}")
         return pub_error_response(13018, msg=f"密码修改失败: {e.args}")
@@ -308,58 +308,58 @@ def reset_password(request):
     """管理员重置用户密码"""
     try:
         body = pub_get_request_body(request)
-        
+
         if request.method != 'POST':
             return pub_error_response(13019, msg='请求方法错误')
-        
+
         # 验证必需参数
         user_uuid = body.get('user_uuid')
         new_password = body.get('new_password')
         confirm_password = body.get('confirm_password')
-        
+
         if not user_uuid or not new_password or not confirm_password:
             return pub_error_response(13020, msg='缺少必需参数：user_uuid, new_password, confirm_password')
-        
+
         if new_password != confirm_password:
             return pub_error_response(13021, msg='新密码与确认密码不一致')
-        
+
         # 获取当前用户（用于权限验证）
         from apps.myAuth.token_utils import TokenManager
         token = TokenManager.get_token_from_request(request)
         if not token:
             return pub_error_response(13022, msg='未提供认证令牌')
-        
+
         current_user_uuid = TokenManager.get_user_uuid_from_token(token)
         if not current_user_uuid:
             return pub_error_response(13023, msg='无效的认证令牌')
-        
+
         current_user = User.objects.filter(uuid=current_user_uuid).first()
         if not current_user:
             return pub_error_response(13024, msg='当前用户不存在')
-        
+
         # 检查当前用户权限（这里简单检查是否为管理员，实际项目中应该有更详细的权限验证）
         # 在当前系统中，我们假设所有用户都可以重置其他用户密码，实际项目中应有权限检查
         target_user = User.objects.filter(uuid=user_uuid).first()
         if not target_user:
             return pub_error_response(13025, msg='目标用户不存在')
-        
+
         # 检查LDAP用户不能重置密码
         if target_user.is_ldap:
             return pub_error_response(13026, msg='无法重置LDAP用户的密码')
-        
+
         # 验证新密码强度
         is_valid, msg = validate_password_strength(new_password)
         if not is_valid:
             return pub_error_response(13027, msg=msg)
-        
+
         # 更新密码
         encrypted_new_password = aes.encrypt(new_password)
         target_user.password = encrypted_new_password
         target_user.save()
-        
+
         color_logger.info(f"用户 {current_user.username} 为用户 {target_user.username} 重置密码成功")
         return pub_success_response(msg='密码重置成功')
-    
+
     except Exception as e:
         color_logger.error(f"管理员重置密码失败: {e.args}")
         return pub_error_response(13028, msg=f"密码重置失败: {e.args}")
@@ -369,16 +369,16 @@ def get_password_config(request):
     """获取密码配置"""
     try:
         body = pub_get_request_body(request)
-        
+
         if request.method != 'GET':
             return pub_error_response(13029, msg='请求方法错误')
-        
+
         # 返回默认密码配置
         from .password_validator import get_password_strength_config
         config = get_password_strength_config()
-        
+
         return pub_success_response(config)
-    
+
     except Exception as e:
         color_logger.error(f"获取密码配置失败: {e.args}")
         return pub_error_response(13030, msg=f"获取密码配置失败: {e.args}")
@@ -388,34 +388,42 @@ def update_password_config(request):
     """更新密码配置"""
     try:
         body = pub_get_request_body(request)
-        
+
         if request.method != 'POST':
             return pub_error_response(13031, msg='请求方法错误')
-        
-        # 这里应该从配置文件或数据库中读取和保存配置，为简化先返回成功
-        # 实际上在当前实现中，配置是通过函数参数传递的，我们可以通过环境变量或配置文件来实现持久存储
-        
-        # 验证密码配置参数（可选）
+
+        # 验证密码配置参数
         min_length = body.get('min_length', 8)
         max_length = body.get('max_length', 128)
         require_uppercase = body.get('require_uppercase', True)
         require_lowercase = body.get('require_lowercase', True)
         require_numbers = body.get('require_numbers', True)
         require_special = body.get('require_special', False)
-        
-        # 可以将配置保存到数据库或配置文件中，这里先返回成功
+        allowed_special_chars = body.get('allowed_special_chars', "!@#$%^&*()_+-=[]{};':\"\\|,.<>\/?")
+
+        # 验证参数范围
+        if min_length < 1 or min_length > max_length:
+            return pub_error_response(13033, msg='最小长度必须大于0且小于等于最大长度')
+        if max_length < min_length or max_length > 256:
+            return pub_error_response(13034, msg='最大长度必须大于等于最小长度且小于等于256')
+
+        # 保存配置到数据库
+        from .password_validator import save_password_strength_config
         config = {
             "min_length": min_length,
             "max_length": max_length,
             "require_uppercase": require_uppercase,
             "require_lowercase": require_lowercase,
             "require_numbers": require_numbers,
-            "require_special": require_special
+            "require_special": require_special,
+            "allowed_special_chars": allowed_special_chars
         }
-        
+
+        save_password_strength_config(config)
+
         color_logger.info(f"密码配置已更新: {config}")
         return pub_success_response(config, msg='密码配置更新成功')
-    
+
     except Exception as e:
         color_logger.error(f"更新密码配置失败: {e.args}")
         return pub_error_response(13032, msg=f"更新密码配置失败: {e.args}")

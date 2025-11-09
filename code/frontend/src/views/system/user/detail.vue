@@ -9,7 +9,7 @@
             <el-button 
               type="warning" 
               @click="handleResetPassword" 
-              v-if="hasPerms('system.user:resetPassword') && route.query.uuid !== getCurrentUserUuid()"
+              v-if="hasPerms('system.user:resetPassword') && userInfo.username !== getCurrentUserUsername()"
               style="margin-right: 10px;"
             >
               重置密码
@@ -19,7 +19,7 @@
             <el-button 
               type="primary" 
               @click="handleChangePassword" 
-              v-if="route.query.uuid === getCurrentUserUuid()"
+              v-if="userInfo.username === getCurrentUserUsername()"
               style="margin-right: 10px;"
             >
               修改密码
@@ -240,11 +240,13 @@ import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
 import { hasPerms } from "@/utils/auth";
 import router from '@/router'
+import { uuid } from '@pureadmin/utils'
 
 const route = useRoute()
 const isEditing = ref(false)
 const formRef = ref<FormInstance>()
 const userInfo = ref({
+  uuid: '',
   username: '',
   nickname: '',
   phone: '',
@@ -444,11 +446,11 @@ const handleSubmit = async () => {
 }
 
 // 获取当前用户UUID
-const getCurrentUserUuid = () => {
+const getCurrentUserUsername = () => {
   const userStr = localStorage.getItem('user-info');
   if (userStr) {
     const user = JSON.parse(userStr);
-    return user.uuid;
+    return user.username;
   }
   return '';
 }

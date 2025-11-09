@@ -30,7 +30,7 @@ class UserGroup(BaseTypeTree):
     """用户组模型"""
     code = models.CharField(default=uuid.uuid4, max_length=64, unique=True, verbose_name='类型编码')
     description = models.TextField(verbose_name='描述', null=True, blank=True)
-    
+
     users = models.ManyToManyField('User', verbose_name='用户列表')
     permissions = models.ManyToManyField('perm.Permission', verbose_name='权限列表')
     roles = models.ManyToManyField('perm.Role', verbose_name='角色列表')
@@ -39,3 +39,17 @@ class UserGroup(BaseTypeTree):
         verbose_name = '用户组'
         verbose_name_plural = verbose_name
 
+
+# 系统配置模型
+class SystemConfig(BaseModel):
+    """系统配置模型，用于存储各种系统配置项"""
+    config_key = models.CharField(max_length=100, unique=True, verbose_name='配置键')
+    config_value = models.TextField(verbose_name='配置值')
+    description = models.TextField(verbose_name='配置描述', null=True, blank=True)
+
+    class Meta:
+        verbose_name = '系统配置'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return f"{self.config_key}: {self.config_value}"

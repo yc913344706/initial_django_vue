@@ -1,6 +1,93 @@
 <template>
   <div class="system-page">
 
+    <!-- 密码强度配置 -->
+    <el-card class="config-card" style="margin-top: 20px;">
+      <template #header>
+        <div class="card-header">
+          <span class="title">密码强度配置</span>
+        </div>
+      </template>
+
+      <el-form
+        :model="passwordConfigForm"
+        :rules="passwordConfigRules"
+        ref="passwordConfigFormRef"
+        label-width="150px"
+        class="config-form"
+      >
+        <el-form-item label="密码最小长度" prop="min_length">
+          <el-input-number
+            v-model="passwordConfigForm.min_length"
+            :min="1"
+            :max="256"
+            placeholder="密码最小长度"
+          />
+          <div class="form-help">密码最小长度</div>
+        </el-form-item>
+
+        <el-form-item label="密码最大长度" prop="max_length">
+          <el-input-number
+            v-model="passwordConfigForm.max_length"
+            :min="1"
+            :max="256"
+            placeholder="密码最大长度"
+          />
+          <div class="form-help">密码最大长度</div>
+        </el-form-item>
+
+        <el-form-item label="需要大写字母">
+          <el-switch
+            v-model="passwordConfigForm.require_uppercase"
+            active-text="是"
+            inactive-text="否"
+          />
+          <div class="form-help">是否要求密码包含大写字母</div>
+        </el-form-item>
+
+        <el-form-item label="需要小写字母">
+          <el-switch
+            v-model="passwordConfigForm.require_lowercase"
+            active-text="是"
+            inactive-text="否"
+          />
+          <div class="form-help">是否要求密码包含小写字母</div>
+        </el-form-item>
+
+        <el-form-item label="需要数字">
+          <el-switch
+            v-model="passwordConfigForm.require_numbers"
+            active-text="是"
+            inactive-text="否"
+          />
+          <div class="form-help">是否要求密码包含数字</div>
+        </el-form-item>
+
+        <el-form-item label="需要特殊字符">
+          <el-switch
+            v-model="passwordConfigForm.require_special"
+            active-text="是"
+            inactive-text="否"
+          />
+          <div class="form-help">是否要求密码包含特殊字符</div>
+        </el-form-item>
+
+        <el-form-item label="允许的特殊字符" prop="allowed_special_chars" v-if="passwordConfigForm.require_special">
+          <el-input
+            v-model="passwordConfigForm.allowed_special_chars"
+            placeholder="允许的特殊字符"
+            :rows="3"
+            type="textarea"
+          />
+          <div class="form-help">指定允许使用的特殊字符列表</div>
+        </el-form-item>
+
+        <el-form-item>
+          <el-button type="primary" @click="handleSavePasswordConfig">保存密码强度配置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
     <!-- 安全配置 -->
     <el-card class="config-card" style="margin-top: 20px;">
       <template #header>
@@ -41,7 +128,7 @@
         </el-form-item>
       </el-form>
     </el-card>
-    
+
     <el-card class="config-card">
       <template #header>
         <div class="card-header">
@@ -184,6 +271,16 @@ interface SecurityConfig {
   lockout_duration: number
 }
 
+interface PasswordConfig {
+  min_length: number
+  max_length: number
+  require_uppercase: boolean
+  require_lowercase: boolean
+  require_numbers: boolean
+  require_special: boolean
+  allowed_special_chars: string
+}
+
 const ldapConfigForm = ref<LdapConfig>({
   enabled: false,
   server_host: '',
@@ -203,8 +300,32 @@ const securityConfigForm = ref<SecurityConfig>({
   lockout_duration: 60
 })
 
+const passwordConfigForm = ref<PasswordConfig>({
+  min_length: 8,
+  max_length: 128,
+  require_uppercase: true,
+  require_lowercase: true,
+  require_numbers: true,
+  require_special: false,
+  allowed_special_chars: "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?"  // 默认的特殊字符
+})
+
 const ldapConfigFormRef = ref<FormInstance>()
 const securityConfigFormRef = ref<FormInstance>()
+const passwordConfigFormRef = ref<FormInstance>()
+
+// 密码配置验证规则
+const passwordConfigRules = ref<FormRules>({
+  min_length: [
+    { required: true, message: '请输入密码最小长度', trigger: 'blur' }
+  ],
+  max_length: [
+    { required: true, message: '请输入密码最大长度', trigger: 'blur' }
+  ],
+  allowed_special_chars: [
+    { required: true, message: '请输入允许的特殊字符', trigger: 'blur' }
+  ]
+})
 
 // LDAP配置验证规则
 const ldapConfigRules = ref<FormRules>({
@@ -229,6 +350,29 @@ const securityConfigRules = ref<FormRules>({
   ]
 })
 
+// 获取密码配置
+const getPasswordConfig = async () => {
+  try {
+    const res = await http.request('get', apiMap.user.passwordConfig)
+    if (res.success) {
+      const configData = res.data
+
+      passwordConfigForm.value = {
+        min_length: configData.min_length || 8,
+        max_length: configData.max_length || 128,
+        require_uppercase: configData.require_uppercase || false,
+        require_lowercase: configData.require_lowercase || false,
+        require_numbers: configData.require_numbers || false,
+        require_special: configData.require_special || false,
+        allowed_special_chars: configData.allowed_special_chars || "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?"
+      }
+    } else {
+      ElMessage.error(res.msg)
+    }
+  } catch (error: any) {
+    ElMessage.error(`获取密码配置失败。${error.msg || error}`)
+  }
+}
 
 // 获取LDAP配置
 const getLdapConfig = async () => {
@@ -236,7 +380,7 @@ const getLdapConfig = async () => {
     const res = await http.request('get', apiMap.ldap.config)
     if (res.success) {
       const configData = res.data
-      
+
       ldapConfigForm.value = {
         ...configData
       }
@@ -250,9 +394,9 @@ const getLdapConfig = async () => {
 
 // 处理LDAP类型变化
 const handleLdapTypeChange = (value: string) => {
-  if (!ldapConfigForm.value.user_search_filter && 
-      !ldapConfigForm.value.username_attr && 
-      !ldapConfigForm.value.display_name_attr && 
+  if (!ldapConfigForm.value.user_search_filter &&
+      !ldapConfigForm.value.username_attr &&
+      !ldapConfigForm.value.display_name_attr &&
       !ldapConfigForm.value.email_attr) {
     // 只有在用户还没有自定义这些值时才预填充默认值
     if (value === 'ad') {
@@ -285,6 +429,30 @@ const getSecurityConfig = async () => {
   }
 }
 
+// 保存密码配置
+const handleSavePasswordConfig = async () => {
+  if (!passwordConfigFormRef.value) return
+
+  await passwordConfigFormRef.value.validate(async (valid) => {
+    if (valid) {
+      try {
+        const configToSave = {
+          ...passwordConfigForm.value
+        }
+
+        const res = await http.request('post', apiMap.user.passwordConfig, { data: configToSave })
+        if (res.success) {
+          ElMessage.success('密码配置保存成功')
+        } else {
+          ElMessage.error(res.msg)
+        }
+      } catch (error) {
+        ElMessage.error(`保存密码配置失败。${error.msg || error}`)
+      }
+    }
+  })
+}
+
 // 保存LDAP配置
 const handleSaveLdapConfig = async () => {
   if (!ldapConfigFormRef.value) return
@@ -295,7 +463,7 @@ const handleSaveLdapConfig = async () => {
         const configToSave = {
           ...ldapConfigForm.value
         }
-        
+
         const res = await http.request('post', apiMap.ldap.config, { data: configToSave })
         if (res.success) {
           ElMessage.success('LDAP配置保存成功')
@@ -319,7 +487,7 @@ const handleTestConnection = async () => {
         const configToTest = {
           ...ldapConfigForm.value
         }
-        
+
         const res = await http.request('post', apiMap.ldap.testConnection, { data: configToTest })
         if (res.success) {
           ElMessage.success('LDAP连接测试成功')
@@ -356,6 +524,7 @@ const handleSaveSecurityConfig = async () => {
 }
 
 onMounted(() => {
+  getPasswordConfig()
   getLdapConfig()
   getSecurityConfig()
 })
