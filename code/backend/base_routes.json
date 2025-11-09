@@ -39,6 +39,14 @@
           "title": "用户详情"
         }
       },
+      "user.config": {
+        "path": "/system/user/config",
+        "name": "UserConfig",
+        "meta": {
+          "title": "用户配置",
+          "showParent": true
+        }
+      },
       "role": {
         "path": "/system/role/index",
         "name": "RoleIndex",
@@ -76,22 +84,6 @@
         "name": "AuditIndex",
         "meta": {
           "title": "审计日志",
-          "showParent": true
-        }
-      },
-      "ldap": {
-        "path": "/system/ldap/config",
-        "name": "LdapConfig",
-        "meta": {
-          "title": "LDAP配置",
-          "showParent": true
-        }
-      },
-      "user.config": {
-        "path": "/system/user/config",
-        "name": "UserConfig",
-        "meta": {
-          "title": "用户配置",
           "showParent": true
         }
       }
