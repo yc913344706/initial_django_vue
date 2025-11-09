@@ -420,53 +420,6 @@ def update_password_config(request):
         color_logger.error(f"更新密码配置失败: {e.args}")
         return pub_error_response(13032, msg=f"更新密码配置失败: {e.args}")
 
-
-def get_security_config(request):
-    """获取安全配置"""
-    try:
-        body = pub_get_request_body(request)
-        
-        if request.method != 'GET':
-            return pub_error_response(13033, msg='请求方法错误')
-        
-        # 返回默认安全配置
-        config = {
-            "max_login_attempts": 5,
-            "lockout_duration": 60
-        }
-        
-        return pub_success_response(config)
-    
-    except Exception as e:
-        color_logger.error(f"获取安全配置失败: {e.args}")
-        return pub_error_response(13034, msg=f"获取安全配置失败: {e.args}")
-
-
-def update_security_config(request):
-    """更新安全配置"""
-    try:
-        body = pub_get_request_body(request)
-        
-        if request.method != 'POST':
-            return pub_error_response(13035, msg='请求方法错误')
-        
-        # 验证安全配置参数
-        max_login_attempts = body.get('max_login_attempts', 5)
-        lockout_duration = body.get('lockout_duration', 60)
-        
-        config = {
-            "max_login_attempts": max_login_attempts,
-            "lockout_duration": lockout_duration
-        }
-        
-        color_logger.info(f"安全配置已更新: {config}")
-        return pub_success_response(config, msg='安全配置更新成功')
-    
-    except Exception as e:
-        color_logger.error(f"更新安全配置失败: {e.args}")
-        return pub_error_response(13036, msg=f"更新安全配置失败: {e.args}")
-
-
 def password_config(request):
     """处理密码配置的GET和POST请求"""
     try:
@@ -479,17 +432,3 @@ def password_config(request):
     except Exception as e:
         color_logger.error(f"处理密码配置请求失败: {e.args}")
         return pub_error_response(13038, msg=f"处理密码配置请求失败: {e.args}")
-
-
-def security_config(request):
-    """处理安全配置的GET和POST请求"""
-    try:
-        if request.method == 'GET':
-            return get_security_config(request)
-        elif request.method == 'POST':
-            return update_security_config(request)
-        else:
-            return pub_error_response(13039, msg='请求方法错误')
-    except Exception as e:
-        color_logger.error(f"处理安全配置请求失败: {e.args}")
-        return pub_error_response(13040, msg=f"处理安全配置请求失败: {e.args}")
