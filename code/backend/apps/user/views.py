@@ -111,7 +111,7 @@ def user(request):
             color_logger.debug(f"删除用户: {body['uuid']}")
             user = User.objects.filter(uuid=body['uuid']).first()
             assert user, '删除的用户不存在'
-            user.delete()
+            user.real_delete()
             return pub_success_response()
         else:
             return pub_error_response(13003, msg='请求方法错误')
