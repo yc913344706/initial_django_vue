@@ -1,5 +1,6 @@
 from django.db import models
 from lib.model_tools import BaseModel, BaseTypeTree
+from django.contrib.auth.hashers import make_password, check_password
 import uuid
 
 # Create your models here.
@@ -25,6 +26,17 @@ class User(BaseModel):
 
     def __str__(self):
         return self.username
+
+    def set_password(self, raw_password):
+        """设置密码，使用Django的密码哈希功能"""
+        self.password = make_password(raw_password)
+
+    def check_password(self, raw_password):
+        """检查密码是否正确"""
+        if self.is_ldap:
+            # LDAP用户不使用本地密码验证
+            return False
+        return check_password(raw_password, self.password)
 
 class UserGroup(BaseTypeTree):
     """用户组模型"""

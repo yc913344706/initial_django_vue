@@ -72,10 +72,14 @@ def user(request):
             create_keys = ['username', 'nickname', 'phone', 'email', 'password']
             create_dict = {key: value for key, value in body.items() if key in create_keys}
 
-            encrypted_password = aes.encrypt(create_dict['password'])
-            create_dict['password'] = encrypted_password
+            # 创建用户并设置密码
+            user = User.objects.create(username=create_dict['username'], 
+                                      nickname=create_dict['nickname'], 
+                                      phone=create_dict.get('phone'), 
+                                      email=create_dict.get('email'))
+            user.set_password(create_dict['password'])  # 使用Django的密码哈希
+            user.save()
 
-            user = User.objects.create(**create_dict)
             return pub_success_response(format_user_data(user))
         elif request.method == 'PUT':
             uuid = body.get('uuid')
@@ -277,8 +281,7 @@ def change_password(request):
             return pub_error_response(13015, msg='LDAP用户无法修改本地密码')
 
         # 验证当前密码
-        decrypted_password = aes.decrypt(user.password)
-        if decrypted_password != current_password:
+        if not user.check_password(current_password):
             return pub_error_response(13016, msg='当前密码不正确')
 
         # 验证新密码强度
@@ -287,8 +290,7 @@ def change_password(request):
             return pub_error_response(13017, msg=msg)
 
         # 更新密码
-        encrypted_new_password = aes.encrypt(new_password)
-        user.password = encrypted_new_password
+        user.set_password(new_password)  # 使用Django的密码哈希
         user.save()
 
         color_logger.info(f"用户 {user.username} 修改密码成功")
@@ -343,8 +345,7 @@ def reset_password(request):
             return pub_error_response(13027, msg=msg)
 
         # 更新密码
-        encrypted_new_password = aes.encrypt(new_password)
-        target_user.password = encrypted_new_password
+        target_user.set_password(new_password)  # 使用Django的密码哈希
         target_user.save()
 
         color_logger.info(f"用户 {current_user.username} 为用户 {target_user.username} 重置密码成功")

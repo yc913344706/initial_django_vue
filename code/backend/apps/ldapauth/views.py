@@ -60,29 +60,27 @@ def ldap_config(request):
                     'server_port': server_port,
                     'base_dn': body.get('base_dn', ''),
                     'admin_dn': body.get('admin_dn', ''),
-                    'admin_password': body.get('admin_password', ''),
-                    'user_search_filter': body.get('user_search_filter', '(objectClass=user)'),
-                    'username_attr': body.get('username_attr', 'sAMAccountName'),
-                    'display_name_attr': body.get('display_name_attr', 'displayName'),
-                    'email_attr': body.get('email_attr', 'mail'),
-                    'ldap_type': body.get('ldap_type', 'ad'),
                 }
             )
 
-            if not created:
-                # 更新现有配置
-                ldap_config.enabled = body.get('enabled', False)
-                ldap_config.server_host = server_host
-                ldap_config.server_port = server_port
-                ldap_config.base_dn = body.get('base_dn', '')
-                ldap_config.admin_dn = body.get('admin_dn', '')
-                ldap_config.admin_password = body.get('admin_password', '')
-                ldap_config.user_search_filter = body.get('user_search_filter', '(objectClass=user)')
-                ldap_config.username_attr = body.get('username_attr', 'sAMAccountName')
-                ldap_config.display_name_attr = body.get('display_name_attr', 'displayName')
-                ldap_config.email_attr = body.get('email_attr', 'mail')
-                ldap_config.ldap_type = body.get('ldap_type', 'ad')
-                ldap_config.save()
+            # 设置LDAP配置的其他字段
+            ldap_config.enabled = body.get('enabled', False)
+            ldap_config.server_host = server_host
+            ldap_config.server_port = server_port
+            ldap_config.base_dn = body.get('base_dn', '')
+            ldap_config.admin_dn = body.get('admin_dn', '')
+            ldap_config.user_search_filter = body.get('user_search_filter', '(objectClass=user)')
+            ldap_config.username_attr = body.get('username_attr', 'sAMAccountName')
+            ldap_config.display_name_attr = body.get('display_name_attr', 'displayName')
+            ldap_config.email_attr = body.get('email_attr', 'mail')
+            ldap_config.ldap_type = body.get('ldap_type', 'ad')
+            
+            # 如果提供了新密码，则更新加密后的密码
+            admin_password = body.get('admin_password', '')
+            if admin_password:  # 只有在提供了新密码时才更新密码字段
+                ldap_config.set_admin_password(admin_password)
+            
+            ldap_config.save()
 
             return pub_success_response("LDAP配置保存成功")
         else:

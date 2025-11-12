@@ -1,5 +1,6 @@
 from django.db import models
 from lib.model_tools import BaseModel
+from lib.password_tools import aes
 
 
 class LdapConfig(BaseModel):
@@ -27,6 +28,16 @@ class LdapConfig(BaseModel):
 
     def __str__(self):
         return f"LDAP配置 - {self.server_host}"
+
+    def set_admin_password(self, raw_password):
+        """设置管理员密码，使用AES加密存储"""
+        self.admin_password = aes.encrypt(raw_password)
+
+    def get_admin_password(self):
+        """获取管理员密码，解密后返回"""
+        if self.admin_password:
+            return aes.decrypt(self.admin_password)
+        return None
 
 
 class SecurityConfig(BaseModel):

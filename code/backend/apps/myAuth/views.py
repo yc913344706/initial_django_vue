@@ -10,7 +10,7 @@ from lib.log import color_logger
 from apps.perm.utils import get_user_perm_json_all
 from lib.route_tool import RouteTool
 from apps.user.utils import format_user_data
-from lib.password_tools import aes
+from django.contrib.auth.hashers import check_password
 from apps.ldapauth.models import LdapConfig
 from apps.ldapauth.views import record_user_login_failed, get_user_is_lock
 from apps.ldapauth.ldap_utils import LdapAuthBackend
@@ -73,10 +73,10 @@ def login(request):
                     return pub_error_response(10004, msg=f"用户名或密码错误")
             elif local_user and not local_user.is_ldap:
                 # 该用户是本地用户，使用本地认证
-                _encrypt_password = aes.encrypt(password)
-                user_obj = User.objects.filter(username=username, password=_encrypt_password).first()
-                
-                if not user_obj:
+                # 直接使用User模型的check_password方法验证密码
+                if local_user.check_password(password):
+                    user_obj = local_user
+                else:
                     # 本地认证失败，记录失败次数
                     record_user_login_failed(username)
                     return pub_error_response(10005, msg=f"用户名或密码错误")
@@ -91,10 +91,10 @@ def login(request):
                     return pub_error_response(10006, msg=f"用户名或密码错误")
         else:
             # 没有启用LDAP，只使用本地认证
-            _encrypt_password = aes.encrypt(password)
-            user_obj = User.objects.filter(username=username, password=_encrypt_password).first()
-
-            if not user_obj:
+            local_user = User.objects.filter(username=username).first()
+            if local_user and not local_user.is_ldap and local_user.check_password(password):
+                user_obj = local_user
+            else:
                 # 本地认证失败，记录失败次数
                 record_user_login_failed(username)
                 return pub_error_response(10007, msg=f"用户名或密码错误")

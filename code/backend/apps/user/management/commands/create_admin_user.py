@@ -1,9 +1,20 @@
 from django.core.management.base import BaseCommand
 from apps.user.models import User, UserGroup
 from apps.perm.models import Permission
-from lib.password_tools import aes
+from django.contrib.auth.hashers import make_password
 from lib.log import color_logger
 
+from backend.settings import BASE_DIR
+import os
+import json
+PERM_JSON_DIR = os.path.join(BASE_DIR, 'etc', 'perm_jsons')
+
+def get_permissions_from_json(json_file_path):
+    res = {}
+    with open(json_file_path, 'r') as file:
+        res = json.load(file)
+    
+    return res
 
 class Command(BaseCommand):
     help = 'Create admin user if not exists'
@@ -20,18 +31,16 @@ class Command(BaseCommand):
                 self.style.WARNING(f'Admin user "{admin_username}" already exists')
             )
         else:
-            # Encrypt the password using the AES encryption used by the application
-            encrypted_password = aes.encrypt(admin_password)
-            
-            # Create the admin user
+            # 使用Django的密码哈希创建用户
             admin_user = User.objects.create(
                 username=admin_username,
-                password=encrypted_password,
                 email='admin@example.com',
                 nickname='Admin',
                 phone='12345678901',
                 is_active=True
             )
+            admin_user.set_password(admin_password)  # 使用Django的密码哈希
+            admin_user.save()
             
             self.stdout.write(
                 self.style.SUCCESS(
@@ -67,125 +76,19 @@ class Command(BaseCommand):
                 "system_admin", 
                 "【系统模块】管理员", 
                 '初始化创建系统管理员权限',
-                {
-                    "backend": {
-                        "api": {
-                            "/api/v1/perm/role/": ["GET", "POST", "PUT", "DELETE"],
-                            "/api/v1/user/user/": ["GET", "POST", "PUT", "DELETE"],
-                            "/api/v1/perm/roles/": ["GET", "DELETE"],
-                            "/api/v1/user/group/": ["GET", "POST", "PUT", "DELETE"],
-                            "/api/v1/user/users/": ["GET", "DELETE"],
-                            "/api/v1/user/groups/": ["GET", "DELETE"],
-                            "/api/v1/perm/permission/": ["GET", "POST", "PUT", "DELETE"],
-                            "/api/v1/perm/permissions/": ["GET", "DELETE"],
-                            "/api/v1/perm/user-permission-json/": ["GET"]
-                        }
-                    },
-                    "frontend": {
-                        "routes": [
-                            "system.user",
-                            "system.user.detail",
-                            "system.permission",
-                            "system.permission.detail",
-                            "system.role",
-                            "system.role.detail",
-                            "system.group",
-                            "system.group.detail"
-                        ],
-                        "resources": [
-                            "system.userList:read",
-                            "system.userList:create",
-                            "system.userList:delete",
-                            "system.user:read",
-                            "system.user:create",
-                            "system.user:update",
-                            "system.user:delete",
-                            "system.permissionList:read",
-                            "system.permissionList:create",
-                            "system.permissionList:delete",
-                            "system.permission:read",
-                            "system.permission:create",
-                            "system.permission:update",
-                            "system.permission:delete",
-                            "system.roleList:read",
-                            "system.roleList:create",
-                            "system.roleList:delete",
-                            "system.role:read",
-                            "system.role:create",
-                            "system.role:update",
-                            "system.role:delete",
-                            "system.groupList:read",
-                            "system.groupList:create",
-                            "system.groupList:delete",
-                            "system.group:read",
-                            "system.group:create",
-                            "system.group:update",
-                            "system.group:delete"
-                        ]
-                    }
-                }
+                get_permissions_from_json(os.path.join(PERM_JSON_DIR, 'system_admin.json'))
             ),
             (
                 "system_reader",
                 "【系统模块】查看权限",
                 "初始化创建系统查看权限",
-                {
-                    "backend": {
-                        "api": {
-                            "/api/v1/perm/role/": ["GET"],
-                            "/api/v1/user/user/": ["GET"],
-                            "/api/v1/perm/roles/": ["GET"],
-                            "/api/v1/user/group/": ["GET"],
-                            "/api/v1/user/users/": ["GET"],
-                            "/api/v1/user/groups/": ["GET"],
-                            "/api/v1/perm/permission/": ["GET"],
-                            "/api/v1/perm/permissions/": ["GET"],
-                            "/api/v1/perm/user-permission-json/": ["GET"]
-                        }
-                    },
-                    "frontend": {
-                        "routes": [
-                            "system.user",
-                            "system.user.detail",
-                            "system.permission",
-                            "system.permission.detail",
-                            "system.role",
-                            "system.role.detail",
-                            "system.group",
-                            "system.group.detail"
-                        ],
-                        "resources": [
-                            "system.userList:read",
-                            "system.user:read",
-                            "system.permissionList:read",
-                            "system.permission:read",
-                            "system.roleList:read",
-                            "system.role:read",
-                            "system.groupList:read",
-                            "system.group:read"
-                        ]
-                    }
-                }
+                get_permissions_from_json(os.path.join(PERM_JSON_DIR, 'system_reader.json'))
             ),
             (
                 "system_audit",
                 "【系统模块】审计日志查看权限",
                 "初始化创建系统审计日志查看权限",
-                {
-                    "backend": {
-                    "api": {
-                        "/api/v1/audit/audit-logs/": ["GET"]
-                    }
-                    },
-                    "frontend": {
-                        "routes": [
-                            "system.audit"
-                        ],
-                        "resources": [
-                            "system.auditList:read"
-                        ]
-                    }
-                }
+                get_permissions_from_json(os.path.join(PERM_JSON_DIR, 'system_audit.json'))
             )
         ]:
             perm_obj = Permission.objects.filter(code=perm[0]).first()

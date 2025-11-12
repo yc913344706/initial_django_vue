@@ -1,0 +1,46 @@
+{
+    "backend": {
+      "api": {
+        "/admin/": ["GET"],
+        "/api/v1/perm/permissions/": ["GET"],
+        "/api/v1/perm/permission/": ["GET"],
+        "/api/v1/perm/user-permission-json/": ["GET"],
+        "/api/v1/perm/roles/": ["GET"],
+        "/api/v1/perm/role/": ["GET"],
+        "/api/v1/user/reset-password/": ["POST"],
+        "/api/v1/user/password-config/": ["GET"],
+        "/api/v1/user/users/": ["GET"],
+        "/api/v1/user/user/": ["GET"],
+        "/api/v1/user/groups/": ["GET"],
+        "/api/v1/user/group/": ["GET"],
+        "/api/v1/ldap/config/": ["GET"],
+        "/api/v1/ldap/test-connection/": ["POST"],
+        "/api/v1/ldap/security/config/": ["GET"]
+      }
+    },
+    "frontend": {
+      "routes": [
+        "system.user",
+        "system.user.detail",
+        "system.user.config",
+        "system.ldap",
+        "system.permission",
+        "system.permission.detail",
+        "system.role",
+        "system.role.detail",
+        "system.group",
+        "system.group.detail"
+      ],
+      "resources": [
+        "system.userList:read",
+        "system.user:read",
+        "system.permissionList:read",
+        "system.permission:read",
+        "system.roleList:read",
+        "system.role:read",
+        "system.groupList:read",
+        "system.group:read"
+      ]
+    }
+  }
+  

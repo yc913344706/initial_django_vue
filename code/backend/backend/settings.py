@@ -30,7 +30,12 @@ set_color_logger_level(config_data.get('LOG_LEVEL', "DEBUG"))
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-y^54noti#i2kbylp8z9s^ky4#w$#0qu!2pu3#^yf1mmp553=ke'
+# 尝试从环境变量获取SECRET_KEY，如果不存在则使用配置文件中的值或生成默认值
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or config_data.get('SECRET_KEY') or 'django-insecure-y^54noti#i2kbylp8z9s^ky4#w$#0qu!2pu3#^yf1mmp553=ke'
+
+# 从环境变量获取数据库和Redis密码，如果不存在则从配置文件中读取
+config_data["MYSQL"]["PASSWORD"] = os.environ.get('MYSQL_PASSWORD') or config_data["MYSQL"]["PASSWORD"]
+config_data["REDIS"]["PASSWORD"] = os.environ.get('REDIS_PASSWORD') or config_data["REDIS"]["PASSWORD"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config_data.get('SETTINGS',{}).get('DEBUG', True)

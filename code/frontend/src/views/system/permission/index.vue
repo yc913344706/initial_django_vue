@@ -274,7 +274,7 @@ const handleSubmit = async () => {
         getPermissionList();
       } catch (error) {
         logger.error(error)
-        ElMessage.error(dialogType.value === "add" ? "新增失败。" + error.msg || error : "编辑失败。" + error.msg || error);
+        ElMessage.error(dialogType.value === "add" ? `新增失败。${error.msg || error}` : `编辑失败。${error.msg || error}`);
       }
     }
   });

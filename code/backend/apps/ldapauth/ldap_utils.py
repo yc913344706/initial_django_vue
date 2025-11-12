@@ -124,7 +124,7 @@ class LdapUtils:
                     "PORT": ldap_config['server_port'],
                     "BASE_DN": ldap_config['base_dn'],
                     "USER": ldap_config.get('username_attr', 'sAMAccountName'),
-                    "PASSWORD": ldap_config['admin_password'],
+                    "PASSWORD": ldap_config.get('admin_password', ''),  # 从配置中获取的密码应该是已解密的，如果是新配置则为空
                     "METHOD": "plain",
                     "BIND_DN": ldap_config['admin_dn'],
                     "SEARCH_ATTRIBUTE": ldap_config.get('username_attr'),
@@ -135,7 +135,7 @@ class LdapUtils:
                     'HOST': ldap_config['server_host'],
                     'PORT': ldap_config['server_port'],
                     'USER_DN': ldap_config['admin_dn'],
-                    'PASSWORD': ldap_config['admin_password'],
+                    'PASSWORD': ldap_config.get('admin_password', ''),  # 从配置中获取的密码应该是已解密的，如果是新配置则为空
                     'USER_SEARCH_BASE': ldap_config['base_dn'],
                     'USERNAME_KEY': ldap_config.get('username_attr', 'uid'),
                     'EMAIL_KEY': ldap_config.get('email_attr', 'mail')
@@ -147,7 +147,7 @@ class LdapUtils:
                     "SERVER": ldap_config.server_host,
                     "BASE_DN": ldap_config.base_dn,
                     "USER": ldap_config.username_attr,
-                    "PASSWORD": ldap_config.admin_password,
+                    "PASSWORD": ldap_config.get_admin_password(),
                     "PORT": ldap_config.server_port,
                     "METHOD": "plain",
                     "BIND_DN": ldap_config.admin_dn,
@@ -159,7 +159,7 @@ class LdapUtils:
                     'HOST': ldap_config.server_host,
                     'PORT': ldap_config.server_port,
                     'USER_DN': ldap_config.admin_dn,
-                    'PASSWORD': ldap_config.admin_password,
+                    'PASSWORD': ldap_config.get_admin_password(),
                     'USER_SEARCH_BASE': ldap_config.base_dn,
                     'USERNAME_KEY': ldap_config.username_attr,
                     'EMAIL_KEY': ldap_config.email_attr

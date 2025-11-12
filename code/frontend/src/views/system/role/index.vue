@@ -182,7 +182,7 @@ const getRoleList = async () => {
       ElMessage.error(res.msg);
     }
   } catch (error) {
-    ElMessage.error("获取角色列表失败。' + error.msg || error);
+    ElMessage.error(`获取角色列表失败。${error.msg || error}`);
   } finally {
     loading.value = false
   }
@@ -243,7 +243,7 @@ const handleDelete = (row) => {
         ElMessage.error(res.msg);
       }
     } catch (error) {
-      ElMessage.error("删除失败。' + error.msg || error);
+      ElMessage.error(`删除失败。${error.msg || error}`);
     }
   })
 }
