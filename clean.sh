@@ -5,6 +5,11 @@
 
 set -e  # 如果命令以非零状态退出，则立即退出
 
+CURRENT_DIR="$(dirname $(realpath $0))"
+WORKSPACE="${CURRENT_DIR}"
+. "${WORKSPACE}"/lib/log.sh
+cd ${CURRENT_DIR} || die "cd ${CURRENT_DIR} failed"
+
 echo "开始清理 initial_django_vue 项目..."
 
 # 停止并删除与此项目相关的所有容器
@@ -20,34 +25,26 @@ echo "正在删除网络..."
 docker network ls --format='{{.ID}} {{.Name}}' | grep initial_django_vue_ | awk '{print $1}' | xargs -r docker network rm
 
 # 删除任何悬空的卷
-echo "正在删除未使用的卷..."
-docker volume prune -f
+# echo "正在删除未使用的卷..."
+# docker volume prune -f
+
+# 清理可能与此项目相关的任何悬空 Docker 镜像
+# echo "正在删除悬空的镜像..."
+# docker image prune -f
 
 # 清理数据目录（不包括目录本身）
 echo "正在清理数据目录..."
 if [ -d "./data" ]; then
-    for dir in ./data/*/; do
-        if [ -d "$dir" ] && [ "$dir" != "./data/" ]; then
-            echo "正在清空 $dir"
-            rm -rf "$dir"/*
-        fi
-    done
+    echo "正在清空 data 目录"
+    rm -rf ./data/*
 fi
 
 # 清理日志目录（不包括目录本身）
 echo "正在清理日志目录..."
 if [ -d "./logs" ]; then
-    for dir in ./logs/*/; do
-        if [ -d "$dir" ] && [ "$dir" != "./logs/" ]; then
-            echo "正在清空 $dir"
-            rm -rf "$dir"/*
-        fi
-    done
+    echo "正在清空 logs 目录"
+    rm -rf ./logs/*
 fi
-
-# 清理可能与此项目相关的任何悬空 Docker 镜像
-echo "正在删除悬空的镜像..."
-docker image prune -f
 
 echo "清理完成！"
 echo ""
