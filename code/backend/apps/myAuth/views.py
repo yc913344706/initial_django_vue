@@ -105,7 +105,7 @@ def login(request):
         # 生成token
         color_logger.debug(f"generate_tokens: {username}")
         token_manager = TokenManager()
-        access_token, refresh_token = token_manager.generate_tokens(username)
+        access_token, refresh_token, session_id = token_manager.generate_tokens(username)
 
         color_logger.debug(f"get_user_perm_json_all: {user_obj.uuid}")
         user_permission_json = get_user_perm_json_all(user_obj.uuid)
@@ -176,8 +176,14 @@ def logout(request):
         username = token_manager.get_username_from_access_token(access_token)
         
         if username:
-            # 使token失效
-            token_manager.invalidate_tokens(username)
+            # 使当前会话的token失效
+            # 需要从token中提取session_id
+            payload = token_manager.verify_token(access_token)
+            if payload and 'session_id' in payload:
+                token_manager.invalidate_tokens(username, session_id=payload['session_id'])
+            else:
+                # 如果无法获取session_id，则使用户的所有token失效
+                token_manager.invalidate_tokens(username)
             
         # 创建响应
         response = pub_success_response('退出成功')
