@@ -49,4 +49,5 @@ fi
 echo "清理完成！"
 echo ""
 echo "要重新启动项目，请运行:"
-echo "  docker-compose -f docker-compose.dev.yaml up -d"
+echo "  开发环境： docker-compose -f docker-compose.dev.yaml up -d"
+echo "  正式环境： docker-compose -f docker-compose.prod.yaml up -d"
