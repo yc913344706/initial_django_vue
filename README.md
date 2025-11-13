@@ -11,8 +11,8 @@
   - [更多命令](#更多命令)
 - [一些配置](#一些配置)
   - [环境变量配置](#环境变量配置)
-  - [前端图标](#前端图标)
-  - [系统标题](#系统标题)
+  - [前端图标配置](#前端图标配置)
+  - [系统标题配置](#系统标题配置)
 - [参考文档：](#参考文档)
 
 ## 📖 项目描述
@@ -89,13 +89,13 @@ docker-compose -f docker-compose.prod.yaml down
 | 【后端】全量路由定义文件 | `code/backend/base_routes.json` |
 | 【后端】docker环境变量 | `code/backend/.prod.env` |
 
-### 前端图标
+### 前端图标配置
 
 - 图标：`code/frontend/public/favicon.ico`
 - logo：`code/frontend/public/logo.png`
 - user-avatar：`code/frontend/src/assets/user.jpg`
 
-### 系统标题
+### 系统标题配置
 
 - `code/frontend/public/platform-config.json`: Title
 - `code/frontend/src/views/monitor/dashboard/index.vue`: title
