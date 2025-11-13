@@ -10,7 +10,7 @@
 ## 目录结构
 
 ```
-ops_arch_dashboard/
+initial_django_vue/
 ├── .gitignore
 ├── docker-compose.dev.yaml          # Docker Compose 开发配置
 ├── LICENSE
@@ -46,21 +46,3 @@ ops_arch_dashboard/
 - 【后端】业务配置：`code/backend/.dev.yaml`
 - 【后端】全量路由定义文件：`code/backend/config/base_routes.json`
 - 【后端】docker环境变量：`code/backend/.dev.env`
-
-## 环境与部署
-
-### Docker 配置
-- Docker Compose 文件：`docker-compose.dev.yaml`
-- 启动命令：`docker-compose -f docker-compose.dev.yaml up -d`
-- 访问地址：http://localhost:8080/
-
-### 内置用户
-| 角色 | 账号 | 密码 |
-| ---- | ---- | ---- |
-| 管理员 | admin | Admin@123 |
-
-## 关键功能
-- RBAC 权限管理系统
-- 全栈开发框架
-- Docker 容器化部署
-- 支持 MySQL、Redis 数据存储

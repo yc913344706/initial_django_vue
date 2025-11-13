@@ -1,10 +1,33 @@
-## 是什么
+## 📖 项目描述
 
 - 最小化全栈开发基础框架，支持 RBAC 权限管理系统。包括前端、后端、nginx、mysql、redis。
 - 技术栈： `Python 3.13`、`Django 5.2`、`Vue 3.5`。
-- 环境要求：`Docker Engine 18.06.0`、`Docker Compose 3.7+` 。
+- 代码结构见[这里](./vibe-docs/code_arch.md)。
 
-## 如何使用
+## ✨ 功能特性
+ 
+- ✅ 用户体系：
+    - ✅ 本地用户：增删改查
+    - ✅ 本地用户：用户自行修改密码、管理员重置密码
+    - ✅ 本地用户：密码复杂度配置、登录锁定配置
+    - ✅ 密码加密存储（本地用户密码无法逆向破解）
+    - ✅ 允许配置对接 LDAP 用户（ldap用户只记录，不存储、修改用户密码）
+- ✅ 权限体系：
+    - ✅ 基础RABC：管理：权限（JSON格式）、角色、用户组（可继承）
+    - ✅ json格式权限，可以参考已有的系统默认权限进行新权限配置。（前端、后端权限均可配置）
+    - ☑️ 系统权限不允许删除
+- ✅ 审计日志：
+    - ☑️ 登录日志：用户登录、退出、失败登录
+    - ✅ 操作日志：以模型为维度，记录所有模型的增删改。
+- ✅ 前端一些特性：
+    - ✅ 动态菜单（根据权限动态生成）
+
+## 🚀 快速开始
+
+### 环境要求
+
+- `Docker Engine 18.06.0`
+- `Docker Compose 3.7+` 
 
 ### 启动
 
@@ -30,14 +53,11 @@ http://localhost:8080/
 ### 更多命令
 
 ```bash
-docker-compose -f docker-compose.prod.yaml up db_mysql -d
-docker-compose -f docker-compose.prod.yaml up backend -d
-docker-compose -f docker-compose.prod.yaml up frontend -d
-
 # 停止
 docker-compose -f docker-compose.prod.yaml down
+
 # 清理数据
-rm -rf ./data/
+./clean.sh
 ```
 
 ## 一些配置
@@ -62,3 +82,9 @@ rm -rf ./data/
 
 - `code/frontend/public/platform-config.json`: Title
 - `code/frontend/src/views/monitor/dashboard/index.vue`: title
+
+
+## 参考文档：
+- [示例readme](https://blog.csdn.net/gitblog_00002/article/details/150695762)
+- [readme编写](https://github.com/guodongxiaren/README)
+- [readme编写:图标](https://github.com/guodongxiaren/README/blob/master/emoji.md)
