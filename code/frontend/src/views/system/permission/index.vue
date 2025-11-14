@@ -40,19 +40,42 @@
       <el-table
         v-loading="loading"
         :data="permissionList"
-        style="width: 100%"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection" width="55" />
-        <el-table-column prop="name" label="权限名称" />
-        <el-table-column prop="code" label="权限代码" />
-        <el-table-column prop="description" label="描述" />
-        <el-table-column label="操作" width="200">
+        <el-table-column type="selection" min-width="55" />
+        <el-table-column prop="name" label="权限名称" min-width="180" fixed/>
+        <el-table-column prop="code" label="权限代码" min-width="120" />
+        <el-table-column prop="description" label="描述" min-width="240" />
+        <el-table-column prop="is_system" label="权限类型" min-width="120">
+          <template #default="scope">
+            <el-tag :type="scope.row.is_system ? 'danger' : 'success'">
+              {{ scope.row.is_system ? '系统权限' : '普通权限' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="250">
           <template #default="scope">
             <el-button type="info" size="small" @click="handleViewDetail(scope.row)">查看详情</el-button>
-            <el-button type="danger" size="small" @click="handleDelete(scope.row)"
+            <el-button
+              type="primary"
+              size="small"
+              @click="handleEdit(scope.row)"
+              :disabled="scope.row.is_system"
+              v-if="hasPerms('system.permission:update')"
+            >
+              编辑
+              <!-- {{ scope.row.is_system ? '系统权限' : '编辑' }} -->
+            </el-button>
+            <el-button
+              type="danger"
+              size="small"
+              @click="handleDelete(scope.row)"
+              :disabled="scope.row.is_system"
               v-if="hasPerms('system.permission:delete')"
-            >删除</el-button>
+            >
+              删除
+              <!-- {{ scope.row.is_system ? '系统权限' : '删除' }} -->
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -191,6 +214,12 @@ const handleAdd = () => {
 
 // 编辑权限
 const handleEdit = row => {
+  // 检查是否为系统权限
+  if (row.is_system) {
+    ElMessage.warning("系统权限无法编辑");
+    return;
+  }
+
   dialogType.value = "edit";
   form.value = { ...row };
   dialogVisible.value = true;
@@ -206,6 +235,12 @@ const handleViewDetail = row => {
 
 // 删除权限
 const handleDelete = row => {
+  // 检查是否为系统权限
+  if (row.is_system) {
+    ElMessage.warning("系统权限无法删除");
+    return;
+  }
+
   ElMessageBox.confirm("确认删除该权限吗？", "提示", {
     type: "warning"
   }).then(async () => {
@@ -288,16 +323,27 @@ const handleSelectionChange = (selection: any[]) => {
 // 批量删除
 const handleBatchDelete = async () => {
   if (!selectedPermissions.value.length) return
-  
+
+  // 检查选中的权限中是否包含系统权限
+  const selectedPermissionObjects = permissionList.value.filter(item =>
+    selectedPermissions.value.includes(item.uuid)
+  );
+
+  const systemPermissions = selectedPermissionObjects.filter(item => item.is_system);
+  if (systemPermissions.length > 0) {
+    ElMessage.warning(`选中的权限中包含系统权限，无法删除：${systemPermissions.map(p => p.name).join(', ')}`);
+    return;
+  }
+
   try {
     await ElMessageBox.confirm('确定要删除选中的权限吗?', '提示', {
       type: 'warning'
     })
-    
+
     const res = await http.request('delete', apiMap.permission.permissionList, {
       data: { uuids: selectedPermissions.value }
     })
-    
+
     if (res.success) {
       ElMessage.success('删除成功')
       getPermissionList()

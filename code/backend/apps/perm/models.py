@@ -7,6 +7,7 @@ class Permission(BaseModel):
     code = models.CharField(max_length=100, unique=True, verbose_name='权限代码')
     permission_json = models.JSONField(verbose_name='权限JSON')
     description = models.TextField(blank=True, null=True, verbose_name='描述')
+    is_system = models.BooleanField(default=False, verbose_name='是否为系统权限')
 
     class Meta:
         verbose_name = '权限'

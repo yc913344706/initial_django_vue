@@ -41,8 +41,14 @@ def permission_list(request):
         elif request.method == 'DELETE':
             uuids = body.get('uuids', [])
             permissions = Permission.objects.filter(uuid__in=uuids)
+
+            # 检查是否有系统权限
             for permission in permissions:
                 assert permission, '删除的权限不存在'
+                if permission.is_system:
+                    return pub_error_response(12002, msg=f"无法删除系统权限: {permission.name}")
+
+            for permission in permissions:
                 permission.delete()
 
             return pub_success_response()
@@ -74,6 +80,10 @@ def permission(request):
             permission_obj = Permission.objects.filter(uuid=uuid).first()
             assert permission_obj, '更新的权限不存在'
 
+            # 检查是否为系统权限
+            if permission_obj.is_system:
+                return pub_error_response(12004, msg=f"无法修改系统权限: {permission_obj.name}")
+
             update_keys = ['name', 'code', 'permission_json', 'description']
             update_dict = {key: value for key, value in body.items() if key in update_keys}
             for key, value in update_dict.items():
@@ -86,6 +96,10 @@ def permission(request):
             color_logger.debug(f"删除权限: {body['uuid']}")
             permission = Permission.objects.filter(uuid=body['uuid']).first()
             assert permission, '删除的权限不存在'
+
+            if permission.is_system:
+                return pub_error_response(12004, msg=f"无法删除系统权限: {permission.name}")
+
             permission.delete()
             return pub_success_response()
         else:

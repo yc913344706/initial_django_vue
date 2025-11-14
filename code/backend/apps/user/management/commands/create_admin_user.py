@@ -93,11 +93,14 @@ class Command(BaseCommand):
         ]:
             perm_obj = Permission.objects.filter(code=perm[0]).first()
             if perm_obj is None:
+                # 标记核心权限为系统权限
+                is_system_perm = perm[0] in ['everyone_base_perm', 'system_admin', 'system_reader', 'system_audit']
                 perm_obj = Permission.objects.create(
                     code=perm[0],
                     name=perm[1],
                     description=perm[2],
-                    permission_json=perm[3]
+                    permission_json=perm[3],
+                    is_system=is_system_perm
                 )
             if perm[0] in ['system_admin', 'system_audit']:
                 system_admin_group.permissions.add(perm_obj)

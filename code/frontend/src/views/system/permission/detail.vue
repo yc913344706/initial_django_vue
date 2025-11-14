@@ -5,12 +5,16 @@
         <div class="card-header">
           <span>权限详情</span>
           <div>
-            <el-button 
-            type="primary" 
-            @click="handleEdit" 
+            <el-button
+            type="primary"
+            @click="handleEdit"
+            :disabled="permissionInfo.is_system"
             v-if="!isEditing && hasPerms('system.permission:update')"
-            >编辑</el-button>
-            <el-button 
+            >
+              编辑
+              <!-- {{ permissionInfo.is_system ? '系统权限' : '编辑' }} -->
+            </el-button>
+            <el-button
             @click="$router.back()"
             >返回</el-button>
           </div>
@@ -48,6 +52,11 @@
         <el-descriptions :column="2" border>
           <el-descriptions-item label="权限名称">{{ permissionInfo.name }}</el-descriptions-item>
           <el-descriptions-item label="权限代码">{{ permissionInfo.code }}</el-descriptions-item>
+          <el-descriptions-item label="类型">
+            <el-tag :type="permissionInfo.is_system ? 'danger' : 'success'">
+              {{ permissionInfo.is_system ? '系统权限' : '普通权限' }}
+            </el-tag>
+          </el-descriptions-item>
           <el-descriptions-item label="描述">{{ permissionInfo.description }}</el-descriptions-item>
           <el-descriptions-item label="创建时间">{{ permissionInfo.created_time }}</el-descriptions-item>
           <el-descriptions-item label="更新时间">{{ permissionInfo.updated_time }}</el-descriptions-item>
@@ -177,6 +186,11 @@ const getPermissionDetail = async () => {
 
 // 编辑
 const handleEdit = () => {
+  if (permissionInfo.value.is_system) {
+    ElMessage.warning("系统权限无法编辑");
+    return;
+  }
+
   form.value = {
     uuid: permissionInfo.value.uuid,
     name: permissionInfo.value.name,

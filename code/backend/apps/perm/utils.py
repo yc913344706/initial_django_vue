@@ -16,6 +16,7 @@ def format_permission_data(permission: Permission, only_basic=False):
         'name': permission.name,
         'code': permission.code,
         'permission_json': permission.permission_json,
+        'is_system': permission.is_system,
         'description': permission.description,
     }
 
