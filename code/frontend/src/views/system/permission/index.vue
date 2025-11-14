@@ -56,16 +56,14 @@
         <el-table-column label="操作" width="250">
           <template #default="scope">
             <el-button type="info" size="small" @click="handleViewDetail(scope.row)">查看详情</el-button>
-            <el-button
+            <!-- <el-button
               type="primary"
               size="small"
               @click="handleEdit(scope.row)"
-              :disabled="scope.row.is_system"
               v-if="hasPerms('system.permission:update')"
             >
               编辑
-              <!-- {{ scope.row.is_system ? '系统权限' : '编辑' }} -->
-            </el-button>
+            </el-button> -->
             <el-button
               type="danger"
               size="small"
@@ -74,7 +72,6 @@
               v-if="hasPerms('system.permission:delete')"
             >
               删除
-              <!-- {{ scope.row.is_system ? '系统权限' : '删除' }} -->
             </el-button>
           </template>
         </el-table-column>
@@ -214,12 +211,6 @@ const handleAdd = () => {
 
 // 编辑权限
 const handleEdit = row => {
-  // 检查是否为系统权限
-  if (row.is_system) {
-    ElMessage.warning("系统权限无法编辑");
-    return;
-  }
-
   dialogType.value = "edit";
   form.value = { ...row };
   dialogVisible.value = true;

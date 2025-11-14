@@ -8,11 +8,9 @@
             <el-button
             type="primary"
             @click="handleEdit"
-            :disabled="permissionInfo.is_system"
             v-if="!isEditing && hasPerms('system.permission:update')"
             >
               编辑
-              <!-- {{ permissionInfo.is_system ? '系统权限' : '编辑' }} -->
             </el-button>
             <el-button
             @click="$router.back()"
@@ -186,10 +184,6 @@ const getPermissionDetail = async () => {
 
 // 编辑
 const handleEdit = () => {
-  if (permissionInfo.value.is_system) {
-    ElMessage.warning("系统权限无法编辑");
-    return;
-  }
 
   form.value = {
     uuid: permissionInfo.value.uuid,

@@ -81,8 +81,8 @@ def permission(request):
             assert permission_obj, '更新的权限不存在'
 
             # 检查是否为系统权限
-            if permission_obj.is_system:
-                return pub_error_response(12004, msg=f"无法修改系统权限: {permission_obj.name}")
+            # if permission_obj.is_system:
+            #     return pub_error_response(12004, msg=f"无法修改系统权限: {permission_obj.name}")
 
             update_keys = ['name', 'code', 'permission_json', 'description']
             update_dict = {key: value for key, value in body.items() if key in update_keys}

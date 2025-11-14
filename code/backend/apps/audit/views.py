@@ -6,6 +6,49 @@ from lib.paginator_tool import pub_paging_tool
 from .models import AuditLog
 from lib.time_tools import utc_obj_to_time_zone_str
 
+def get_audit_config(request):
+    """获取审计配置信息，包括操作类型等"""
+    try:
+        if request.method != 'GET':
+            return pub_success_response(14003, msg="仅支持GET请求")
+
+        # 获取操作类型的显示名称和样式配置
+        action_configs = []
+        for action_value, action_display in AuditLog.ACTION_CHOICES:
+            # 根据操作类型确定标签样式
+            if action_value == 'CREATE':
+                tag_type = 'success'
+            elif action_value == 'UPDATE':
+                tag_type = 'warning'
+            elif action_value == 'DELETE':
+                tag_type = 'danger'
+            elif action_value == 'LOGIN':
+                tag_type = 'primary'
+            elif action_value == 'LOGOUT':
+                tag_type = 'info'
+            elif action_value == 'LOGIN_FAILED':
+                tag_type = 'danger'
+            else:
+                # 默认样式
+                tag_type = 'info'
+
+            action_configs.append({
+                'value': action_value,
+                'display': action_display,
+                'tag_type': tag_type
+            })
+
+        config_data = {
+            'action_configs': action_configs
+        }
+
+        return pub_success_response(config_data)
+
+    except Exception as e:
+        color_logger.error(f"获取审计配置失败: {str(e)}")
+        return pub_error_response(14004, msg=f"获取审计配置失败: {str(e)}")
+
+
 # Create your views here.
 
 def get_audit_logs(request):
@@ -29,7 +72,12 @@ def get_audit_logs(request):
             
         # 操作类型筛选
         if action := body.get('action'):
-            query = query.filter(action=action)
+            # 支持多选操作类型，以逗号分隔
+            if ',' in action:
+                action_list = [item.strip() for item in action.split(',')]
+                query = query.filter(action__in=action_list)
+            else:
+                query = query.filter(action=action)
             
         # IP地址筛选
         if ip_address := body.get('ip_address'):

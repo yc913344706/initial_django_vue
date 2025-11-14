@@ -27,16 +27,21 @@
 
         <div class="form-item">
           <span class="label">操作类型</span>
-          <el-select 
-            v-model="searchForm.action" 
-            placeholder="请选择操作类型" 
+          <el-select
+            v-model="searchForm.action"
+            placeholder="请选择操作类型"
             clearable
+            multiple
+            collapse-tags
             class="search-input"
             @keyup.enter="handleSearch"
           >
-            <el-option label="创建" value="CREATE" />
-            <el-option label="更新" value="UPDATE" />
-            <el-option label="删除" value="DELETE" />
+            <el-option
+              v-for="config in auditConfig.action_configs"
+              :key="config.value"
+              :label="config.display"
+              :value="config.value"
+            />
           </el-select>
         </div>
 
@@ -156,20 +161,40 @@ const currentDetail = ref('')
 const searchForm = ref({
   operator: '',
   model_name: '',
-  action: '',
+  action: [],  // 改为数组以支持多选
   ip_address: '',
   date_range: [],
   keyword: ''
 })
 
+// 审计配置数据
+const auditConfig = ref({
+  action_configs: []
+})
+
+// 获取审计配置
+const fetchAuditConfig = async () => {
+  try {
+    const res = await http.request('get', apiMap.audit.config)
+    if (res.success) {
+      auditConfig.value = res.data
+    } else {
+      logger.error('获取审计配置失败:', res.msg)
+      ElMessage.error(`获取审计配置失败: ${res.msg}`)
+    }
+  } catch (error) {
+    logger.error('获取审计配置失败:', error)
+    ElMessage.error(`获取审计配置失败: ${error.msg || error}`)
+  }
+}
+
 // 获取操作类型标签样式
 const getActionTagType = (action) => {
-  const typeMap = {
-    'CREATE': 'success',
-    'UPDATE': 'warning',
-    'DELETE': 'danger'
+  const config = auditConfig.value.action_configs.find(item => item.value === action)
+  if (config) {
+    return config.tag_type
   }
-  return typeMap[action] || 'info'
+  return 'info' // 默认样式
 }
 
 // 构建查询参数
@@ -178,6 +203,13 @@ const buildQueryParams = () => {
   if (params.date_range?.length === 2) {
     params.start_date = params.date_range[0]
     params.end_date = params.date_range[1]
+  }
+  // 如果action是数组，将其转换为逗号分隔的字符串
+  if (Array.isArray(params.action) && params.action.length > 0) {
+    params.action = params.action.join(',')
+  } else if (params.action === null || params.action === '') {
+    // 如果是空值，删除该参数
+    delete params.action
   }
   delete params.date_range
   return params
@@ -194,7 +226,7 @@ const resetSearch = () => {
   searchForm.value = {
     operator: '',
     model_name: '',
-    action: '',
+    action: [],
     ip_address: '',
     date_range: [],
     keyword: ''
@@ -243,11 +275,13 @@ const showDetail = (row) => {
   detailDialogVisible.value = true
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (!hasPerms('system.auditList:read')) {
     ElMessage.error('您没有权限查看审计日志')
     router.push('/error/403')
   }
+  // 先获取配置，再获取审计日志
+  await fetchAuditConfig()
   fetchAuditLogs()
 })
 </script>

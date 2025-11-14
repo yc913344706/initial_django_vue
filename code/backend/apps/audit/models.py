@@ -6,13 +6,16 @@ class AuditLog(BaseModel):
     ACTION_CHOICES = (
         ('CREATE', '创建'),
         ('UPDATE', '更新'),
-        ('DELETE', '删除')
+        ('DELETE', '删除'),
+        ('LOGIN', '登录'),
+        ('LOGOUT', '退出'),
+        ('LOGIN_FAILED', '登录失败')
     )
 
     operator_username = models.CharField(max_length=100, verbose_name='操作人')
-    model_name = models.CharField(max_length=100, verbose_name='模型名称')
-    record_id = models.CharField(max_length=100, verbose_name='记录ID')
-    action = models.CharField(max_length=20, choices=ACTION_CHOICES, verbose_name='操作类型')
+    model_name = models.CharField(max_length=100, verbose_name='模型名称', null=True, blank=True)
+    record_id = models.CharField(max_length=100, verbose_name='记录ID', null=True, blank=True)
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES, verbose_name='操作类型', help_text='操作类型')
     detail = models.JSONField(verbose_name='操作详情')
     ip_address = models.GenericIPAddressField(null=True, verbose_name='IP地址')
 

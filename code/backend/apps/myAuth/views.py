@@ -14,6 +14,7 @@ from django.contrib.auth.hashers import check_password
 from apps.ldapauth.models import LdapConfig
 from apps.ldapauth.views import record_user_login_failed, get_user_is_lock
 from apps.ldapauth.ldap_utils import LdapAuthBackend
+from apps.audit.utils import add_audit_log
 
 # Create your views here.
 
@@ -52,6 +53,13 @@ def login(request):
             return pub_error_response(10002, msg=f"用户名或密码不能为空")
 
         if get_user_is_lock(username):
+            # 记录登录失败审计日志（因账户被锁定）
+            add_audit_log(
+                action='LOGIN_FAILED',
+                operator_username=username,
+                detail={'message': '用户登录失败，账户因登录失败次数过多被锁定'},
+                request=request
+            )
             return pub_error_response(10003, msg="错误过多，被锁定，请联系管理员")
 
         # 检查LDAP配置是否启用
@@ -70,6 +78,13 @@ def login(request):
                 if not user_obj:
                     # LDAP认证失败，记录失败次数
                     record_user_login_failed(username)
+                    # 记录登录失败审计日志
+                    add_audit_log(
+                        action='LOGIN_FAILED',
+                        operator_username=username,
+                        detail={'message': 'LDAP认证失败，用户名或密码错误'},
+                        request=request
+                    )
                     return pub_error_response(10004, msg=f"用户名或密码错误")
             elif local_user and not local_user.is_ldap:
                 # 该用户是本地用户，使用本地认证
@@ -79,6 +94,13 @@ def login(request):
                 else:
                     # 本地认证失败，记录失败次数
                     record_user_login_failed(username)
+                    # 记录登录失败审计日志
+                    add_audit_log(
+                        action='LOGIN_FAILED',
+                        operator_username=username,
+                        detail={'message': '本地认证失败，用户名或密码错误'},
+                        request=request
+                    )
                     return pub_error_response(10005, msg=f"用户名或密码错误")
             else:
                 # 用户在本地数据库中不存在，尝试LDAP认证
@@ -88,6 +110,13 @@ def login(request):
                 if not user_obj:
                     # LDAP认证失败，记录失败次数
                     record_user_login_failed(username)
+                    # 记录登录失败审计日志
+                    add_audit_log(
+                        action='LOGIN_FAILED',
+                        operator_username=username,
+                        detail={'message': '非本地用户LDAP认证失败，用户名或密码错误'},
+                        request=request
+                    )
                     return pub_error_response(10006, msg=f"用户名或密码错误")
         else:
             # 没有启用LDAP，只使用本地认证
@@ -97,6 +126,13 @@ def login(request):
             else:
                 # 本地认证失败，记录失败次数
                 record_user_login_failed(username)
+                # 记录登录失败审计日志
+                add_audit_log(
+                    action='LOGIN_FAILED',
+                    operator_username=username,
+                    detail={'message': '无LDAP配置时本地认证失败，用户名或密码错误'},
+                    request=request
+                )
                 return pub_error_response(10007, msg=f"用户名或密码错误")
 
         # 认证成功后，重置登录失败计数
@@ -158,6 +194,14 @@ def login(request):
             **{**cookie_options, 'max_age': config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE')}
         )
 
+        # 记录登录成功审计日志
+        add_audit_log(
+            action='LOGIN',
+            operator_username=username,
+            detail={'message': '用户登录成功'},
+            request=request
+        )
+
         return response
 
     except Exception as e:
@@ -192,7 +236,16 @@ def logout(request):
         response.delete_cookie(config_data.get('AUTH', {}).get('COOKIE_ACCESS_TOKEN_NAME'))
         response.delete_cookie(config_data.get('AUTH', {}).get('COOKIE_REFRESH_TOKEN_NAME'))
         response.delete_cookie(config_data.get('AUTH', {}).get('COOKIE_USERNAME_NAME'))
-        
+
+        # 记录退出成功审计日志
+        if username:
+            add_audit_log(
+                action='LOGOUT',
+                operator_username=username,
+                detail={'message': '用户退出成功'},
+                request=request
+            )
+
         response.content = pub_success_response("退出成功").content
         return response
         

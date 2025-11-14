@@ -41,6 +41,7 @@ export const apiMap = {
   // 审计管理
   audit: {
     auditLogs: "/audit/audit-logs/",
+    config: "/audit/config/",
   },
 
   // LDAP管理

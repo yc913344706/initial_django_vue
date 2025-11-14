@@ -57,10 +57,10 @@ class RouteTool:
 
             # 如果路由本身有权限 或者 有权限访问的子路由，则返回该路由
             route_has_permission = has_permission(route_key)
-            color_logger.debug(f"检查权限: {route}, {route_key}, 有权限: {route_has_permission}, 有子路由权限: {has_accessible_children}")
+            # color_logger.debug(f"检查权限: {route}, {route_key}, 有权限: {route_has_permission}, 有子路由权限: {has_accessible_children}")
             
             if route_has_permission or has_accessible_children:
-                color_logger.debug(f"有权限访问: {route}, {route_key}")
+                # color_logger.debug(f"有权限访问: {route}, {route_key}")
                 return filtered_route
             else:
                 color_logger.debug(f"无权限访问: {route}, {route_key}")
