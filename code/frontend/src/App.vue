@@ -6,10 +6,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, computed } from "vue";
 import { ElConfigProvider } from "element-plus";
 import { ReDialog } from "@/components/ReDialog";
 import zhCn from "element-plus/es/locale/lang/zh-cn";
+import en from "element-plus/es/locale/lang/en";
+import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
   name: "app",
@@ -17,10 +19,16 @@ export default defineComponent({
     [ElConfigProvider.name]: ElConfigProvider,
     ReDialog
   },
-  computed: {
-    currentLocale() {
-      return zhCn;
-    }
+  setup() {
+    const { locale } = useI18n();
+
+    const currentLocale = computed(() => {
+      return locale.value === 'zh-CN' ? zhCn : en;
+    });
+
+    return {
+      currentLocale
+    };
   }
 });
 </script>

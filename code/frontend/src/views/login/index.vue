@@ -2,7 +2,7 @@
 import Motion from "./utils/motion";
 import { useRouter } from "vue-router";
 import { message } from "@/utils/message";
-import { loginRules } from "./utils/rule";
+import { createLoginRules } from "./utils/i18nRule";
 import { useNav } from "@/layout/hooks/useNav";
 import type { FormInstance } from "element-plus";
 import { useLayout } from "@/layout/hooks/useLayout";
@@ -13,6 +13,7 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { ref, reactive, toRaw, onMounted, onBeforeUnmount } from "vue";
 import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange";
 import { DataInfo } from "@/utils/auth";
+import { useI18n } from 'vue-i18n';
 
 import dayIcon from "@/assets/svg/day.svg?component";
 import darkIcon from "@/assets/svg/dark.svg?component";
@@ -22,6 +23,7 @@ import logger from "@/utils/logger";
 import Cookies from "js-cookie";
 import { setToken } from "@/utils/auth";
 
+const { t } = useI18n();
 defineOptions({
   name: "Login"
 });
@@ -40,6 +42,8 @@ const ruleForm = reactive({
   username: "admin",
   password: "Admin@123"
 });
+
+const loginRules = createLoginRules();
 
 const onLogin = async (formEl: FormInstance | undefined) => {
   logger.debug('开始登录')
@@ -66,7 +70,7 @@ const onLogin = async (formEl: FormInstance | undefined) => {
                   router.push(topMenu.path)
                     .then(() => {
                       logger.debug('跳转成功' + topMenu.path)
-                      message("登录成功", { type: "success" });
+                      message(t('message.loginSuccess'), { type: "success" });
                     })
                     .catch(err => {
                       logger.error('路由跳转失败:', err)
@@ -74,7 +78,7 @@ const onLogin = async (formEl: FormInstance | undefined) => {
                       // 如果跳转失败，尝试跳转到首页
                       router.push("/").then(() => {
                         logger.debug('跳转到首页成功')
-                        message("登录成功", { type: "success" });
+                        message(t('message.loginSuccess'), { type: "success" });
                       }).catch(e => {
                         logger.error('跳转到首页也失败:', e)
                         message("登录失败，跳转到首页失败", { type: "error" });
@@ -85,7 +89,7 @@ const onLogin = async (formEl: FormInstance | undefined) => {
                   // message("目标路由不存在，将跳转到首页", { type: "warning" });
                   router.push("/").then(() => {
                     logger.debug('跳转到首页成功')
-                    message("登录成功", { type: "success" });
+                    message(t('message.loginSuccess'), { type: "success" });
                   }).catch(e => {
                     logger.error('跳转到首页失败:', e)
                     message("登录失败，跳转到首页失败", { type: "error" });
@@ -96,7 +100,7 @@ const onLogin = async (formEl: FormInstance | undefined) => {
                 router.push("/")
                   .then(() => {
                     logger.debug('跳转到首页成功')
-                    message("登录成功", { type: "success" });
+                    message(t('message.loginSuccess'), { type: "success" });
                   })
                   .catch(err => {
                     logger.error('跳转到首页失败:', err)
@@ -105,15 +109,15 @@ const onLogin = async (formEl: FormInstance | undefined) => {
               }
             }).catch(err => {
               logger.error('路由初始化失败:', err)
-              message("登录失败，路由初始化失败", { type: "error" });
+              message(t('message.loginFailed') + t('message.routeInitFailed'), { type: "error" });
             });
           } else {
             logger.error('登录失败，返回结果:', res)
-            message("登录失败", { type: "error" });
+            message(t('message.loginFailed'), { type: "error" });
           }
         }).catch(error => {
           logger.error('登录过程发生错误:', error)
-          let _error_msg = "登录失败."
+          let _error_msg = t('message.loginFailed')
           if (error.msg) {
             _error_msg += error.msg
           } else if (error.message) {
@@ -237,7 +241,7 @@ onBeforeUnmount(() => {
         <div class="login-form">
           <avatar class="avatar" />
           <Motion>
-            <h2 class="outline-none">{{ title }}</h2>
+            <h2 class="outline-none">{{ t('page.title.login') }}</h2>
           </Motion>
 
           <el-form
@@ -247,20 +251,11 @@ onBeforeUnmount(() => {
             size="large"
           >
             <Motion :delay="100">
-              <el-form-item
-                :rules="[
-                  {
-                    required: true,
-                    message: '请输入账号',
-                    trigger: 'blur'
-                  }
-                ]"
-                prop="username"
-              >
+              <el-form-item prop="username">
                 <el-input
                   v-model="ruleForm.username"
                   clearable
-                  placeholder="账号"
+                  :placeholder="t('field.username')"
                   :prefix-icon="useRenderIcon(User)"
                 />
               </el-form-item>
@@ -272,7 +267,7 @@ onBeforeUnmount(() => {
                   v-model="ruleForm.password"
                   clearable
                   show-password
-                  placeholder="密码"
+                  :placeholder="t('field.password')"
                   :prefix-icon="useRenderIcon(Lock)"
                 />
               </el-form-item>
@@ -286,7 +281,7 @@ onBeforeUnmount(() => {
                 :loading="loading"
                 @click="onLogin(ruleFormRef)"
               >
-                登录
+                {{ t('button.login') }}
               </el-button>
             </Motion>
           </el-form>

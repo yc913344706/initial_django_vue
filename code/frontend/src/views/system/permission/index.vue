@@ -4,10 +4,10 @@
     <el-card class="search-card">
       <div class="search-form">
         <div class="form-item">
-          <span class="label">关键词</span>
+          <span class="label">{{ t('page.permission.keyword') }}</span>
           <el-input
             v-model="searchForm.keyword"
-            placeholder="搜索权限名称/权限代码"
+            :placeholder="t('page.permission.searchPlaceholder')"
             clearable
             class="search-input"
             @keyup.enter="handleSearch"
@@ -17,20 +17,20 @@
         <div class="form-item button-group">
           <el-button type="primary" @click="handleSearch">
             <el-icon><Search /></el-icon>
-            搜索
+            {{ t('button.search') }}
           </el-button>
-          <el-button @click="resetSearch">重置</el-button>
-          <el-button 
-            type="danger" 
-            @click="handleBatchDelete" 
+          <el-button @click="resetSearch">{{ t('button.reset') }}</el-button>
+          <el-button
+            type="danger"
+            @click="handleBatchDelete"
             :disabled="!selectedPermissions.length"
             v-if="hasPerms('system.permissionList:delete')"
-          >批量删除</el-button>
-          <el-button 
-            type="primary" 
+          >{{ t('button.batchDelete') }}</el-button>
+          <el-button
+            type="primary"
             @click="handleAdd"
             v-if="hasPerms('system.permissionList:create')"
-          >新增</el-button>
+          >{{ t('button.create') }}</el-button>
         </div>
       </div>
     </el-card>
@@ -43,26 +43,26 @@
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" min-width="55" />
-        <el-table-column prop="name" label="权限名称" min-width="180" fixed/>
-        <el-table-column prop="code" label="权限代码" min-width="120" />
-        <el-table-column prop="description" label="描述" min-width="240" />
-        <el-table-column prop="is_system" label="权限类型" min-width="120">
+        <el-table-column prop="name" :label="t('page.permission.name')" min-width="180" fixed/>
+        <el-table-column prop="code" :label="t('page.permission.code')" min-width="120" />
+        <el-table-column prop="description" :label="t('field.description')" min-width="240" />
+        <el-table-column prop="is_system" :label="t('page.permission.type')" min-width="120">
           <template #default="scope">
             <el-tag :type="scope.row.is_system ? 'danger' : 'success'">
-              {{ scope.row.is_system ? '系统权限' : '普通权限' }}
+              {{ scope.row.is_system ? t('page.permission.systemPermission') : t('page.permission.normalPermission') }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="250">
+        <el-table-column :label="t('table.actions')" width="250">
           <template #default="scope">
-            <el-button type="info" size="small" @click="handleViewDetail(scope.row)">查看详情</el-button>
+            <el-button type="info" size="small" @click="handleViewDetail(scope.row)">{{ t('button.detail') }}</el-button>
             <!-- <el-button
               type="primary"
               size="small"
               @click="handleEdit(scope.row)"
               v-if="hasPerms('system.permission:update')"
             >
-              编辑
+              {{ t('button.edit') }}
             </el-button> -->
             <el-button
               type="danger"
@@ -71,7 +71,7 @@
               :disabled="scope.row.is_system"
               v-if="hasPerms('system.permission:delete')"
             >
-              删除
+              {{ t('button.delete') }}
             </el-button>
           </template>
         </el-table-column>
@@ -93,33 +93,33 @@
     <!-- 新增/编辑对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="dialogType === 'add' ? '新增权限' : '编辑权限'"
+      :title="dialogType === 'add' ? t('dialog.title.create') + t('common.permission') : t('dialog.title.edit') + t('common.permission')"
       width="50%"
     >
       <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
-        <el-form-item label="权限名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入权限名称" />
+        <el-form-item :label="t('page.permission.name')" prop="name">
+          <el-input v-model="form.name" :placeholder="t('page.permission.enterName')" />
         </el-form-item>
-        <el-form-item label="权限代码" prop="code">
-          <el-input v-model="form.code" placeholder="请输入权限代码" />
+        <el-form-item :label="t('page.permission.code')" prop="code">
+          <el-input v-model="form.code" :placeholder="t('page.permission.enterCode')" />
         </el-form-item>
-        <el-form-item label="权限JSON" prop="permission_json">
+        <el-form-item :label="t('page.permission.json')" prop="permission_json">
           <el-input
             v-model="form.permission_json"
             type="textarea"
             :rows="10"
-            placeholder="请输入权限JSON"
+            :placeholder="t('page.permission.enterJson')"
             @input="handleJsonInput"
           />
         </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input v-model="form.description" type="textarea" placeholder="请输入描述" />
+        <el-form-item :label="t('field.description')" prop="description">
+          <el-input v-model="form.description" type="textarea" :placeholder="t('page.permission.enterDescription')" />
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">确定</el-button>
+          <el-button @click="dialogVisible = false">{{ t('button.cancel') }}</el-button>
+          <el-button type="primary" @click="handleSubmit">{{ t('button.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -137,6 +137,9 @@ import router from '@/router'
 import logger from '@/utils/logger'
 import { Search } from '@element-plus/icons-vue'
 import '@/style/system.scss'
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const permissionList = ref([]);
 const dialogVisible = ref(false);
@@ -150,10 +153,10 @@ const form = ref({
 });
 
 const rules = {
-  name: [{ required: true, message: "请输入权限名称", trigger: "blur" }],
-  code: [{ required: true, message: "请输入权限代码", trigger: "blur" }],
+  name: [{ required: true, message: t('page.permission.enterName'), trigger: "blur" }],
+  code: [{ required: true, message: t('page.permission.enterCode'), trigger: "blur" }],
   permission_json: [
-    { required: true, message: "请输入权限JSON", trigger: "blur" }
+    { required: true, message: t('page.permission.enterJson'), trigger: "blur" }
   ]
 };
 
@@ -191,7 +194,7 @@ const getPermissionList = async () => {
       ElMessage.error(res.msg);
     }
   } catch (error) {
-    ElMessage.error(`获取权限列表失败。${error.msg || error}`);
+    ElMessage.error(`${t('message.getPermissionListFailed')}。${error.msg || error}`);
   } finally {
     loading.value = false
   }
@@ -228,11 +231,11 @@ const handleViewDetail = row => {
 const handleDelete = row => {
   // 检查是否为系统权限
   if (row.is_system) {
-    ElMessage.warning("系统权限无法删除");
+    ElMessage.warning(t('message.systemPermissionCannotDelete'));
     return;
   }
 
-  ElMessageBox.confirm("确认删除该权限吗？", "提示", {
+  ElMessageBox.confirm(t('message.deleteConfirm'), t('common.confirm'), {
     type: "warning"
   }).then(async () => {
     try {
@@ -242,13 +245,13 @@ const handleDelete = row => {
         { data: { uuid: row.uuid } }
       );
       if (res.success) {
-        ElMessage.success("删除成功");
+        ElMessage.success(t('message.operationSuccess'));
         getPermissionList();
       } else {
         ElMessage.error(res.msg);
       }
     } catch (error) {
-      ElMessage.error(`删除失败。${error.msg || error}`);
+      ElMessage.error(`${t('message.deleteFailed')}。${error.msg || error}`);
     }
   });
 };
@@ -280,7 +283,7 @@ const handleSubmit = async () => {
             { data: submitData }
           );
           if (res.success) {
-            ElMessage.success("新增成功");
+            ElMessage.success(t('message.createSuccess'));
           } else {
             ElMessage.error(res.msg);
           }
@@ -291,7 +294,7 @@ const handleSubmit = async () => {
             { data: submitData }
           );
           if (res.success) {
-            ElMessage.success("编辑成功");
+            ElMessage.success(t('message.editSuccess'));
           } else {
             ElMessage.error(res.msg);
           }
@@ -300,7 +303,7 @@ const handleSubmit = async () => {
         getPermissionList();
       } catch (error) {
         logger.error(error)
-        ElMessage.error(dialogType.value === "add" ? `新增失败。${error.msg || error}` : `编辑失败。${error.msg || error}`);
+        ElMessage.error(dialogType.value === "add" ? `${t('message.createFailed')}。${error.msg || error}` : `${t('message.editFailed')}。${error.msg || error}`);
       }
     }
   });
@@ -322,12 +325,12 @@ const handleBatchDelete = async () => {
 
   const systemPermissions = selectedPermissionObjects.filter(item => item.is_system);
   if (systemPermissions.length > 0) {
-    ElMessage.warning(`选中的权限中包含系统权限，无法删除：${systemPermissions.map(p => p.name).join(', ')}`);
+    ElMessage.warning(`${t('message.systemPermissionCannotDelete')}：${systemPermissions.map(p => p.name).join(', ')}`);
     return;
   }
 
   try {
-    await ElMessageBox.confirm('确定要删除选中的权限吗?', '提示', {
+    await ElMessageBox.confirm(t('message.batchDeleteConfirm'), t('common.confirm'), {
       type: 'warning'
     })
 
@@ -336,7 +339,7 @@ const handleBatchDelete = async () => {
     })
 
     if (res.success) {
-      ElMessage.success('删除成功')
+      ElMessage.success(t('message.operationSuccess'))
       getPermissionList()
       selectedPermissions.value = []
     } else {
@@ -344,7 +347,7 @@ const handleBatchDelete = async () => {
     }
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error(`删除失败。${error.msg || error}`)
+      ElMessage.error(`${t('message.deleteFailed')}。${error.msg || error}`)
     }
   }
 }

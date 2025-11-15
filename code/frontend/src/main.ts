@@ -11,6 +11,9 @@ import { injectResponsiveStorage } from "@/utils/responsive";
 import Table from "@pureadmin/table";
 // import PureDescriptions from "@pureadmin/descriptions";
 
+// 引入国际化
+import i18n from "./i18n";
+
 // 引入重置样式
 import "./style/reset.scss";
 // 导入公共样式
@@ -55,6 +58,7 @@ app.use(VueTippy);
 getPlatformConfig(app).then(async config => {
   setupStore(app);
   app.use(router);
+  app.use(i18n); // 注册国际化
   await router.isReady();
   injectResponsiveStorage(app, config);
   app.use(MotionPlugin).use(useElementPlus).use(Table);

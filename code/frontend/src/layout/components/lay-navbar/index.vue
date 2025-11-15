@@ -11,6 +11,9 @@ import LayNavMix from "../lay-sidebar/NavMix.vue";
 import LaySidebarFullScreen from "../lay-sidebar/components/SidebarFullScreen.vue";
 import LaySidebarBreadCrumb from "../lay-sidebar/components/SidebarBreadCrumb.vue";
 import LaySidebarTopCollapse from "../lay-sidebar/components/SidebarTopCollapse.vue";
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 import LogoutCircleRLine from "@iconify-icons/ri/logout-circle-r-line";
 import Setting from "@iconify-icons/ri/settings-3-line";
@@ -40,18 +43,18 @@ const {
 // 修改密码验证规则
 const changePasswordRules = {
   current_password: [
-    { required: true, message: '请输入当前密码', trigger: 'blur' }
+    { required: true, message: t('page.user.enterCurrentPassword'), trigger: 'blur' }
   ],
   new_password: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '新密码长度至少6位', trigger: 'blur' }
+    { required: true, message: t('page.user.enterNewPassword'), trigger: 'blur' },
+    { min: 6, message: t('page.user.newPasswordMinLength'), trigger: 'blur' }
   ],
   confirm_password: [
-    { required: true, message: '请确认新密码', trigger: 'blur' },
+    { required: true, message: t('page.user.enterConfirmPassword'), trigger: 'blur' },
     {
       validator: (rule: any, value: string, callback: any) => {
         if (value !== changePasswordForm.value.new_password) {
-          callback(new Error('确认密码与新密码不一致'))
+          callback(new Error(t('page.user.confirmPasswordNotMatch')))
         } else {
           callback()
         }
@@ -79,13 +82,13 @@ const confirmChangePassword = async () => {
       data: changePasswordForm.value
     });
     if (res.success) {
-      ElMessage.success(res.msg || '密码修改成功');
+      ElMessage.success(res.msg || t('message.changePasswordSuccess'));
       changePasswordDialogVisible.value = false;
     } else {
       ElMessage.error(res.msg);
     }
   } catch (error) {
-    ElMessage.error(`密码修改失败。${error.msg || error}`);
+    ElMessage.error(`${t('message.changePasswordFailed')}。${error.msg || error}`);
   }
 };
 </script>
@@ -133,7 +136,7 @@ const confirmChangePassword = async () => {
                 :icon="LogoutCircleRLine"
                 style="margin: 5px"
               />
-              退出系统
+              {{$t('common.logout')}}
             </el-dropdown-item>
           </el-dropdown-menu>
         </template>
@@ -151,7 +154,7 @@ const confirmChangePassword = async () => {
   <!-- 修改密码对话框 -->
   <el-dialog
     v-model="changePasswordDialogVisible"
-    title="修改密码"
+    :title="$t('page.user.changePassword')"
     width="500px"
     :close-on-click-modal="false"
   >
@@ -161,35 +164,35 @@ const confirmChangePassword = async () => {
       ref="changePasswordFormRef"
       label-width="100px"
     >
-      <el-form-item label="当前密码" prop="current_password">
+      <el-form-item :label="$t('field.currentPassword')" prop="current_password">
         <el-input
           v-model="changePasswordForm.current_password"
           type="password"
           show-password
-          placeholder="请输入当前密码"
+          :placeholder="$t('page.user.enterCurrentPassword')"
         />
       </el-form-item>
-      <el-form-item label="新密码" prop="new_password">
+      <el-form-item :label="$t('field.newPassword')" prop="new_password">
         <el-input
           v-model="changePasswordForm.new_password"
           type="password"
           show-password
-          placeholder="请输入新密码"
+          :placeholder="$t('page.user.enterNewPassword')"
         />
       </el-form-item>
-      <el-form-item label="确认新密码" prop="confirm_password">
+      <el-form-item :label="$t('field.confirmPassword')" prop="confirm_password">
         <el-input
           v-model="changePasswordForm.confirm_password"
           type="password"
           show-password
-          placeholder="请再次输入新密码"
+          :placeholder="$t('page.user.enterConfirmPassword')"
         />
       </el-form-item>
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="changePasswordDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmChangePassword">确认</el-button>
+        <el-button @click="changePasswordDialogVisible = false">{{$t('button.cancel')}}</el-button>
+        <el-button type="primary" @click="confirmChangePassword">{{$t('button.confirm')}}</el-button>
       </span>
     </template>
   </el-dialog>

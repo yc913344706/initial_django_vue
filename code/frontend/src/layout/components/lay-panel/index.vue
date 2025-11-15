@@ -95,9 +95,9 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss" scoped>
-:deep(.el-scrollbar) {
-  height: calc(100vh - 110px);
-}
+// :deep(.right-panel.el-scrollbar) {
+//   height: calc(100vh - 110px);
+// }
 
 .right-panel-background {
   position: fixed;
@@ -133,6 +133,9 @@ onBeforeUnmount(() => {
 
   .right-panel {
     transform: translate(0);
+  }
+  .el-scrollbar {
+    height: calc(100vh - 110px);
   }
 }
 

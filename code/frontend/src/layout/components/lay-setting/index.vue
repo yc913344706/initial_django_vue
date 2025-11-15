@@ -17,6 +17,7 @@ import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import Segmented, { type OptionsType } from "@/components/ReSegmented";
 import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange";
 import { useDark, useGlobal, debounce, isNumber } from "@pureadmin/utils";
+import { useI18n } from 'vue-i18n';
 
 import Check from "@iconify-icons/ep/check";
 import LeftArrow from "@iconify-icons/ri/arrow-left-s-line";
@@ -24,6 +25,8 @@ import RightArrow from "@iconify-icons/ri/arrow-right-s-line";
 import DayIcon from "@/assets/svg/day.svg?component";
 import DarkIcon from "@/assets/svg/dark.svg?component";
 import SystemIcon from "@/assets/svg/system.svg?component";
+
+const { t, locale } = useI18n();
 
 const { device } = useNav();
 const { isDark } = useDark();
@@ -296,6 +299,17 @@ function watchSystemThemeChange() {
   mediaQueryList.addEventListener("change", updateTheme);
 }
 
+// 语言切换功能
+const languageOptions = [
+  { value: 'zh-CN', label: '简体中文' },
+  { value: 'en-US', label: 'English' }
+];
+
+const handleLanguageChange = (lang: string) => {
+  locale.value = lang;
+  localStorage.setItem('lang', lang);
+};
+
 onBeforeMount(() => {
   /* 初始化系统配置 */
   nextTick(() => {
@@ -511,6 +525,23 @@ onUnmounted(() => removeMatchMedia);
             @change="multiTagsCacheChange"
           />
         </li>
+        <li>
+          <span class="dark:text-white">语言切换</span>
+          <el-select
+            v-model="locale"
+            :placeholder="$t('common.selectLanguage')"
+            @change="handleLanguageChange"
+            style="width: 100px;"
+            :teleported="false"
+          >
+            <el-option
+              v-for="item in languageOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </li>
       </ul>
     </div>
   </LayPanel>
@@ -629,5 +660,8 @@ onUnmounted(() => removeMatchMedia);
     padding: 3px 0;
     font-size: 14px;
   }
+}
+.el-select-dropdown {
+  z-index: 999999;  /* 提升 select 下拉框层级 */
 }
 </style>
