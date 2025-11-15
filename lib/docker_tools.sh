@@ -106,8 +106,9 @@ push_image_with_manifest_for_arch() {
         # 为了更安全，我们可以尝试拉取该镜像的清单并检查其大小
         # 以确保它不是空的或损坏的镜像
         remote_image_size=$(docker manifest inspect ${_arch_image_tag} 2>/dev/null | jq '.manifests[0].size // .size' 2>/dev/null)
-        
-        if [ -n "$remote_image_size" ] && [ "$remote_image_size" -gt 0 ]; then
+
+        # 检查 remote_image_size 是否为 null 或空值，如果是，则视为无效镜像大小
+        if [ -n "$remote_image_size" ] && [ "$remote_image_size" != "null" ] && [ "$remote_image_size" -gt 0 ]; then
           log_info "Remote image for architecture ${_arch} has valid size: ${remote_image_size}"
           _manifest_args="${_manifest_args} ${_arch_image_tag}"
           _archs_to_annotate="${_archs_to_annotate} ${_arch}"
