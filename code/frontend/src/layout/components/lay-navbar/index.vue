@@ -129,7 +129,7 @@ const confirmChangePassword = async () => {
                 :icon="Setting"
                 style="margin: 5px"
               />
-              修改密码
+              {{$t('page.user.changePassword')}}
             </el-dropdown-item>
             <el-dropdown-item @click="logout">
               <IconifyIconOffline
@@ -247,12 +247,20 @@ const confirmChangePassword = async () => {
 }
 
 .logout {
-  width: 120px;
+  // width: 150px;
 
   ::v-deep(.el-dropdown-menu__item) {
-    display: inline-flex;
-    flex-wrap: wrap;
-    min-width: 100%;
+    min-height: 40px;
+    display: flex !important;
+    align-items: center !important;
+    padding: 5px 10px !important;
+  }
+
+  ::v-deep(.el-dropdown-menu__item) span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
   }
 }
 </style>
