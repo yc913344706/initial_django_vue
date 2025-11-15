@@ -103,17 +103,34 @@ push_image_with_manifest_for_arch() {
       if docker manifest inspect ${_arch_image_tag} >/dev/null 2>&1; then
         log_info "Found remote image for architecture ${_arch}: ${_arch_image_tag}"
         
-        # 为了更安全，我们可以尝试拉取该镜像的清单并检查其大小
-        # 以确保它不是空的或损坏的镜像
-        remote_image_size=$(docker manifest inspect ${_arch_image_tag} 2>/dev/null | jq '.manifests[0].size // .size' 2>/dev/null)
+        # 为了更安全，我们可以尝试拉取该镜像的清单并检查其是否存在
+        # 以确保镜像不是空的或损坏的
+        # 获取镜像清单并尝试计算总大小（配置大小 + 所有层的大小之和）
+        remote_manifest=$(docker manifest inspect ${_arch_image_tag} 2>/dev/null)
 
-        # 检查 remote_image_size 是否为 null 或空值，如果是，则视为无效镜像大小
-        if [ -n "$remote_image_size" ] && [ "$remote_image_size" != "null" ] && [ "$remote_image_size" -gt 0 ]; then
-          log_info "Remote image for architecture ${_arch} has valid size: ${remote_image_size}"
-          _manifest_args="${_manifest_args} ${_arch_image_tag}"
-          _archs_to_annotate="${_archs_to_annotate} ${_arch}"
+        if [ -n "$remote_manifest" ]; then
+            # 计算配置大小和所有层的总大小
+            config_size=$(echo "$remote_manifest" | jq '.config.size' 2>/dev/null)
+            layers_total_size=$(echo "$remote_manifest" | jq '[.layers[].size] | add // 0' 2>/dev/null)
+
+            # 如果配置大小存在且有效，将其加入总大小计算
+            if [ -n "$config_size" ] && [ "$config_size" != "null" ] && [[ "$config_size" =~ ^[0-9]+$ ]]; then
+                total_size=$((config_size + layers_total_size))
+            else
+                # 如果配置大小不可用，只使用层的大小
+                total_size=$layers_total_size
+            fi
+
+            # 检查 total_size 是否有效（非 null 且为数字）
+            if [ -n "$total_size" ] && [[ "$total_size" =~ ^[0-9]+$ ]] && [ "$total_size" -gt 0 ]; then
+                log_info "Remote image for architecture ${_arch} has valid total size: ${total_size}"
+                _manifest_args="${_manifest_args} ${_arch_image_tag}"
+                _archs_to_annotate="${_archs_to_annotate} ${_arch}"
+            else
+                log_info "Remote image for architecture ${_arch} has invalid or zero total size: ${total_size}, skipping: ${_arch_image_tag}"
+            fi
         else
-          log_info "Remote image for architecture ${_arch} has invalid or zero size, skipping: ${_arch_image_tag}"
+            log_info "Remote image for architecture ${_arch} manifest not accessible, skipping: ${_arch_image_tag}"
         fi
       else
         log_info "Remote image for architecture ${_arch} not found: ${_arch_image_tag}"
