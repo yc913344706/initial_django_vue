@@ -4,10 +4,10 @@
     <el-card class="search-card">
       <div class="search-form">
         <div class="form-item">
-          <span class="label">操作人</span>
+          <span class="label">{{ $t('page.audit.operator') }}</span>
           <el-input
             v-model="searchForm.operator"
-            placeholder="搜索操作人"
+            :placeholder="$t('page.audit.searchOperator')"
             clearable
             class="search-input"
             @keyup.enter="handleSearch"
@@ -15,10 +15,10 @@
         </div>
 
         <div class="form-item">
-          <span class="label">模型名称</span>
+          <span class="label">{{ $t('page.audit.model') }}</span>
           <el-input
             v-model="searchForm.model_name"
-            placeholder="搜索模型名称"
+            :placeholder="$t('page.audit.searchModelName')"
             clearable
             class="search-input"
             @keyup.enter="handleSearch"
@@ -26,10 +26,10 @@
         </div>
 
         <div class="form-item">
-          <span class="label">操作类型</span>
+          <span class="label">{{ $t('page.audit.action') }}</span>
           <el-select
             v-model="searchForm.action"
-            placeholder="请选择操作类型"
+            :placeholder="$t('page.audit.selectActionType')"
             clearable
             multiple
             collapse-tags
@@ -46,10 +46,10 @@
         </div>
 
         <div class="form-item">
-          <span class="label">IP地址</span>
+          <span class="label">{{ $t('page.audit.ip') }}</span>
           <el-input
             v-model="searchForm.ip_address"
-            placeholder="搜索IP地址"
+            :placeholder="$t('page.audit.searchIp')"
             clearable
             class="search-input"
             @keyup.enter="handleSearch"
@@ -57,13 +57,13 @@
         </div>
 
         <div class="form-item">
-          <span class="label">操作时间</span>
+          <span class="label">{{ $t('page.audit.time') }}</span>
           <el-date-picker
             v-model="searchForm.date_range"
             type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
+            range-separator="-"
+            start-placeholder="$t('page.audit.startDate')"
+            end-placeholder="$t('page.audit.endDate')"
             value-format="YYYY-MM-DD"
             class="date-range-picker"
             @keyup.enter="handleSearch"
@@ -71,10 +71,10 @@
         </div>
 
         <div class="form-item">
-          <span class="label">关键词</span>
+          <span class="label">{{ $t('page.audit.keyword') }}</span>
           <el-input
             v-model="searchForm.keyword"
-            placeholder="搜索操作人/记录ID"
+            :placeholder="$t('page.audit.searchKeyword')"
             clearable
             class="search-input"
             @keyup.enter="handleSearch"
@@ -84,9 +84,9 @@
         <div class="form-item button-group">
           <el-button type="primary" @click="handleSearch">
             <el-icon><Search /></el-icon>
-            搜索
+            {{ $t('common.search') }}
           </el-button>
-          <el-button @click="resetSearch">重置</el-button>
+          <el-button @click="resetSearch">{{ $t('common.reset') }}</el-button>
         </div>
       </div>
     </el-card>
@@ -94,21 +94,21 @@
     <!-- 表格区域 -->
     <el-card class="table-card">
       <el-table :data="auditList" v-loading="loading" border>
-        <el-table-column prop="operator_username" label="操作人" min-width="100" />
-        <el-table-column prop="model_name" label="模型名称" min-width="120" />
-        <el-table-column prop="record_id" label="记录ID" min-width="180" />
-        <el-table-column prop="action_display" label="操作类型" width="140">
+        <el-table-column prop="operator_username" :label="$t('page.audit.operator')" min-width="100" />
+        <el-table-column prop="model_name" :label="$t('page.audit.model')" min-width="120" />
+        <el-table-column prop="record_id" :label="$t('page.audit.recordId')" min-width="180" />
+        <el-table-column prop="action_display" :label="$t('page.audit.action')" width="140">
           <template #default="{ row }">
             <el-tag :type="getActionTagType(row.action)">
               {{ row.action_display }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="create_time" label="操作时间" min-width="150" />
-        <el-table-column label="操作详情" min-width="120">
+        <el-table-column prop="create_time" :label="$t('page.audit.time')" min-width="150" />
+        <el-table-column :label="$t('page.audit.content')" min-width="120">
           <template #default="{ row }">
             <el-button link type="primary" @click="showDetail(row)">
-              查看详情
+              {{ $t('common.detail') }}
             </el-button>
           </template>
         </el-table-column>
@@ -130,7 +130,7 @@
     <!-- 详情对话框 -->
     <el-dialog
       v-model="detailDialogVisible"
-      title="操作详情"
+      :title="$t('page.audit.detail')"
       width="600px"
       class="detail-dialog"
     >
@@ -148,8 +148,10 @@ import { apiMap } from '@/config/api'
 import logger from '@/utils/logger'
 import { hasPerms } from "@/utils/auth";
 import router from '@/router'
+import { useI18n } from 'vue-i18n'
 import '@/style/system.scss'
 
+const { t } = useI18n()
 const loading = ref(false)
 const auditList = ref([])
 const currentPage = ref(1)
@@ -180,11 +182,11 @@ const fetchAuditConfig = async () => {
       auditConfig.value = res.data
     } else {
       logger.error('获取审计配置失败:', res.msg)
-      ElMessage.error(`获取审计配置失败: ${res.msg}`)
+      ElMessage.error(`${t('message.getPermissionListFailed')}: ${res.msg}`)
     }
   } catch (error) {
     logger.error('获取审计配置失败:', error)
-    ElMessage.error(`获取审计配置失败: ${error.msg || error}`)
+    ElMessage.error(`${t('message.getPermissionListFailed')}: ${error.msg || error}`)
   }
 }
 
@@ -243,7 +245,7 @@ const fetchAuditLogs = async () => {
       page_size: pageSize.value,
       ...buildQueryParams()
     }
-    const res = await http.request('get', apiMap.audit.auditLogs, { 
+    const res = await http.request('get', apiMap.audit.auditLogs, {
       params: params
     })
     if (res.success) {
@@ -252,7 +254,7 @@ const fetchAuditLogs = async () => {
     }
   } catch (error) {
     logger.error('获取审计日志失败:', error)
-    ElMessage.error(`获取审计日志失败。${error.msg || error}`)
+    ElMessage.error(`${t('message.getPermissionListFailed')}。${error.msg || error}`)
   } finally {
     loading.value = false
   }
@@ -277,7 +279,7 @@ const showDetail = (row) => {
 
 onMounted(async () => {
   if (!hasPerms('system.auditList:read')) {
-    ElMessage.error('您没有权限查看审计日志')
+    ElMessage.error(t('message.noPermissionToAccessPage'))
     router.push('/error/403')
   }
   // 先获取配置，再获取审计日志

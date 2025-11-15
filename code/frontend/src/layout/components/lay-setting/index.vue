@@ -148,13 +148,13 @@ function setFalse(Doms): any {
 const stretchTypeOptions = computed<Array<OptionsType>>(() => {
   return [
     {
-      label: "固定",
-      tip: "紧凑页面，轻松找到所需信息",
+      label: t('setting.fixedWidth'),
+      tip: t('setting.fixedWidthTip'),
       value: "fixed"
     },
     {
-      label: "自定义",
-      tip: "最小1280、最大1600",
+      label: t('setting.customWidth'),
+      tip: t('setting.customWidthTip'),
       value: "custom"
     }
   ];
@@ -196,24 +196,24 @@ const pClass = computed(() => {
 const themeOptions = computed<Array<OptionsType>>(() => {
   return [
     {
-      label: "浅色",
+      label: t('setting.dayTheme'),
       icon: DayIcon,
       theme: "light",
-      tip: "清新启航，点亮舒适的工作界面",
+      tip: t('setting.dayThemeTip'),
       iconAttrs: { fill: isDark.value ? "#fff" : "#000" }
     },
     {
-      label: "深色",
+      label: t('setting.darkTheme'),
       icon: DarkIcon,
       theme: "dark",
-      tip: "月光序曲，沉醉于夜的静谧雅致",
+      tip: t('setting.darkThemeTip'),
       iconAttrs: { fill: isDark.value ? "#fff" : "#000" }
     },
     {
-      label: "自动",
+      label: t('setting.systemTheme'),
       icon: SystemIcon,
       theme: "system",
-      tip: "同步时光，界面随晨昏自然呼应",
+      tip: t('setting.systemThemeTip'),
       iconAttrs: { fill: isDark.value ? "#fff" : "#000" }
     }
   ];
@@ -222,18 +222,18 @@ const themeOptions = computed<Array<OptionsType>>(() => {
 const markOptions = computed<Array<OptionsType>>(() => {
   return [
     {
-      label: "灵动",
-      tip: "灵动标签，添趣生辉",
+      label: t('setting.smartTag'),
+      tip: t('setting.smartTagTip'),
       value: "smart"
     },
     {
-      label: "卡片",
-      tip: "卡片标签，高效浏览",
+      label: t('setting.cardTag'),
+      tip: t('setting.cardTagTip'),
       value: "card"
     },
     {
-      label: "谷歌",
-      tip: "谷歌风格，经典美观",
+      label: t('setting.chromeTag'),
+      tip: t('setting.chromeTagTip'),
       value: "chrome"
     }
   ];
@@ -329,7 +329,7 @@ onUnmounted(() => removeMatchMedia);
 <template>
   <LayPanel>
     <div class="p-5">
-      <p :class="pClass">整体风格</p>
+      <p :class="pClass">{{ t('setting.overallStyle') }}</p>
       <Segmented
         resize
         class="select-none"
@@ -347,7 +347,7 @@ onUnmounted(() => removeMatchMedia);
         "
       />
 
-      <p :class="['mt-5', pClass]">主题色</p>
+      <p :class="['mt-5', pClass]">{{ t('setting.themeColor') }}</p>
       <ul class="theme-color">
         <li
           v-for="(item, index) in themeColors"
@@ -366,12 +366,12 @@ onUnmounted(() => removeMatchMedia);
         </li>
       </ul>
 
-      <p :class="['mt-5', pClass]">导航模式</p>
+      <p :class="['mt-5', pClass]">{{ t('setting.navMode') }}</p>
       <ul class="pure-theme">
         <li
           ref="verticalRef"
           v-tippy="{
-            content: '左侧菜单，亲切熟悉',
+            content: t('setting.navModeVerticalTip'),
             zIndex: 41000
           }"
           :class="layoutTheme.layout === 'vertical' ? 'is-select' : ''"
@@ -384,7 +384,7 @@ onUnmounted(() => removeMatchMedia);
           v-if="device !== 'mobile'"
           ref="horizontalRef"
           v-tippy="{
-            content: '顶部菜单，简洁概览',
+            content: t('setting.navModeHorizontalTip'),
             zIndex: 41000
           }"
           :class="layoutTheme.layout === 'horizontal' ? 'is-select' : ''"
@@ -397,7 +397,7 @@ onUnmounted(() => removeMatchMedia);
           v-if="device !== 'mobile'"
           ref="mixRef"
           v-tippy="{
-            content: '混合菜单，灵活多变',
+            content: t('setting.navModeMixTip'),
             zIndex: 41000
           }"
           :class="layoutTheme.layout === 'mix' ? 'is-select' : ''"
@@ -409,7 +409,7 @@ onUnmounted(() => removeMatchMedia);
       </ul>
 
       <span v-if="useAppStoreHook().getViewportWidth > 1280">
-        <p :class="['mt-5', pClass]">页宽</p>
+        <p :class="['mt-5', pClass]">{{ t('setting.pageWidth') }}</p>
         <Segmented
           resize
           class="mb-2 select-none"
@@ -452,7 +452,7 @@ onUnmounted(() => removeMatchMedia);
         </button>
       </span>
 
-      <p :class="['mt-4', pClass]">页签风格</p>
+      <p :class="['mt-4', pClass]">{{ t('setting.tabStyle') }}</p>
       <Segmented
         resize
         class="select-none"
@@ -461,72 +461,10 @@ onUnmounted(() => removeMatchMedia);
         @change="onChange"
       />
 
-      <p class="mt-5 font-medium text-sm dark:text-white">界面显示</p>
+      <p class="mt-5 font-medium text-sm dark:text-white">{{ t('setting.interfaceDisplay') }}</p>
       <ul class="setting">
         <li>
-          <span class="dark:text-white">灰色模式</span>
-          <el-switch
-            v-model="settings.greyVal"
-            inline-prompt
-            active-text="开"
-            inactive-text="关"
-            @change="greyChange"
-          />
-        </li>
-        <li>
-          <span class="dark:text-white">色弱模式</span>
-          <el-switch
-            v-model="settings.weakVal"
-            inline-prompt
-            active-text="开"
-            inactive-text="关"
-            @change="weekChange"
-          />
-        </li>
-        <li>
-          <span class="dark:text-white">隐藏标签页</span>
-          <el-switch
-            v-model="settings.tabsVal"
-            inline-prompt
-            active-text="开"
-            inactive-text="关"
-            @change="tagsChange"
-          />
-        </li>
-        <li>
-          <span class="dark:text-white">隐藏页脚</span>
-          <el-switch
-            v-model="settings.hideFooter"
-            inline-prompt
-            active-text="开"
-            inactive-text="关"
-            @change="hideFooterChange"
-          />
-        </li>
-        <li>
-          <span class="dark:text-white">Logo</span>
-          <el-switch
-            v-model="logoVal"
-            inline-prompt
-            :active-value="true"
-            :inactive-value="false"
-            active-text="开"
-            inactive-text="关"
-            @change="logoChange"
-          />
-        </li>
-        <li>
-          <span class="dark:text-white">页签持久化</span>
-          <el-switch
-            v-model="settings.multiTagsCache"
-            inline-prompt
-            active-text="开"
-            inactive-text="关"
-            @change="multiTagsCacheChange"
-          />
-        </li>
-        <li>
-          <span class="dark:text-white">语言切换</span>
+          <span class="dark:text-white">{{ t('setting.languageSwitch') }}</span>
           <el-select
             v-model="locale"
             :placeholder="$t('common.selectLanguage')"
@@ -537,10 +475,72 @@ onUnmounted(() => removeMatchMedia);
             <el-option
               v-for="item in languageOptions"
               :key="item.value"
-              :label="item.label"
+              :label="t('setting.language.' + item.value)"
               :value="item.value"
             />
           </el-select>
+        </li>
+        <li>
+          <span class="dark:text-white">{{ t('setting.greyMode') }}</span>
+          <el-switch
+            v-model="settings.greyVal"
+            inline-prompt
+            :active-text="t('setting.on')"
+            :inactive-text="t('setting.off')"
+            @change="greyChange"
+          />
+        </li>
+        <li>
+          <span class="dark:text-white">{{ t('setting.weakMode') }}</span>
+          <el-switch
+            v-model="settings.weakVal"
+            inline-prompt
+            :active-text="t('setting.on')"
+            :inactive-text="t('setting.off')"
+            @change="weekChange"
+          />
+        </li>
+        <li>
+          <span class="dark:text-white">{{ t('setting.hideTabs') }}</span>
+          <el-switch
+            v-model="settings.tabsVal"
+            inline-prompt
+            :active-text="t('setting.on')"
+            :inactive-text="t('setting.off')"
+            @change="tagsChange"
+          />
+        </li>
+        <li>
+          <span class="dark:text-white">{{ t('setting.hideFooter') }}</span>
+          <el-switch
+            v-model="settings.hideFooter"
+            inline-prompt
+            :active-text="t('setting.on')"
+            :inactive-text="t('setting.off')"
+            @change="hideFooterChange"
+          />
+        </li>
+        <li>
+          <span class="dark:text-white">{{ t('setting.logo') }}</span>
+          <el-switch
+            v-model="logoVal"
+            inline-prompt
+            :active-value="true"
+            :inactive-value="false"
+            :active-text="t('setting.on')"
+            :inactive-text="t('setting.off')"
+            @change="logoChange"
+          />
+        </li>
+        <li>
+          <span class="dark:text-white">{{ t('setting.tabPersistence') }}</span>
+          <el-switch
+            v-model="settings.multiTagsCache"
+            inline-prompt
+            :active-text="t('setting.on')"
+            :inactive-text="t('setting.off')"
+            @change="multiTagsCacheChange"
+          />
         </li>
       </ul>
     </div>

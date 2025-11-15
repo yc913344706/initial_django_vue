@@ -40,6 +40,7 @@ import { useUserStoreHook } from "@/store/modules/user";
 import { getBackendConfig } from '@/utils/backendConfig'
 import { http } from '@/utils/http'
 import {config} from '@/config'
+import { globalT } from '@/i18n';
 
 type FromRouteType = RouteLocationNormalizedLoaded;
 
@@ -137,8 +138,9 @@ const handlePageTitle = (to: ToRouteType) => {
     to.matched.some(item => {
       if (!item.meta.title) return "";
       const Title = getConfig().Title;
-      if (Title) document.title = `${item.meta.title} | ${Title}`;
-      else document.title = item.meta.title as string;
+      const translatedTitle = globalT(item.meta.title);
+      if (Title) document.title = `${translatedTitle} | ${Title}`;
+      else document.title = translatedTitle;
     });
   }
   return externalLink;

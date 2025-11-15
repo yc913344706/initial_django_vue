@@ -13,6 +13,7 @@
   - [环境变量配置](#环境变量配置)
   - [前端图标配置](#前端图标配置)
   - [系统标题配置](#系统标题配置)
+  - [i18n](#i18n)
 - [参考文档：](#参考文档)
 
 ## 📖 项目描述
@@ -90,10 +91,10 @@ docker-compose -f docker-compose.prod.yaml down
 
 | 作用 | 文件 |
 | ---- | ---- |
-| 【前端】vue工程配置 | `code/frontend/.env.production` |
-| 【前端】Pure Admin配置 | `code/frontend/public/platform-config.json` |
-| 【后端】业务配置 | `code/backend/.prod.yaml` |
-| 【后端】全量路由定义文件 | `code/backend/base_routes.json` |
+| 【前端】vue工程配置 | [./code/frontend/.env.production](./code/frontend/.env.production) |
+| 【前端】Pure Admin配置 | [./code/frontend/public/platform-config.json](./code/frontend/public/platform-config.json) <br/> [./code/frontend/public/platform-config.json.explain](./code/frontend/public/platform-config.json.explain) |
+| 【后端】业务配置 | [code/backend/.prod.yaml](code/backend/.prod.yaml) |
+| 【后端】全量路由定义文件 | [code/backend/base_routes.json](code/backend/base_routes.json) |
 | 【后端】docker环境变量 | `code/backend/.prod.env` |
 
 ### 前端图标配置
@@ -107,6 +108,10 @@ docker-compose -f docker-compose.prod.yaml down
 - `code/frontend/public/platform-config.json`: Title
 - `code/frontend/src/views/monitor/dashboard/index.vue`: title
 
+### i18n
+
+- [这是i18n 的英文文件](./code/frontend/src/i18n/locales/en-US.json)
+- [这是i18n 的中文文件](./code/frontend/src/i18n/locales/zh-CN.json)
 
 ## 参考文档：
 - [示例readme](https://blog.csdn.net/gitblog_00002/article/details/150695762)

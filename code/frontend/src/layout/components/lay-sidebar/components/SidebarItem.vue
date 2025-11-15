@@ -7,6 +7,7 @@ import { useNav } from "@/layout/hooks/useNav";
 import SidebarLinkItem from "./SidebarLinkItem.vue";
 import SidebarExtraIcon from "./SidebarExtraIcon.vue";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { useI18n } from 'vue-i18n';
 import {
   type PropType,
   type CSSProperties,
@@ -23,6 +24,7 @@ import ArrowRight from "@iconify-icons/ep/arrow-right-bold";
 
 const attrs = useAttrs();
 const { layout, isCollapse, tooltipEffect, getDivStyle } = useNav();
+const { t } = useI18n();
 
 const props = defineProps({
   item: {
@@ -101,6 +103,11 @@ function resolvePath(routePath) {
     return posix.resolve(props.basePath, routePath);
   }
 }
+
+function getTranslatedTitle(titleKey: string) {
+  if (!titleKey) return '';
+  return t(titleKey);
+}
 </script>
 
 <template>
@@ -145,7 +152,7 @@ function resolvePath(routePath) {
         truncated
         class="!w-full !pl-4 !text-inherit"
       >
-        {{ onlyOneChild.meta.title }}
+        {{ getTranslatedTitle(onlyOneChild.meta.title) }}
       </el-text>
 
       <template #title>
@@ -157,7 +164,7 @@ function resolvePath(routePath) {
             }"
             class="!w-full !text-inherit"
           >
-            {{ onlyOneChild.meta.title }}
+            {{ getTranslatedTitle(onlyOneChild.meta.title) }}
           </ReText>
           <SidebarExtraIcon :extraIcon="onlyOneChild.meta.extraIcon" />
         </div>
@@ -204,7 +211,7 @@ function resolvePath(routePath) {
             item.parentId === null
         }"
       >
-        {{ item.meta.title }}
+        {{ getTranslatedTitle(item.meta.title) }}
       </ReText>
       <SidebarExtraIcon v-if="!isCollapse" :extraIcon="item.meta.extraIcon" />
     </template>

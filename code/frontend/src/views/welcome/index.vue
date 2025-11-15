@@ -3,6 +3,9 @@ defineOptions({
   name: "Welcome"
 });
 
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+
 import { getConfig } from "@/config";
 
 const TITLE = getConfig("Title");
@@ -13,7 +16,7 @@ const TITLE = getConfig("Title");
     <h1>{{ TITLE }}</h1>
 
     <div>
-      欢迎来到{{ TITLE }}
+      {{ t('page.title.welcome') }} {{ TITLE }}
     </div>
   </el-card>
 </template>

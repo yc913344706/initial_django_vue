@@ -1,13 +1,13 @@
 <template>
   <div class="system-page" v-if="hasPerms('system.userList:read')">
-    <!-- 搜索区域 -->
+    <!-- {{ t('page.user.searchSection') }} -->
     <el-card class="search-card">
       <div class="search-form">
         <div class="form-item">
-          <span class="label">关键词</span>
+          <span class="label">{{ t('page.user.keyword') }}</span>
           <el-input
             v-model="searchForm.keyword"
-            placeholder="搜索用户名/昵称/手机号/邮箱"
+            :placeholder="t('page.user.searchUserPlaceholder')"
             clearable
             class="search-input"
             @keyup.enter="handleSearch"
@@ -17,25 +17,25 @@
         <div class="form-item button-group">
           <el-button type="primary" @click="handleSearch">
             <el-icon><Search /></el-icon>
-            搜索
+            {{ t('button.search') }}
           </el-button>
-          <el-button @click="resetSearch">重置</el-button>
-          <el-button 
-            type="danger" 
-            @click="handleBatchDelete" 
+          <el-button @click="resetSearch">{{ t('button.reset') }}</el-button>
+          <el-button
+            type="danger"
+            @click="handleBatchDelete"
             :disabled="!selectedUsers.length"
             v-if="hasPerms('system.userList:delete')"
-          >批量删除</el-button>
-          <el-button 
-            type="primary" 
+          >{{ t('button.batchDelete') }}</el-button>
+          <el-button
+            type="primary"
             @click="handleAdd"
             v-if="hasPerms('system.userList:create')"
-          >新增</el-button>
+          >{{ t('button.create') }}</el-button>
         </div>
       </div>
     </el-card>
 
-    <!-- 表格区域 -->
+    <!-- {{ t('page.user.tableSection') }} -->
     <el-card class="table-card">
       <el-table
         v-loading="loading"
@@ -44,26 +44,26 @@
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="username" label="用户名" />
-        <el-table-column prop="nickname" label="昵称" />
-        <el-table-column prop="is_active" label="状态">
+        <el-table-column prop="username" :label="t('field.username')" />
+        <el-table-column prop="nickname" :label="t('field.nickname')" />
+        <el-table-column prop="is_active" :label="t('field.status')">
             <template #default="{ row }">
               <el-tag :type="row.is_active ? 'success' : 'danger'">
-                {{ row.is_active ? '启用' : '禁用' }}
+                {{ row.is_active ? t('common.enabled') : t('common.disabled') }}
               </el-tag>
             </template>
           </el-table-column>
-        <el-table-column prop="phone" label="手机号" />
-        <el-table-column prop="email" label="邮箱" />
-        <el-table-column label="操作" width="400">
+        <el-table-column prop="phone" :label="t('field.phone')" />
+        <el-table-column prop="email" :label="t('field.email')" />
+        <el-table-column :label="t('table.actions')" width="400">
           <template #default="scope">
-            <el-button type="info" size="small" @click="handleViewDetail(scope.row)">查看详情</el-button>
-            <el-button 
-              type="danger" 
-              size="small" 
-              @click="handleDelete(scope.row)" 
+            <el-button type="info" size="small" @click="handleViewDetail(scope.row)">{{ t('button.detail') }}</el-button>
+            <el-button
+              type="danger"
+              size="small"
+              @click="handleDelete(scope.row)"
               v-if="hasPerms('system.user:delete')"
-            >删除</el-button>
+            >{{ t('button.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -81,53 +81,53 @@
       </div>
     </el-card>
 
-    <!-- 新增/编辑对话框 -->
+    <!-- {{ t('page.user.addEditDialog') }} -->
     <el-dialog
       v-model="dialogVisible"
-      :title="dialogType === 'add' ? '新增用户' : '编辑用户'"
+      :title="dialogType === 'add' ? t('dialog.title.create') : t('dialog.title.edit')"
       width="50%"
     >
       <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="form.username" placeholder="请输入用户名" />
+        <el-form-item :label="t('field.username')" prop="username">
+          <el-input v-model="form.username" :placeholder="t('page.user.enterUsername')" />
         </el-form-item>
-        <el-form-item label="昵称" prop="nickname">
-          <el-input v-model="form.nickname" placeholder="请输入昵称" />
+        <el-form-item :label="t('field.nickname')" prop="nickname">
+          <el-input v-model="form.nickname" :placeholder="t('page.user.enterNickname')" />
         </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="form.phone" placeholder="请输入手机号" />
+        <el-form-item :label="t('field.phone')" prop="phone">
+          <el-input v-model="form.phone" :placeholder="t('page.user.enterPhone')" />
         </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="form.email" placeholder="请输入邮箱" />
+        <el-form-item :label="t('field.email')" prop="email">
+          <el-input v-model="form.email" :placeholder="t('page.user.enterEmail')" />
         </el-form-item>
-        <el-form-item label="密码" prop="password" v-if="dialogType === 'add'">
-          <el-input v-model="form.password" type="password" placeholder="请输入密码" />
+        <el-form-item :label="t('field.password')" prop="password" v-if="dialogType === 'add'">
+          <el-input v-model="form.password" type="password" :placeholder="t('page.user.enterPassword')" />
         </el-form-item>
-        <el-form-item label="状态" prop="is_active">
+        <el-form-item :label="t('field.status')" prop="is_active">
           <el-switch v-model="form.is_active" />
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">确定</el-button>
+          <el-button @click="dialogVisible = false">{{ t('button.cancel') }}</el-button>
+          <el-button type="primary" @click="handleSubmit">{{ t('button.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
 
-    <!-- 权限管理对话框 -->
+    <!-- {{ t('page.user.permissionManagement') }}对话框 -->
     <el-dialog
       v-model="authDialogVisible"
-      title="权限管理"
+      :title="t('page.user.permissionManagement')"
       width="70%"
     >
       <el-form :model="authForm" label-width="120px">
-        <el-form-item label="角色">
+        <el-form-item :label="t('field.role')">
           <el-select
             v-model="authForm.roles"
             multiple
             filterable
-            placeholder="请选择角色"
+            :placeholder="t('page.user.selectRolePlaceholder')"
             style="width: 100%"
           >
             <el-option
@@ -138,12 +138,12 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="权限">
+        <el-form-item :label="t('field.permission')">
           <el-select
             v-model="authForm.permissions"
             multiple
             filterable
-            placeholder="请选择权限"
+            :placeholder="t('page.user.selectPermissionPlaceholder')"
             style="width: 100%"
           >
             <el-option
@@ -157,8 +157,8 @@
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="authDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmitAuth">确定</el-button>
+          <el-button @click="authDialogVisible = false">{{ t('button.cancel') }}</el-button>
+          <el-button type="primary" @click="handleSubmitAuth">{{ t('button.confirm') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -175,6 +175,8 @@ import { hasPerms } from "@/utils/auth";
 import router from '@/router'
 import { Search } from '@element-plus/icons-vue'
 import '@/style/system.scss'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 interface UserForm {
   uuid?: string
@@ -216,13 +218,13 @@ const selectedUsers = ref<string[]>([])
 
 const rules = {
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' }
+    { required: true, message: t('page.user.enterUsername'), trigger: 'blur' }
   ],
   nickname: [
-    { required: true, message: '请输入昵称', trigger: 'blur' }
+    { required: true, message: t('page.user.enterNickname'), trigger: 'blur' }
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' }
+    { required: true, message: t('page.user.enterPassword'), trigger: 'blur' }
   ]
 }
 
@@ -255,7 +257,7 @@ const getUserList = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error(`获取用户列表失败。${error.msg || error}`)
+    ElMessage.error(`${t('message.getUserListFailed')}。${error.msg || error}`)
   } finally {
     loading.value = false
   }
@@ -271,7 +273,7 @@ const getRoleList = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error(`获取角色列表失败。${error.msg || error}`)
+    ElMessage.error(`${t('message.getRoleListFailed')}。${error.msg || error}`)
   }
 }
 
@@ -285,7 +287,7 @@ const getPermissionList = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error(`获取权限列表失败。${error.msg || error}`)
+    ElMessage.error(`${t('message.getPermissionListFailed')}。${error.msg || error}`)
   }
 }
 
@@ -313,17 +315,17 @@ const handleViewDetail = (row: UserForm) => {
 
 // 删除用户
 const handleDelete = (row: UserForm) => {
-  ElMessageBox.confirm('确定删除该用户吗？', '提示', {
+  ElMessageBox.confirm(t('message.deleteConfirm'), t('common.tip'), {
     type: 'warning'
   }).then(async () => {
     try {
       await http.request('delete', apiMap.user.user, {
         data: { uuid: row.uuid }
       })
-      ElMessage.success('删除成功')
+      ElMessage.success(t('message.deleteSuccess'))
       getUserList()
     } catch (error) {
-      ElMessage.error(`删除失败。${error.msg || error}`)
+      ElMessage.error(`${t('message.deleteFailed')}。${error.msg || error}`)
     }
   })
 }
@@ -338,14 +340,14 @@ const handleSubmit = async () => {
         if (dialogType.value === 'add') {
           const res = await http.request('post', apiMap.user.user, { data: form.value })
           if (res.success) {
-            ElMessage.success('新增成功')
+            ElMessage.success(t('message.createSuccess'))
           } else {
             ElMessage.error(res.msg)
           }
         } else {
           const res = await http.request('put', apiMap.user.user, { data: { ...form.value, uuid: form.value.uuid } })
           if (res.success) {
-            ElMessage.success('编辑成功')
+            ElMessage.success(t('message.editSuccess'))
           } else {
             ElMessage.error(res.msg)
           }
@@ -353,7 +355,7 @@ const handleSubmit = async () => {
         dialogVisible.value = false
         getUserList()
       } catch (error) {
-        ElMessage.error(dialogType.value === 'add' ? `新增失败。${error.msg || error}` : `编辑失败。${error.msg || error}`)
+        ElMessage.error(`${dialogType.value === 'add' ? t('message.createFailed') : t('message.editFailed')}。${error.msg || error}`)
       }
     }
   })
@@ -370,14 +372,14 @@ const handleSubmitAuth = async () => {
       }
     })
     if (res.success) {
-      ElMessage.success('更新成功')
+      ElMessage.success(t('message.updateSuccess'))
       authDialogVisible.value = false
       getUserList()
     } else {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error(`更新失败。${error.msg || error}`)
+    ElMessage.error(`${t('message.updateFailed')}。${error.msg || error}`)
   }
 }
 
@@ -391,16 +393,16 @@ const handleBatchDelete = async () => {
   if (!selectedUsers.value.length) return
   
   try {
-    await ElMessageBox.confirm('确定要删除选中的用户吗?', '提示', {
+    await ElMessageBox.confirm(t('message.batchDeleteConfirm'), t('common.tip'), {
       type: 'warning'
     })
-    
+
     const res = await http.request('delete', apiMap.user.userList, {
       data: { uuids: selectedUsers.value }
     })
-    
+
     if (res.success) {
-      ElMessage.success('删除成功')
+      ElMessage.success(t('message.deleteSuccess'))
       getUserList()
       selectedUsers.value = []
     } else {
@@ -408,7 +410,7 @@ const handleBatchDelete = async () => {
     }
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error(`删除失败。${error.msg || error}`)
+      ElMessage.error(`${t('message.deleteFailed')}。${error.msg || error}`)
     }
   }
 }
@@ -441,7 +443,7 @@ const resetSearch = () => {
 
 onMounted(() => {
   if (!hasPerms('system.userList:read')) {
-    ElMessage.error('您没有权限查看用户列表')
+    ElMessage.error(t('message.noPermissionToViewUserList'))
     router.push('/error/403')
   }
   getUserList()

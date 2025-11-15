@@ -9,6 +9,7 @@ import { handleAliveRoute, getTopMenu } from "@/router/utils";
 import { useSettingStoreHook } from "@/store/modules/settings";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import { usePermissionStoreHook } from "@/store/modules/permission";
+import { useI18n } from 'vue-i18n';
 import { ref, watch, unref, toRaw, nextTick, onBeforeUnmount } from "vue";
 import {
   delay,
@@ -23,6 +24,7 @@ import ArrowDown from "@iconify-icons/ri/arrow-down-s-line";
 import ArrowRightSLine from "@iconify-icons/ri/arrow-right-s-line";
 import ArrowLeftSLine from "@iconify-icons/ri/arrow-left-s-line";
 
+const { t } = useI18n();
 const {
   Close,
   route,
@@ -555,6 +557,11 @@ onBeforeUnmount(() => {
   emitter.off("tagViewsShowModel");
   emitter.off("changLayoutRoute");
 });
+
+function getTranslatedTitle(titleKey: string) {
+  if (!titleKey) return '';
+  return t(titleKey);
+}
 </script>
 
 <template>
@@ -588,7 +595,7 @@ onBeforeUnmount(() => {
             <span
               class="tag-title dark:!text-text_color_primary dark:hover:!text-primary"
             >
-              {{ item.meta.title }}
+              {{ getTranslatedTitle(item.meta.title) }}
             </span>
             <span
               v-if="
@@ -613,7 +620,7 @@ onBeforeUnmount(() => {
               <TagChrome />
             </div>
             <span class="tag-title">
-              {{ item.meta.title }}
+              {{ getTranslatedTitle(item.meta.title) }}
             </span>
             <span
               v-if="isFixedTag(item) ? false : index !== 0"

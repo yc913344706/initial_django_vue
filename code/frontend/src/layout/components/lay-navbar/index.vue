@@ -215,7 +215,7 @@ const confirmChangePassword = async () => {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    min-width: 280px;
+    min-width: 30vw;
     height: 48px;
     color: #000000d9;
 

@@ -15,6 +15,7 @@ import { usePermissionStoreHook } from "@/store/modules/permission";
 import { userKey } from "@/utils/auth";
 import ExitFullscreen from "@iconify-icons/ri/fullscreen-exit-fill";
 import Fullscreen from "@iconify-icons/ri/fullscreen-fill";
+import { useI18n } from 'vue-i18n';
 
 const errorInfo =
   "The current routing configuration is incorrect, please check the configuration";
@@ -75,6 +76,7 @@ export function useNav() {
     return $storage?.layout?.layout;
   });
 
+  const { t } = useI18n();
   const title = computed(() => {
     return $config.Title;
   });
@@ -82,8 +84,9 @@ export function useNav() {
   /** 动态title */
   function changeTitle(meta: routeMetaType) {
     const Title = getConfig().Title;
-    if (Title) document.title = `${meta.title} | ${Title}`;
-    else document.title = meta.title;
+    const translatedTitle = meta.title ? t(meta.title) : '';
+    if (Title) document.title = `${translatedTitle} | ${Title}`;
+    else document.title = translatedTitle;
   }
 
   /** 退出登录 */

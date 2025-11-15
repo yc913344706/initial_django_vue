@@ -7,7 +7,7 @@ export default [
     name: "Login",
     component: () => import("@/views/login/index.vue"),
     meta: {
-      title: "登录",
+      title: "page.title.login",
       showLink: false,
       rank: 101
     }

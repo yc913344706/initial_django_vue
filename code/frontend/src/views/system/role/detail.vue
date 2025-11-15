@@ -3,32 +3,32 @@
     <el-card class="box-card">
       <template #header>
         <div class="card-header">
-          <span>角色详情</span>
+          <span>{{ $t('page.role.detail') }}</span>
           <div>
-            <el-button type="primary" @click="handleEdit" v-if="!isEditing && hasPerms('system.role:update')">编辑</el-button>
+            <el-button type="primary" @click="handleEdit" v-if="!isEditing && hasPerms('system.role:update')">{{ $t('common.edit') }}</el-button>
             <el-button @click="$router.back()"
-            >返回</el-button>
+            >{{ $t('common.back') }}</el-button>
           </div>
         </div>
       </template>
 
       <template v-if="isEditing && hasPerms('system.role:update')">
         <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
-          <el-form-item label="角色名称" prop="name">
-            <el-input v-model="form.name" placeholder="请输入角色名称" />
+          <el-form-item :label="$t('page.role.name')" prop="name">
+            <el-input v-model="form.name" :placeholder="$t('page.role.enterName')" />
           </el-form-item>
-          <el-form-item label="角色代码" prop="code">
-            <el-input v-model="form.code" placeholder="请输入角色代码" />
+          <el-form-item :label="$t('page.role.code')" prop="code">
+            <el-input v-model="form.code" :placeholder="$t('page.role.enterCode')" />
           </el-form-item>
-          <el-form-item label="描述" prop="description">
-            <el-input v-model="form.description" type="textarea" placeholder="请输入描述" />
+          <el-form-item :label="$t('page.role.description')" prop="description">
+            <el-input v-model="form.description" type="textarea" :placeholder="$t('page.role.enterDescription')" />
           </el-form-item>
-          <el-form-item label="权限">
+          <el-form-item :label="$t('page.role.permission')">
             <el-select
               v-model="form.permissions"
               multiple
               filterable
-              placeholder="请选择权限"
+              :placeholder="$t('page.user.selectPermissionPlaceholder')"
               style="width: 100%"
             >
               <el-option
@@ -40,56 +40,56 @@
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="handleSubmit">保存</el-button>
-            <el-button @click="handleCancel">取消</el-button>
+            <el-button type="primary" @click="handleSubmit">{{ $t('common.save') }}</el-button>
+            <el-button @click="handleCancel">{{ $t('common.cancel') }}</el-button>
           </el-form-item>
         </el-form>
       </template>
 
       <template v-if="!isEditing && hasPerms('system.role:read')">
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="角色名称">{{ roleInfo.name }}</el-descriptions-item>
-          <el-descriptions-item label="角色代码">{{ roleInfo.code }}</el-descriptions-item>
-          <el-descriptions-item label="描述">{{ roleInfo.description }}</el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{ roleInfo.created_time }}</el-descriptions-item>
-          <el-descriptions-item label="更新时间">{{ roleInfo.updated_time }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('page.role.name')">{{ roleInfo.name }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('page.role.code')">{{ roleInfo.code }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('page.role.description')">{{ roleInfo.description }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('page.user.createTime')">{{ roleInfo.created_time }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('page.user.updateTime')">{{ roleInfo.updated_time }}</el-descriptions-item>
         </el-descriptions>
 
-        <div class="section-title">权限列表</div>
+        <div class="section-title">{{ $t('page.role.permission') }}</div>
         <el-table :data="roleInfo.permissions" style="width: 100%; margin-bottom: 20px">
-          <el-table-column prop="name" label="权限名称">
+          <el-table-column prop="name" :label="$t('page.permission.name')">
             <template #default="{ row }">
               <el-link type="primary" @click="$router.push(`/system/permission/detail?uuid=${row.uuid}`)">{{ row.name }}</el-link>
             </template>
           </el-table-column>
-          <el-table-column prop="description" label="描述" />
+          <el-table-column prop="description" :label="$t('page.role.description')" />
         </el-table>
 
-        <div class="section-title">授予此角色的用户列表</div>
+        <div class="section-title">{{ $t('page.role.user') }} {{ $t('common.list') }}</div>
         <el-table :data="roleInfo.users" style="width: 100%; margin-bottom: 20px">
-          <el-table-column prop="username" label="用户名">
+          <el-table-column prop="username" :label="$t('page.user.username')">
             <template #default="{ row }">
               <el-link type="primary" @click="$router.push(`/system/user/detail?uuid=${row.uuid}`)">{{ row.username }}</el-link>
             </template>
           </el-table-column>
-          <el-table-column prop="nickname" label="昵称" />
-          <el-table-column prop="is_active" label="状态">
+          <el-table-column prop="nickname" :label="$t('page.user.nickname')" />
+          <el-table-column prop="is_active" :label="$t('page.user.status')">
             <template #default="{ row }">
               <el-tag :type="row.is_active ? 'success' : 'danger'">
-                {{ row.is_active ? '启用' : '禁用' }}
+                {{ row.is_active ? $t('common.enabled') : $t('common.disabled') }}
               </el-tag>
             </template>
           </el-table-column>
         </el-table>
 
-        <div class="section-title">授予此角色的用户组列表</div>
+        <div class="section-title">{{ $t('page.group.name') }} {{ $t('common.list') }}</div>
         <el-table :data="roleInfo.groups" style="width: 100%">
-          <el-table-column prop="name" label="用户组名称">
+          <el-table-column prop="name" :label="$t('page.group.name')">
             <template #default="{ row }">
               <el-link type="primary" @click="$router.push(`/system/group/detail?uuid=${row.uuid}`)">{{ row.name }}</el-link>
             </template>
           </el-table-column>
-          <el-table-column prop="description" label="描述" />
+          <el-table-column prop="description" :label="$t('page.role.description')" />
         </el-table>
       </template>
     </el-card>
@@ -98,15 +98,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
 import { hasPerms } from "@/utils/auth";
-import router from '@/router'
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const route = useRoute()
+const router = useRouter()
 const isEditing = ref(false)
 const formRef = ref<FormInstance>()
 const roleInfo = ref({
@@ -133,10 +135,10 @@ const permissionList = ref([])
 
 const rules = {
   name: [
-    { required: true, message: '请输入角色名称', trigger: 'blur' }
+    { required: true, message: t('page.role.enterName'), trigger: 'blur' }
   ],
   code: [
-    { required: true, message: '请输入角色代码', trigger: 'blur' }
+    { required: true, message: t('page.role.enterCode'), trigger: 'blur' }
   ]
 }
 
@@ -152,7 +154,7 @@ const getRoleDetail = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error(`获取角色详情失败。${error.msg || error}`)
+    ElMessage.error(`${t('message.getRoleListFailed')}。${error.msg || error}`)
   }
 }
 
@@ -166,7 +168,7 @@ const getPermissionList = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error(`获取权限列表失败。${error.msg || error}`)
+    ElMessage.error(`${t('message.getPermissionListFailed')}。${error.msg || error}`)
   }
 }
 
@@ -190,7 +192,7 @@ const handleCancel = () => {
 // 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
-  
+
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
@@ -198,14 +200,14 @@ const handleSubmit = async () => {
           data: form.value
         })
         if (res.success) {
-          ElMessage.success('更新成功')
+          ElMessage.success(t('message.updateSuccess'))
           isEditing.value = false
           getRoleDetail()
         } else {
           ElMessage.error(res.msg)
         }
       } catch (error) {
-        ElMessage.error(`更新失败。${error.msg || error}`)
+        ElMessage.error(`${t('message.updateFailed')}。${error.msg || error}`)
       }
     }
   })
@@ -213,7 +215,7 @@ const handleSubmit = async () => {
 
 onMounted(() => {
   if (!hasPerms('system.role:read')) {
-    ElMessage.error('您没有权限查看角色详情')
+    ElMessage.error(t('message.noPermissionToAccessPage'))
     router.push('/error/403')
   }
   getRoleDetail()

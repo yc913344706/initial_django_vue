@@ -3,101 +3,101 @@
     <el-card class="box-card">
       <template #header>
         <div class="card-header">
-          <span>权限详情</span>
+          <span>{{ $t('page.permission.detail') }}</span>
           <div>
             <el-button
             type="primary"
             @click="handleEdit"
             v-if="!isEditing && hasPerms('system.permission:update')"
             >
-              编辑
+              {{ $t('common.edit') }}
             </el-button>
             <el-button
             @click="$router.back()"
-            >返回</el-button>
+            >{{ $t('common.back') }}</el-button>
           </div>
         </div>
       </template>
 
       <template v-if="isEditing && hasPerms('system.permission:update')">
         <el-form :model="form" label-width="120px" :rules="rules" ref="formRef">
-          <el-form-item label="权限名称" prop="name">
-            <el-input v-model="form.name" placeholder="请输入权限名称" />
+          <el-form-item :label="$t('page.permission.name')" prop="name">
+            <el-input v-model="form.name" :placeholder="$t('page.permission.enterName')" />
           </el-form-item>
-        <el-form-item label="权限代码" prop="code">
-          <el-input v-model="form.code" placeholder="请输入权限代码" />
+        <el-form-item :label="$t('page.permission.code')" prop="code">
+          <el-input v-model="form.code" :placeholder="$t('page.permission.enterCode')" />
         </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input v-model="form.description" type="textarea" placeholder="请输入描述" />
+        <el-form-item :label="$t('page.permission.description')" prop="description">
+          <el-input v-model="form.description" type="textarea" :placeholder="$t('page.permission.enterDescription')" />
         </el-form-item>
-        <el-form-item label="权限JSON" prop="permission_json">
+        <el-form-item :label="$t('page.permission.json')" prop="permission_json">
           <el-input
             v-model="form.permission_json"
             type="textarea"
             :rows="10"
-            placeholder="请输入权限JSON"
+            :placeholder="$t('page.permission.enterJson')"
             @input="handleJsonInput"
           />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSubmit">保存</el-button>
-            <el-button @click="handleCancel">取消</el-button>
+          <el-button type="primary" @click="handleSubmit">{{ $t('common.save') }}</el-button>
+            <el-button @click="handleCancel">{{ $t('common.cancel') }}</el-button>
           </el-form-item>
         </el-form>
       </template>
 
       <template v-if="!isEditing && hasPerms('system.permission:read')">
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="权限名称">{{ permissionInfo.name }}</el-descriptions-item>
-          <el-descriptions-item label="权限代码">{{ permissionInfo.code }}</el-descriptions-item>
-          <el-descriptions-item label="类型">
+          <el-descriptions-item :label="$t('page.permission.name')">{{ permissionInfo.name }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('page.permission.code')">{{ permissionInfo.code }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('page.permission.type')">
             <el-tag :type="permissionInfo.is_system ? 'danger' : 'success'">
-              {{ permissionInfo.is_system ? '系统权限' : '普通权限' }}
+              {{ permissionInfo.is_system ? $t('page.permission.systemPermission') : $t('page.permission.normalPermission') }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="描述">{{ permissionInfo.description }}</el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{ permissionInfo.created_time }}</el-descriptions-item>
-          <el-descriptions-item label="更新时间">{{ permissionInfo.updated_time }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('page.permission.description')">{{ permissionInfo.description }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('page.user.createTime')">{{ permissionInfo.created_time }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('page.user.updateTime')">{{ permissionInfo.updated_time }}</el-descriptions-item>
         </el-descriptions>
 
-        <div class="section-title">权限JSON</div>
+        <div class="section-title">{{ $t('page.permission.json') }}</div>
         <pre class="json-viewer">{{ JSON.stringify(permissionInfo.permission_json, null, 2) }}</pre>
 
-        <div class="section-title">角色列表</div>
+        <div class="section-title">{{ $t('page.role.name') }} {{ $t('common.list') }}</div>
         <el-table :data="permissionInfo.roles" style="width: 100%; margin-bottom: 20px">
-          <el-table-column prop="name" label="角色名称">
+          <el-table-column prop="name" :label="$t('page.role.name')">
             <template #default="{ row }">
               <el-link type="primary" @click="$router.push(`/system/role/detail?uuid=${row.uuid}`)">{{ row.name }}</el-link>
             </template>
           </el-table-column>
-          <el-table-column prop="description" label="描述" />
+          <el-table-column prop="description" :label="$t('page.role.description')" />
         </el-table>
 
-        <div class="section-title">授予此权限的用户列表</div>
+        <div class="section-title">{{ $t('page.role.user') }} {{ $t('common.list') }}</div>
         <el-table :data="permissionInfo.users" style="width: 100%; margin-bottom: 20px">
-          <el-table-column prop="username" label="用户名">
+          <el-table-column prop="username" :label="$t('page.user.username')">
             <template #default="{ row }">
               <el-link type="primary" @click="$router.push(`/system/user/detail?uuid=${row.uuid}`)">{{ row.username }}</el-link>
             </template>
           </el-table-column>
-          <el-table-column prop="nickname" label="昵称" />
-          <el-table-column prop="is_active" label="状态">
+          <el-table-column prop="nickname" :label="$t('page.user.nickname')" />
+          <el-table-column prop="is_active" :label="$t('page.user.status')">
             <template #default="{ row }">
               <el-tag :type="row.is_active ? 'success' : 'danger'">
-                {{ row.is_active ? '启用' : '禁用' }}
+                {{ row.is_active ? $t('common.enabled') : $t('common.disabled') }}
               </el-tag>
             </template>
           </el-table-column>
         </el-table>
 
-        <div class="section-title">授予此权限的用户组列表</div>
+        <div class="section-title">{{ $t('page.group.name') }} {{ $t('common.list') }}</div>
         <el-table :data="permissionInfo.groups" style="width: 100%">
-          <el-table-column prop="name" label="用户组名称">
+          <el-table-column prop="name" :label="$t('page.group.name')">
             <template #default="{ row }">
               <el-link type="primary" @click="$router.push(`/system/group/detail?uuid=${row.uuid}`)">{{ row.name }}</el-link>
             </template>
           </el-table-column>
-          <el-table-column prop="description" label="描述" />
+          <el-table-column prop="description" :label="$t('page.group.description')" />
         </el-table>
       </template>
     </el-card>
@@ -106,15 +106,18 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
 import { hasPerms } from "@/utils/auth";
+import { useI18n } from 'vue-i18n';
 import router from '@/router'
 
+const { t } = useI18n();
 const route = useRoute()
+const routerInstance = useRouter()
 const isEditing = ref(false)
 const formRef = ref<FormInstance>()
 const permissionInfo = ref({
@@ -140,13 +143,13 @@ const form = ref({
 
 const rules = {
   name: [
-    { required: true, message: '请输入权限名称', trigger: 'blur' }
+    { required: true, message: t('page.permission.enterName'), trigger: 'blur' }
   ],
   code: [
-    { required: true, message: '请输入权限代码', trigger: 'blur' }
+    { required: true, message: t('page.permission.enterCode'), trigger: 'blur' }
   ],
   permission_json: [
-    { required: true, message: '请输入权限JSON', trigger: 'blur' },
+    { required: true, message: t('page.permission.enterJson'), trigger: 'blur' },
     { validator: validateJson, trigger: 'blur' }
   ]
 }
@@ -154,13 +157,13 @@ const rules = {
 // JSON验证
 function validateJson(rule: any, value: string, callback: any) {
   if (!value) {
-    callback(new Error('请输入权限JSON'))
+    callback(new Error(t('page.permission.enterJson')))
   } else {
     try {
       JSON.parse(value)
       callback()
     } catch (error) {
-      callback(new Error('JSON格式不正确'))
+      callback(new Error(t('page.permission.jsonFormatError')))
     }
   }
 }
@@ -178,7 +181,7 @@ const getPermissionDetail = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error(`获取权限详情失败。${error.msg || error}`)
+    ElMessage.error(`${t('message.getPermissionListFailed')}。${error.msg || error}`)
   }
 }
 
@@ -212,7 +215,7 @@ const handleJsonInput = (value: string) => {
 // 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
-  
+
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
@@ -224,14 +227,14 @@ const handleSubmit = async () => {
           data: submitData
         })
         if (res.success) {
-          ElMessage.success('更新成功')
+          ElMessage.success(t('message.updateSuccess'))
           isEditing.value = false
           getPermissionDetail()
         } else {
           ElMessage.error(res.msg)
         }
       } catch (error) {
-        ElMessage.error(`更新失败。${error.msg || error}`)
+        ElMessage.error(`${t('message.updateFailed')}。${error.msg || error}`)
       }
     }
   })
@@ -239,8 +242,8 @@ const handleSubmit = async () => {
 
 onMounted(() => {
   if (!hasPerms('system.permission:read')) {
-    ElMessage.error('您没有权限查看权限详情')
-    router.push('/error/403')
+    ElMessage.error(t('message.noPermissionToAccessPage'))
+    routerInstance.push('/error/403')
   }
   getPermissionDetail()
 })

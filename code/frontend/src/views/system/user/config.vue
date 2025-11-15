@@ -1,11 +1,11 @@
 <template>
   <div class="system-page">
 
-    <!-- 密码强度配置 -->
+    <!-- {{ t('page.user.passwordConfig') }} -->
     <el-card class="config-card" style="margin-top: 20px;">
       <template #header>
         <div class="card-header">
-          <span class="title">密码强度配置</span>
+          <span class="title">{{ t('page.user.passwordConfig') }}</span>
         </div>
       </template>
 
@@ -16,83 +16,83 @@
         label-width="150px"
         class="config-form"
       >
-        <el-form-item label="密码最小长度" prop="min_length">
+        <el-form-item :label="t('page.user.passwordMinLength')" prop="min_length">
           <el-input-number
             v-model="passwordConfigForm.min_length"
             :min="1"
             :max="256"
-            placeholder="密码最小长度"
+            :placeholder="t('page.user.passwordMinLength')"
           />
-          <div class="form-help">密码最小长度</div>
+          <div class="form-help">{{ t('page.user.passwordMinLengthHelp') }}</div>
         </el-form-item>
 
-        <el-form-item label="密码最大长度" prop="max_length">
+        <el-form-item :label="t('page.user.passwordMaxLength')" prop="max_length">
           <el-input-number
             v-model="passwordConfigForm.max_length"
             :min="1"
             :max="256"
-            placeholder="密码最大长度"
+            :placeholder="t('page.user.passwordMaxLength')"
           />
-          <div class="form-help">密码最大长度</div>
+          <div class="form-help">{{ t('page.user.passwordMaxLengthHelp') }}</div>
         </el-form-item>
 
-        <el-form-item label="需要大写字母">
+        <el-form-item :label="t('page.user.requireUppercase')">
           <el-switch
             v-model="passwordConfigForm.require_uppercase"
-            active-text="是"
-            inactive-text="否"
+            :active-text="t('common.enabled')"
+            :inactive-text="t('common.disabled')"
           />
-          <div class="form-help">是否要求密码包含大写字母</div>
+          <div class="form-help">{{ t('page.user.requireUppercaseHelp') }}</div>
         </el-form-item>
 
-        <el-form-item label="需要小写字母">
+        <el-form-item :label="t('page.user.requireLowercase')">
           <el-switch
             v-model="passwordConfigForm.require_lowercase"
-            active-text="是"
-            inactive-text="否"
+            :active-text="t('common.enabled')"
+            :inactive-text="t('common.disabled')"
           />
-          <div class="form-help">是否要求密码包含小写字母</div>
+          <div class="form-help">{{ t('page.user.requireLowercaseHelp') }}</div>
         </el-form-item>
 
-        <el-form-item label="需要数字">
+        <el-form-item :label="t('page.user.requireNumbers')">
           <el-switch
             v-model="passwordConfigForm.require_numbers"
-            active-text="是"
-            inactive-text="否"
+            :active-text="t('common.enabled')"
+            :inactive-text="t('common.disabled')"
           />
-          <div class="form-help">是否要求密码包含数字</div>
+          <div class="form-help">{{ t('page.user.requireNumbersHelp') }}</div>
         </el-form-item>
 
-        <el-form-item label="需要特殊字符">
+        <el-form-item :label="t('page.user.requireSpecialChars')">
           <el-switch
             v-model="passwordConfigForm.require_special"
-            active-text="是"
-            inactive-text="否"
+            :active-text="t('common.enabled')"
+            :inactive-text="t('common.disabled')"
           />
-          <div class="form-help">是否要求密码包含特殊字符</div>
+          <div class="form-help">{{ t('page.user.requireSpecialCharsHelp') }}</div>
         </el-form-item>
 
-        <el-form-item label="允许的特殊字符" prop="allowed_special_chars" v-if="passwordConfigForm.require_special">
+        <el-form-item :label="t('page.user.allowedSpecialChars')" prop="allowed_special_chars" v-if="passwordConfigForm.require_special">
           <el-input
             v-model="passwordConfigForm.allowed_special_chars"
-            placeholder="允许的特殊字符"
+            :placeholder="t('page.user.allowedSpecialChars')"
             :rows="3"
             type="textarea"
           />
-          <div class="form-help">指定允许使用的特殊字符列表</div>
+          <div class="form-help">{{ t('page.user.allowedSpecialCharsHelp') }}</div>
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="handleSavePasswordConfig">保存密码强度配置</el-button>
+          <el-button type="primary" @click="handleSavePasswordConfig">{{ t('page.user.savePasswordConfig') }}</el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
-    <!-- 安全配置 -->
+    <!-- {{ t('page.user.securityConfig') }} -->
     <el-card class="config-card" style="margin-top: 20px;">
       <template #header>
         <div class="card-header">
-          <span class="title">安全配置</span>
+          <span class="title">{{ t('page.user.securityConfig') }}</span>
         </div>
       </template>
 
@@ -103,28 +103,28 @@
         label-width="150px"
         class="config-form"
       >
-        <el-form-item label="失败登录次数限制" prop="max_login_attempts">
+        <el-form-item :label="t('page.user.maxLoginAttempts')" prop="max_login_attempts">
           <el-input-number
             v-model="securityConfigForm.max_login_attempts"
             :min="1"
             :max="100"
-            placeholder="最大失败登录尝试次数"
+            :placeholder="t('page.user.maxLoginAttemptsPlaceholder')"
           />
-          <div class="form-help">用户登录失败达到此次数后将被锁定</div>
+          <div class="form-help">{{ t('page.user.maxLoginAttemptsHelp') }}</div>
         </el-form-item>
 
-        <el-form-item label="登录锁定时间(分钟)" prop="lockout_duration">
+        <el-form-item :label="t('page.user.lockoutDuration')" prop="lockout_duration">
           <el-input-number
             v-model="securityConfigForm.lockout_duration"
             :min="1"
             :max="1440"
-            placeholder="锁定时间(分钟)"
+            :placeholder="t('page.user.lockoutDurationPlaceholder')"
           />
-          <div class="form-help">账户被锁定的时间长度</div>
+          <div class="form-help">{{ t('page.user.lockoutDurationHelp') }}</div>
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="handleSaveSecurityConfig">保存安全配置</el-button>
+          <el-button type="primary" @click="handleSaveSecurityConfig">{{ t('page.user.saveSecurityConfig') }}</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -132,7 +132,7 @@
     <el-card class="config-card">
       <template #header>
         <div class="card-header">
-          <span class="title">LDAP配置</span>
+          <span class="title">{{ t('page.user.ldapConfig') }}</span>
         </div>
       </template>
 
@@ -143,102 +143,102 @@
         label-width="150px"
         class="config-form"
       >
-        <el-form-item label="启用LDAP认证" prop="enabled">
+        <el-form-item :label="t('page.user.enableLdapAuth')" prop="enabled">
           <el-switch
             v-model="ldapConfigForm.enabled"
-            active-text="启用"
-            inactive-text="禁用"
+            :active-text="t('common.enabled')"
+            :inactive-text="t('common.disabled')"
           />
         </el-form-item>
 
-        <el-form-item label="LDAP类型" prop="ldap_type">
+        <el-form-item :label="t('page.user.ldapType')" prop="ldap_type">
           <el-select
             v-model="ldapConfigForm.ldap_type"
-            placeholder="选择LDAP类型"
+            :placeholder="t('page.user.ldapTypePlaceholder')"
             style="width: 100%"
             @change="handleLdapTypeChange"
           >
-            <el-option label="Active Directory" value="ad" />
-            <el-option label="OpenLDAP" value="openldap" />
+            <el-option :label="t('page.user.activeDirectory')" value="ad" />
+            <el-option :label="t('page.user.openldap')" value="openldap" />
           </el-select>
-          <div class="form-help">选择您使用的LDAP服务器类型</div>
+          <div class="form-help">{{ t('page.user.ldapTypeHelp') }}</div>
         </el-form-item>
 
-        <el-form-item label="服务器主机" prop="server_host">
+        <el-form-item :label="t('page.user.serverHost')" prop="server_host">
           <el-input
             v-model="ldapConfigForm.server_host"
-            placeholder="例如: ldap.example.com"
+            :placeholder="t('page.user.serverHostPlaceholder')"
           />
         </el-form-item>
 
-        <el-form-item label="服务器端口" prop="server_port">
+        <el-form-item :label="t('page.user.serverPort')" prop="server_port">
           <el-input
             v-model="ldapConfigForm.server_port"
-            placeholder="端口号"
+            :placeholder="t('page.user.serverPortPlaceholder')"
           />
           <!-- <el-input-number
             v-model="ldapConfigForm.server_port"
             :min="1"
             :max="65535"
-            placeholder="端口号"
+            :placeholder="t('page.user.serverPortPlaceholder')"
             style="width: 100%"
           /> -->
         </el-form-item>
 
-        <el-form-item label="基础DN" prop="base_dn">
+        <el-form-item :label="t('page.user.baseDn')" prop="base_dn">
           <el-input
             v-model="ldapConfigForm.base_dn"
-            placeholder="例如: dc=example,dc=com"
+            :placeholder="t('page.user.baseDnPlaceholder')"
           />
         </el-form-item>
 
-        <el-form-item label="管理员DN" prop="admin_dn">
+        <el-form-item :label="t('page.user.adminDn')" prop="admin_dn">
           <el-input
             v-model="ldapConfigForm.admin_dn"
-            placeholder="例如: cn=admin,dc=example,dc=com"
+            :placeholder="t('page.user.adminDnPlaceholder')"
           />
         </el-form-item>
 
-        <el-form-item label="管理员密码" prop="admin_password">
+        <el-form-item :label="t('page.user.adminPassword')" prop="admin_password">
           <el-input
             v-model="ldapConfigForm.admin_password"
             type="password"
             show-password
-            placeholder="管理员密码"
+            :placeholder="t('page.user.adminPasswordPlaceholder')"
           />
         </el-form-item>
 
-        <el-form-item label="用户搜索过滤器" prop="user_search_filter">
+        <el-form-item :label="t('page.user.userSearchFilter')" prop="user_search_filter">
           <el-input
             v-model="ldapConfigForm.user_search_filter"
-            placeholder="例如: (objectClass=user)"
+            :placeholder="t('page.user.userSearchFilterPlaceholder')"
           />
         </el-form-item>
 
-        <el-form-item label="用户名属性" prop="username_attr">
+        <el-form-item :label="t('page.user.usernameAttr')" prop="username_attr">
           <el-input
             v-model="ldapConfigForm.username_attr"
-            placeholder="例如: sAMAccountName"
+            :placeholder="t('page.user.usernameAttrPlaceholder')"
           />
         </el-form-item>
 
-        <el-form-item label="显示名属性" prop="display_name_attr">
+        <el-form-item :label="t('page.user.displayNameAttr')" prop="display_name_attr">
           <el-input
             v-model="ldapConfigForm.display_name_attr"
-            placeholder="例如: displayName"
+            :placeholder="t('page.user.displayNameAttrPlaceholder')"
           />
         </el-form-item>
 
-        <el-form-item label="邮箱属性" prop="email_attr">
+        <el-form-item :label="t('page.user.emailAttr')" prop="email_attr">
           <el-input
             v-model="ldapConfigForm.email_attr"
-            placeholder="例如: mail"
+            :placeholder="t('page.user.emailAttrPlaceholder')"
           />
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="handleSaveLdapConfig">保存配置</el-button>
-          <el-button @click="handleTestConnection">测试连接</el-button>
+          <el-button type="primary" @click="handleSaveLdapConfig">{{ t('page.user.saveLdapConfig') }}</el-button>
+          <el-button @click="handleTestConnection">{{ t('page.user.testConnection') }}</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -251,6 +251,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { http } from '@/utils/http'
 import { apiMap } from '@/config/api'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 interface LdapConfig {
   enabled: boolean
@@ -317,36 +319,36 @@ const passwordConfigFormRef = ref<FormInstance>()
 // 密码配置验证规则
 const passwordConfigRules = ref<FormRules>({
   min_length: [
-    { required: true, message: '请输入密码最小长度', trigger: 'blur' }
+    { required: true, message: t('page.user.passwordMinLengthRequired'), trigger: 'blur' }
   ],
   max_length: [
-    { required: true, message: '请输入密码最大长度', trigger: 'blur' }
+    { required: true, message: t('page.user.passwordMaxLengthRequired'), trigger: 'blur' }
   ],
   allowed_special_chars: [
-    { required: true, message: '请输入允许的特殊字符', trigger: 'blur' }
+    { required: true, message: t('page.user.allowedSpecialCharsRequired'), trigger: 'blur' }
   ]
 })
 
 // LDAP配置验证规则
 const ldapConfigRules = ref<FormRules>({
   server_host: [
-    { required: true, message: '请输入服务器地址', trigger: 'blur' }
+    { required: true, message: t('page.user.serverHostRequired'), trigger: 'blur' }
   ],
   base_dn: [
-    { required: true, message: '请输入基础DN', trigger: 'blur' }
+    { required: true, message: t('page.user.baseDnRequired'), trigger: 'blur' }
   ],
   admin_dn: [
-    { required: true, message: '请输入管理员DN', trigger: 'blur' }
+    { required: true, message: t('page.user.adminDnRequired'), trigger: 'blur' }
   ]
 })
 
 // 安全配置验证规则
 const securityConfigRules = ref<FormRules>({
   max_login_attempts: [
-    { required: true, message: '请输入最大登录尝试次数', trigger: 'blur' }
+    { required: true, message: t('page.user.maxLoginAttemptsRequired'), trigger: 'blur' }
   ],
   lockout_duration: [
-    { required: true, message: '请输入锁定时间', trigger: 'blur' }
+    { required: true, message: t('page.user.lockoutDurationRequired'), trigger: 'blur' }
   ]
 })
 
@@ -370,7 +372,7 @@ const getPasswordConfig = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error: any) {
-    ElMessage.error(`获取密码配置失败。${error.msg || error}`)
+    ElMessage.error(`${t('message.getPasswordConfigFailed')}。${error.msg || error}`)
   }
 }
 
@@ -388,7 +390,7 @@ const getLdapConfig = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error: any) {
-    ElMessage.error(`获取LDAP配置失败。${error.msg || error}`)
+    ElMessage.error(`${t('message.getLdapConfigFailed')}。${error.msg || error}`)
   }
 }
 
@@ -425,7 +427,7 @@ const getSecurityConfig = async () => {
       ElMessage.error(res.msg)
     }
   } catch (error) {
-    ElMessage.error(`获取安全配置失败。${error.msg || error}`)
+    ElMessage.error(`${t('message.getSecurityConfigFailed')}。${error.msg || error}`)
   }
 }
 
@@ -442,12 +444,12 @@ const handleSavePasswordConfig = async () => {
 
         const res = await http.request('post', apiMap.user.passwordConfig, { data: configToSave })
         if (res.success) {
-          ElMessage.success('密码配置保存成功')
+          ElMessage.success(t('message.passwordConfigSaved'))
         } else {
           ElMessage.error(res.msg)
         }
       } catch (error) {
-        ElMessage.error(`保存密码配置失败。${error.msg || error}`)
+        ElMessage.error(`${t('message.savePasswordConfigFailed')}。${error.msg || error}`)
       }
     }
   })
@@ -466,12 +468,12 @@ const handleSaveLdapConfig = async () => {
 
         const res = await http.request('post', apiMap.ldap.config, { data: configToSave })
         if (res.success) {
-          ElMessage.success('LDAP配置保存成功')
+          ElMessage.success(t('message.ldapConfigSaved'))
         } else {
           ElMessage.error(res.msg)
         }
       } catch (error) {
-        ElMessage.error(`保存LDAP配置失败。${error.msg || error}`)
+        ElMessage.error(`${t('message.saveLdapConfigFailed')}。${error.msg || error}`)
       }
     }
   })
@@ -490,12 +492,12 @@ const handleTestConnection = async () => {
 
         const res = await http.request('post', apiMap.ldap.testConnection, { data: configToTest })
         if (res.success) {
-          ElMessage.success('LDAP连接测试成功')
+          ElMessage.success(t('message.ldapConnectionTestSuccess'))
         } else {
-          ElMessage.error(res.msg || 'LDAP连接测试失败')
+          ElMessage.error(res.msg || t('message.ldapConnectionTestFailed'))
         }
       } catch (error) {
-        ElMessage.error(`LDAP连接测试失败。${error.msg || error}`)
+        ElMessage.error(`${t('message.ldapConnectionTestFailed')}。${error.msg || error}`)
       }
     }
   })
@@ -512,12 +514,12 @@ const handleSaveSecurityConfig = async () => {
         res = await http.request('post', apiMap.security.config, { data: securityConfigForm.value })
         console.debug(res)
         if (res.success) {
-          ElMessage.success('安全配置保存成功')
+          ElMessage.success(t('message.securityConfigSaved'))
         } else {
           ElMessage.error(res.msg)
         }
       } catch (error) {
-        ElMessage.error(`保存安全配置失败。${error.msg || error}`)
+        ElMessage.error(`${t('message.saveSecurityConfigFailed')}。${error.msg || error}`)
       }
     }
   })

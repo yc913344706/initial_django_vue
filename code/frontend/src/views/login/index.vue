@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { getConfig } from "@/config";
+
+const TITLE = getConfig("Title");
 import Motion from "./utils/motion";
 import { useRouter } from "vue-router";
 import { message } from "@/utils/message";

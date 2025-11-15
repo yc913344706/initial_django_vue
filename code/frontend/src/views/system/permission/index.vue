@@ -380,7 +380,7 @@ const resetSearch = () => {
 
 onMounted(() => {
   if (!hasPerms('system.permissionList:read')) {
-    ElMessage.error('您没有权限查看权限列表')
+    ElMessage.error(t('message.noPermissionToAccessPage'))
     router.push('/error/403')
   }
   getPermissionList();
