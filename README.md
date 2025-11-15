@@ -1,120 +1,123 @@
-## 目录
+[English](./README.md) | [中文](./README_CN.md)
 
-- [目录](#目录)
-- [📖 项目描述](#-项目描述)
-- [✨ 功能特性](#-功能特性)
-- [🚀 快速开始](#-快速开始)
-  - [环境要求](#环境要求)
-  - [启动](#启动)
-  - [访问](#访问)
-  - [内置用户](#内置用户)
-  - [更多命令](#更多命令)
-- [一些配置](#一些配置)
-  - [环境变量配置](#环境变量配置)
-  - [前端图标配置](#前端图标配置)
-  - [系统标题配置](#系统标题配置)
+## Table of Contents
+
+- [Table of Contents](#table-of-contents)
+- [📖 Project Description](#-project-description)
+- [✨ Features](#-features)
+- [🚀 Quick Start](#-quick-start)
+  - [Requirements](#requirements)
+  - [Start](#start)
+  - [Access](#access)
+  - [Built-in User](#built-in-user)
+  - [More Commands](#more-commands)
+- [Some Configurations](#some-configurations)
+  - [Environment Variable Configuration](#environment-variable-configuration)
+  - [Frontend Icon Configuration](#frontend-icon-configuration)
+  - [System Title Configuration](#system-title-configuration)
   - [i18n](#i18n)
-- [参考文档：](#参考文档)
+- [Reference Documents:](#reference-documents)
 
-## 📖 项目描述
+## 📖 Project Description
 
-- 最小化全栈开发基础框架，支持 RBAC 权限管理系统。包括前端、后端、nginx、mysql、redis。
-- 技术栈： `Python 3.13`、`Django 5.2`、`Vue 3.5`。
-- 代码结构见[这里](./docs/code_arch.md)。
+- Minimal full-stack development framework with RBAC permission management system. Includes frontend, backend, nginx, mysql, redis.
+- Technology stack: `Python 3.13`, `Django 5.2`, `Vue 3.5`.
+- Code structure can be found [here](./docs/code_arch.md).
 
-## ✨ 功能特性
- 
-**用户体系**
+## ✨ Features
 
-- ✅ 本地用户：增删改查
-- ✅ 本地用户：用户自行修改密码、管理员重置密码
-- ✅ 本地用户：密码复杂度配置、登录锁定配置
-- ✅ 密码加密存储（本地用户密码无法逆向破解）
-- ✅ 允许配置对接 LDAP 用户（ldap用户只记录，不存储、修改用户密码）
+**User System**
 
-**权限体系**
+- ✅ Local Users: Create, read, update, delete
+- ✅ Local Users: Self-service password change, admin password reset
+- ✅ Local Users: Password complexity configuration, login lock configuration
+- ✅ Encrypted password storage (local user passwords cannot be reverse-engineered)
+- ✅ LDAP user integration support (LDAP users are recorded but passwords are not stored or modified)
 
-- ✅ 基础RABC：管理：权限（JSON格式）、角色、用户组（可继承）
-- ✅ json格式权限，可以参考已有的系统默认权限进行新权限配置。（前端、后端权限均可配置）
-- ✅ 系统权限不允许删除
+**Permission System**
 
-**审计日志**
+- ✅ Basic RBAC: Manage permissions (JSON format), roles, user groups (inheritance supported)
+- ✅ JSON format permissions, can refer to existing system default permissions for new permission configurations. (Frontend and backend permissions can be configured)
+- ✅ System permissions cannot be deleted
 
-- ✅ 登录日志：用户登录、退出、失败登录
-- ✅ 操作日志：以模型为维度，记录所有模型的增删改。
+**Audit Logs**
 
-**前端特性**
+- ✅ Login logs: User login, logout, failed login
+- ✅ Operation logs: Record all model additions, deletions, and modifications by model dimension.
 
-- ✅ 动态菜单（根据权限动态生成）
+**Frontend Features**
 
-## 🚀 快速开始
+- ✅ Dynamic menu (dynamically generated based on permissions)
+- ✅ Chinese/English switch
 
-### 环境要求
+## 🚀 Quick Start
+
+### Requirements
 
 - `Docker Engine 18.06.0`
-- `Docker Compose 3.7+` 
+- `Docker Compose 3.7+`
 
-### 启动
+### Start
 
-> 注意：
+> Note:
 >
-> - 最好在服务器使用。
-> - 个人电脑使用，配置不高的情况下，前端打包时，电脑负载会很高。
+> - Best used on a server.
+> - When using on a personal computer, the computer load will be very high during frontend package building if the configuration is not high.
 
 ```bash
 docker-compose -f docker-compose.prod.yaml up -d
 ```
 
-### 访问
+### Access
 
 http://localhost:8080/
 
-### 内置用户
+### Built-in User
 
-| 角色 | 账号 | 密码 |
-| ---- | ---- | ---- |
-| 管理员 | admin | Admin@123 |
+| Role | Account | Password |
+| ---- | ------- | -------- |
+| Administrator | admin | Admin@123 |
 
-### 更多命令
+### More Commands
 
 ```bash
-# 停止
+# Stop
 docker-compose -f docker-compose.prod.yaml down
 
-# 清理数据
+# Clean data
 ./clean.sh
 ```
 
-## 一些配置
+## Some Configurations
 
-### 环境变量配置
+### Environment Variable Configuration
 
-| 作用 | 文件 |
-| ---- | ---- |
-| 【前端】vue工程配置 | [./code/frontend/.env.production](./code/frontend/.env.production) |
-| 【前端】Pure Admin配置 | [./code/frontend/public/platform-config.json](./code/frontend/public/platform-config.json) <br/> [./code/frontend/public/platform-config.json.explain](./code/frontend/public/platform-config.json.explain) |
-| 【后端】业务配置 | [code/backend/.prod.yaml](code/backend/.prod.yaml) |
-| 【后端】全量路由定义文件 | [code/backend/base_routes.json](code/backend/base_routes.json) |
-| 【后端】docker环境变量 | `code/backend/.prod.env` |
+| Purpose | File |
+| ----- | ---- |
+| 【Frontend】Vue project configuration | [./code/frontend/.env.production](./code/frontend/.env.production) |
+| 【Frontend】Pure Admin configuration | [./code/frontend/public/platform-config.json](./code/frontend/public/platform-config.json) <br/> [./code/frontend/public/platform-config.json.explain](./code/frontend/public/platform-config.json.explain) |
+| 【Backend】Business configuration | [code/backend/.prod.yaml](code/backend/.prod.yaml) |
+| 【Backend】Full route definition file | [code/backend/base_routes.json](code/backend/base_routes.json) |
+| 【Backend】Docker environment variables | `code/backend/.prod.env` |
 
-### 前端图标配置
+### Frontend Icon Configuration
 
-- 图标：`code/frontend/public/favicon.ico`
-- logo：`code/frontend/public/logo.png`
-- user-avatar：`code/frontend/src/assets/user.jpg`
+- Favicon: `code/frontend/public/favicon.ico`
+- Logo: `code/frontend/public/logo.png`
+- User avatar: `code/frontend/src/assets/user.jpg`
 
-### 系统标题配置
+### System Title Configuration
 
 - `code/frontend/public/platform-config.json`: Title
 - `code/frontend/src/views/monitor/dashboard/index.vue`: title
 
 ### i18n
 
-- [这是i18n 的英文文件](./code/frontend/src/i18n/locales/en-US.json)
-- [这是i18n 的中文文件](./code/frontend/src/i18n/locales/zh-CN.json)
+- [This is the i18n English file](./code/frontend/src/i18n/locales/en-US.json)
+- [This is the i18n Chinese file](./code/frontend/src/i18n/locales/zh-CN.json)
 
-## 参考文档：
-- [示例readme](https://blog.csdn.net/gitblog_00002/article/details/150695762)
-- [readme编写](https://github.com/guodongxiaren/README)
-- [readme编写:图标](https://github.com/guodongxiaren/README/blob/master/emoji.md)
-- [为markdown文件生成目录](https://zhuanlan.zhihu.com/p/126353341)
+## Reference Documents:
+- [Sample readme](https://blog.csdn.net/gitblog_00002/article/details/150695762)
+- [README writing](https://github.com/guodongxiaren/README)
+- [README writing: icons](https://github.com/guodongxiaren/README/blob/master/emoji.md)
+- [Generate table of contents for markdown files](https://zhuanlan.zhihu.com/p/126353341)
