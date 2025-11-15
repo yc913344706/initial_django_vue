@@ -19,7 +19,7 @@
 
 - 最小化全栈开发基础框架，支持 RBAC 权限管理系统。包括前端、后端、nginx、mysql、redis。
 - 技术栈： `Python 3.13`、`Django 5.2`、`Vue 3.5`。
-- 代码结构见[这里](./vibe-docs/code_arch.md)。
+- 代码结构见[这里](./docs/code_arch.md)。
 
 ## ✨ 功能特性
  
