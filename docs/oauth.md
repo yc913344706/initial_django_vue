@@ -432,6 +432,53 @@ None（公开客户端）：
 
 ## 与现有系统集成
 
+### 令牌系统架构
+
+本系统维护两套令牌系统以满足不同场景需求：
+
+#### 1. 内部JWT令牌系统 (当前Django认证)
+- **用途**: 前端 → Nginx → Django 后端的内部认证
+- **生成**: Django后端 `apps/myAuth/token_utils.py`
+- **验证**: Django `apps/myAuth/middleware.py` 中间件
+- **格式**: 使用HS256算法的JWT令牌
+- **作用域**: 仅限内部系统通信使用
+
+#### 2. OAuth2/OIDC令牌系统 (新添加的Hydra系统)
+- **用途**: 外部应用与系统集成
+- **生成**: ORY Hydra服务
+- **验证**: ORY Hydra + 回调Django认证
+- **格式**: 标准OAuth2/OIDC令牌
+- **作用域**: 外部应用集成专用
+
+### 令牌验证增强
+
+为了让系统能够验证两种类型的令牌，我们增强了认证中间件：
+
+```python
+# 在 apps/myAuth/token_utils.py 中扩展了 verify_token 方法
+def verify_token(self, token):
+    """验证token - 支持内部JWT和外部OAuth2 token"""
+    try:
+        # 首先检查是否为内部JWT token
+        if self.is_jwt_token(token):
+            # 这是内部JWT token，使用原有逻辑验证
+            # ...
+        else:
+            # 这可能是OAuth2 token，通过Hydra验证
+            return self.verify_oauth2_token_via_hydra(token)
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError as e:
+        # 尝试作为OAuth2 token验证
+        return self.verify_oauth2_token_via_hydra(token)
+    except Exception as e:
+        # 如果JWT验证失败，尝试OAuth2验证
+        oauth2_result = self.verify_oauth2_token_via_hydra(token)
+        if oauth2_result:
+            return oauth2_result
+        return None
+```
+
 ### 用户系统
 - 外部应用用户认证通过Django后端，支持：
   - 本地用户认证
@@ -439,15 +486,30 @@ None（公开客户端）：
 - 认证成功后，外部应用获得标准OAuth2 token
 
 ### 权限系统
-- OAuth2 token验证与现有权限系统集成
+- 系统支持双重权限验证：
+  - 内部JWT令牌：使用现有RBAC系统
+  - OAuth2令牌：根据scope字段和现有RBAC系统共同验证
 - 通过现有RBAC系统控制外部应用访问权限
 
 ## 安全考虑
 
-1. **密钥管理**: `SECRETS_SYSTEM`应使用强密钥并定期更换
-2. **HTTPS**: 生产环境应使用HTTPS
-3. **客户端安全**: 严格管理OAuth2客户端的重定向URI
-4. **权限控制**: 限制外部应用的权限范围
+### 双牌系统安全
+
+1. **双重验证**: 系统同时支持内部JWT和OAuth2令牌验证，确保安全性
+2. **令牌隔离**: 内部和外部令牌有严格的边界，不得混用
+3. **权限验证**: OAuth2令牌使用scope进行细粒度权限控制
+4. **时效性**: 所有令牌都有过期时间，减少安全风险
+
+### 密钥管理
+1. **Hydra密钥**: `SECRETS_SYSTEM`应使用强密钥并定期更换
+2. **JWT密钥**: 内部JWT密钥应与Hydra密钥分离
+3. **客户端密钥**: 严格保护客户端密钥，仅在创建时显示一次
+
+### 访问控制
+1. **HTTPS**: 生产环境应使用HTTPS
+2. **客户端安全**: 严格管理OAuth2客户端的重定向URI
+3. **权限控制**: 限制外部应用的权限范围
+4. **网络访问**: 建议限制Hydra admin端口仅内网访问
 
 ## 常见用法
 
