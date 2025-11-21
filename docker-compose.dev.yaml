@@ -101,7 +101,8 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./etc/nginx.dev.conf:/etc/nginx/conf.d/default.conf
+      - ./etc/nginx/nginx.dev.conf:/etc/nginx/conf.d/default.conf
+      - ./etc/nginx/internal_network_access.conf:/etc/nginx/conf.d/internal_network_access.conf
     depends_on:
       backend:
         condition: service_healthy
@@ -177,11 +178,12 @@ services:
     restart: "no"
 
   hydra:
+    # https://www.ory.com/docs/hydra/self-hosted/configure-deploy
     image: oryd/hydra:v2.2.0
     container_name: initial_django_vue_hydra
     ports:
       - "4444:4444" # Public port
-      - "4445:4445" # Admin port
+      # - "4445:4445" # Admin port
     environment:
       - DSN=mysql://root:Admin@123@tcp(db_mysql:3306)/hydra?parseTime=true
       - SECRETS_SYSTEM=your-secret-key-change-this-in-production

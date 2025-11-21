@@ -119,7 +119,12 @@
     "getClientDetailFailed": "Failed to get OAuth2 client detail",
     "noPermissionToViewOauth2ClientList": "You don't have permission to view OAuth2 client list",
     "noPermissionToViewOauth2Client": "You don't have permission to view OAuth2 client detail",
-    "missingClientId": "Missing client ID parameter"
+    "missingClientId": "Missing client ID parameter",
+    "clientSecretGeneratedNotice": "Please save the client secret now, as it won't be available again",
+    "noContentToCopy": "No content to copy",
+    "resetClientSecretConfirm": "Are you sure to reset client secret? The current secret will become invalid.",
+    "clientSecretResetSuccess": "Client secret reset successfully",
+    "clientSecretResetFailed": "Client secret reset failed"
   },
   "page": {
     "title": {

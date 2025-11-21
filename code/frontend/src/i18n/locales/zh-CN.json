@@ -120,7 +120,12 @@
     "getClientDetailFailed": "获取OAuth2客户端详情失败",
     "noPermissionToViewOauth2ClientList": "您没有权限查看OAuth2客户端列表",
     "noPermissionToViewOauth2Client": "您没有权限查看OAuth2客户端详情",
-    "missingClientId": "缺少客户端ID参数"
+    "missingClientId": "缺少客户端ID参数",
+    "clientSecretGeneratedNotice": "请立即保存客户端密钥，之后将无法再次查看",
+    "noContentToCopy": "没有内容可复制",
+    "resetClientSecretConfirm": "确定要重置客户端密钥吗？重置后现有密钥将失效。",
+    "clientSecretResetSuccess": "客户端密钥重置成功",
+    "clientSecretResetFailed": "客户端密钥重置失败"
   },
   "page": {
     "title": {

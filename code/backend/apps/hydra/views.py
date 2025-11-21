@@ -383,27 +383,52 @@ def manage_oauth2_client(request):
             if not client_id:
                 return pub_error_response(15026, msg='client_id is required for update')
 
-            update_data = {}
-            if 'client_name' in body:
-                update_data['client_name'] = body['client_name']
-            if 'client_secret' in body:
-                update_data['client_secret'] = body['client_secret']
-            if 'grant_types' in body:
-                update_data['grant_types'] = body['grant_types']
-            if 'response_types' in body:
-                update_data['response_types'] = body['response_types']
-            if 'redirect_uris' in body:
-                update_data['redirect_uris'] = body['redirect_uris']
-            if 'scope' in body:
-                update_data['scope'] = body['scope']
+            # Check if this is a secret reset request
+            if body.get('reset_secret'):
+                # Generate a new secret and update only the secret
+                import secrets
+                import string
 
-            response = requests.put(f"{hydra_admin_url}/clients/{client_id}", json=update_data, allow_redirects=True)
+                # Generate a new secret
+                new_secret = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
 
-            if response.status_code == 200:
-                return pub_success_response(response.json(), msg='OAuth2 client updated successfully')
+                secret_update_data = {
+                    'client_secret': new_secret
+                }
+
+                response = requests.patch(f"{hydra_admin_url}/admin/clients/{client_id}", json=secret_update_data, allow_redirects=True)
+
+                if response.status_code == 200:
+                    result = response.json()
+                    # Return the new secret separately for security notice
+                    result['client_secret'] = new_secret
+                    return pub_success_response(result, msg='OAuth2 client secret reset successfully')
+                else:
+                    color_logger.error(f"Failed to reset client secret: {response.text}")
+                    return pub_error_response(15027, msg=f'Failed to reset client secret: Status {response.status_code}, {response.text}')
             else:
-                color_logger.error(f"Failed to update client: {response.text}")
-                return pub_error_response(15027, msg=f'Failed to update client: Status {response.status_code}, {response.text}')
+                # Regular update request
+                update_data = {}
+                if 'client_name' in body:
+                    update_data['client_name'] = body['client_name']
+                if 'client_secret' in body:
+                    update_data['client_secret'] = body['client_secret']
+                if 'grant_types' in body:
+                    update_data['grant_types'] = body['grant_types']
+                if 'response_types' in body:
+                    update_data['response_types'] = body['response_types']
+                if 'redirect_uris' in body:
+                    update_data['redirect_uris'] = body['redirect_uris']
+                if 'scope' in body:
+                    update_data['scope'] = body['scope']
+
+                response = requests.put(f"{hydra_admin_url}/admin/clients/{client_id}", json=update_data, allow_redirects=True)
+
+                if response.status_code == 200:
+                    return pub_success_response(response.json(), msg='OAuth2 client updated successfully')
+                else:
+                    color_logger.error(f"Failed to update client: {response.text}")
+                    return pub_error_response(15027, msg=f'Failed to update client: Status {response.status_code}, {response.text}')
 
         elif request.method == 'DELETE':
             # Delete a client
@@ -411,7 +436,7 @@ def manage_oauth2_client(request):
             if not client_id:
                 return pub_error_response(15028, msg='client_id is required for deletion')
 
-            response = requests.delete(f"{hydra_admin_url}/clients/{client_id}", allow_redirects=True)
+            response = requests.delete(f"{hydra_admin_url}/admin/clients/{client_id}", allow_redirects=True)
 
             if response.status_code == 204:
                 return pub_success_response(msg='OAuth2 client deleted successfully')

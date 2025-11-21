@@ -18,8 +18,8 @@
       <template v-if="isEditing && hasPerms('system.oauth2Client:update')">
         <el-form :model="form" label-width="150px" :rules="rules" ref="formRef">
           <el-form-item :label="t('field.clientId')" prop="client_id">
-            <el-input 
-              v-model="form.client_id" 
+            <el-input
+              v-model="form.client_id"
               :placeholder="t('page.oauth2.enterClientId')"
               :disabled="true" />
           </el-form-item>
@@ -85,6 +85,21 @@
                 :value="item.value"
               />
             </el-select>
+          </el-form-item>
+          <!-- 重置客户端密钥 -->
+          <el-form-item :label="t('field.clientSecret')">
+            <div class="secret-display">
+              <el-input v-model="form.client_secret" type="password" readonly show-password :placeholder="t('page.oauth2.hiddenForSecurity')">
+                <template #append>
+                  <el-button @click="resetClientSecret" :disabled="!hasPerms('system.oauth2Client:update')">
+                    {{ t('button.reset') }}
+                  </el-button>
+                </template>
+              </el-input>
+              <el-button @click="copyToClipboard(form.client_secret)" size="small" :disabled="!form.client_secret">
+                {{ t('button.copy') }}
+              </el-button>
+            </div>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="handleSubmit">{{ t('common.save') }}</el-button>
@@ -181,6 +196,7 @@ const tokenAuthMethodOptions = [
 const clientInfo = ref<OAuth2Client>({
   client_id: '',
   client_name: '',
+  client_secret: '',
   grant_types: [],
   response_types: [],
   redirect_uris: [],
@@ -279,6 +295,61 @@ const handleCancel = () => {
   form.value = { ...clientInfo.value }
 }
 
+// 复制到剪贴板
+const copyToClipboard = async (text: string) => {
+  if (!text) {
+    ElMessage.warning(t('message.noContentToCopy'))
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    ElMessage.success(t('message.passwordCopiedToClipboard'));
+  } catch (err) {
+    ElMessage.error(t('message.copyFailedManual'));
+    console.error('Failed to copy: ', err);
+  }
+}
+
+// 重置客户端密钥
+const resetClientSecret = async () => {
+  try {
+    await ElMessageBox.confirm(
+      t('message.resetClientSecretConfirm'),
+      t('common.tip'),
+      {
+        type: 'warning',
+        confirmButtonText: t('button.confirm'),
+        cancelButtonText: t('button.cancel')
+      }
+    )
+
+    // 调用API重置客户端密钥
+    const res = await http.request('put', apiMap.oauth2.manageClient, {
+      data: {
+        client_id: form.value.client_id,
+        reset_secret: true  // 特殊标志表示只重置密钥
+      }
+    })
+
+    if (res.success && res.data?.client_secret) {
+      // 更新表单中的密钥
+      form.value.client_secret = res.data.client_secret
+      clientInfo.value.client_secret = res.data.client_secret
+
+      ElMessage.success(t('message.clientSecretResetSuccess'))
+      // 提示用户保存新密钥
+      ElMessage.info(t('message.clientSecretGeneratedNotice') || '请立即保存新客户端密钥，之后将无法再次查看')
+    } else {
+      ElMessage.error(res.msg || t('message.clientSecretResetFailed'))
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(`${t('message.clientSecretResetFailed')}。${error.msg || error}`)
+    }
+  }
+}
+
 onMounted(() => {
   if (!hasPerms('system.oauth2Client:read')) {
     ElMessage.error(t('message.noPermissionToViewOauth2Client'))
@@ -302,5 +373,11 @@ onMounted(() => {
 
 .mb-1 {
   margin-bottom: 4px;
+}
+
+.secret-display {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 </style>

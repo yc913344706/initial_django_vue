@@ -120,17 +120,22 @@
       width="60%"
     >
       <el-form :model="form" label-width="150px" :rules="rules" ref="formRef">
-        <el-form-item :label="t('field.clientId')" prop="client_id">
-          <el-input 
-            v-model="form.client_id" 
-            :placeholder="t('page.oauth2.enterClientId')"
-            :disabled="dialogType === 'edit'" />
-        </el-form-item>
         <el-form-item :label="t('field.clientName')" prop="client_name">
           <el-input v-model="form.client_name" :placeholder="t('page.oauth2.enterClientName')" />
         </el-form-item>
-        <el-form-item :label="t('field.clientSecret')" prop="client_secret" v-if="dialogType === 'add'">
-          <el-input v-model="form.client_secret" type="password" :placeholder="t('page.oauth2.enterClientSecret')" show-password />
+        <!-- 客户端ID由系统生成，仅在编辑时显示 -->
+        <el-form-item :label="t('field.clientId')" v-if="dialogType === 'edit'">
+          <el-input v-model="form.client_id" disabled />
+        </el-form-item>
+        <!-- 仅在创建时显示客户端密钥 -->
+        <el-form-item :label="t('field.clientSecret')" v-if="showClientSecret">
+          <el-input v-model="form.client_secret" type="password" readonly show-password>
+            <template #append>
+              <el-button @click="copyToClipboard(form.client_secret)">
+                {{ t('button.copy') }}
+              </el-button>
+            </template>
+          </el-input>
           <div class="form-help">{{ t('page.oauth2.clientSecretHelp') }}</div>
         </el-form-item>
         <el-form-item :label="t('field.grantTypes')" prop="grant_types">
@@ -235,6 +240,7 @@ interface SearchForm {
 const clientList = ref<OAuth2Client[]>([])
 const dialogVisible = ref(false)
 const dialogType = ref<'add' | 'edit'>('add')
+const showClientSecret = ref(false) // 控制客户端密钥的显示
 const formRef = ref<FormInstance>()
 const form = ref<OAuth2Client>({
   client_id: '',
@@ -269,10 +275,6 @@ const tokenAuthMethodOptions = [
 ]
 
 const rules = {
-  client_id: [
-    { required: true, message: t('page.oauth2.enterClientId'), trigger: 'blur' },
-    { min: 3, max: 50, message: t('page.oauth2.clientIdLengthError'), trigger: 'blur' }
-  ],
   client_name: [
     { required: true, message: t('page.oauth2.enterClientName'), trigger: 'blur' }
   ],
@@ -336,32 +338,6 @@ const getClientList = async () => {
   }
 }
 
-// 新增客户端
-const handleAdd = () => {
-  dialogType.value = 'add'
-  form.value = {
-    client_id: '',
-    client_name: '',
-    client_secret: '',
-    grant_types: [],
-    response_types: [],
-    redirect_uris: [],
-    scope: 'openid profile email',
-    token_endpoint_auth_method: 'client_secret_post',
-    redirect_uris_text: ''
-  }
-  dialogVisible.value = true
-}
-
-// 编辑客户端
-const handleEdit = (row: OAuth2Client) => {
-  dialogType.value = 'edit'
-  // 转换 redirect_uris 为文本格式
-  const redirect_uris_text = row.redirect_uris ? row.redirect_uris.join('\n') : ''
-  form.value = { ...row, redirect_uris_text }
-  dialogVisible.value = true
-}
-
 // 查看详情
 const handleViewDetail = (row: OAuth2Client) => {
   // 跳转到详情页，暂时用编辑功能代替
@@ -393,53 +369,6 @@ const handleDelete = async (row: OAuth2Client) => {
       ElMessage.error(`${t('message.deleteFailed')}。${error.msg || error}`)
     }
   }
-}
-
-// 提交表单
-const handleSubmit = async () => {
-  if (!formRef.value) return
-
-  await formRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        // 处理重定向URI格式
-        const redirectUrisArray = form.value.redirect_uris_text
-          ? form.value.redirect_uris_text.split('\n').map(uri => uri.trim()).filter(uri => uri)
-          : [];
-
-        const clientData = {
-          ...form.value,
-          redirect_uris: redirectUrisArray,
-          redirect_uris_text: undefined // 移除临时字段
-        }
-
-        let res;
-        if (dialogType.value === 'add') {
-          res = await http.request('post', apiMap.oauth2.manageClient, { data: clientData })
-        } else {
-          res = await http.request('put', apiMap.oauth2.manageClient, { data: clientData })
-        }
-
-        if (res.success) {
-          ElMessage.success(
-            dialogType.value === 'add' 
-              ? t('message.createSuccess') 
-              : t('message.editSuccess')
-          )
-          dialogVisible.value = false
-          getClientList() // 刷新列表
-        } else {
-          ElMessage.error(res.msg || 
-            (dialogType.value === 'add' ? t('message.createFailed') : t('message.editFailed'))
-          )
-        }
-      } catch (error: any) {
-        ElMessage.error(
-          `${dialogType.value === 'add' ? t('message.createFailed') : t('message.editFailed')}。${error.msg || error}`
-        )
-      }
-    }
-  })
 }
 
 // 表格选择变化
@@ -501,6 +430,107 @@ const resetSearch = () => {
   }
   page.value = 1
   getClientList()
+}
+
+// 复制到剪贴板
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    ElMessage.success(t('message.passwordCopiedToClipboard'));
+  } catch (err) {
+    ElMessage.error(t('message.copyFailedManual'));
+    // 如果API失败，提示用户手动复制
+    console.error('Failed to copy: ', err);
+  }
+}
+
+// 新增客户端
+const handleAdd = () => {
+  dialogType.value = 'add'
+  form.value = {
+    client_id: '',
+    client_name: '',
+    client_secret: '', // 实际值将在API响应中设置
+    grant_types: [],
+    response_types: [],
+    redirect_uris: [],
+    scope: 'openid profile email',
+    token_endpoint_auth_method: 'client_secret_post',
+    redirect_uris_text: ''
+  }
+  showClientSecret.value = false // 初始隐藏密钥
+  dialogVisible.value = true
+}
+
+// 编辑客户端
+const handleEdit = (row: OAuth2Client) => {
+  dialogType.value = 'edit'
+  // 转换 redirect_uris 为文本格式
+  const redirect_uris_text = row.redirect_uris ? row.redirect_uris.join('\n') : ''
+  form.value = { ...row, redirect_uris_text }
+  dialogVisible.value = true
+}
+
+// 提交表单
+const handleSubmit = async () => {
+  if (!formRef.value) return
+
+  await formRef.value.validate(async (valid) => {
+    if (valid) {
+      try {
+        // 处理重定向URI格式
+        const redirectUrisArray = form.value.redirect_uris_text
+          ? form.value.redirect_uris_text.split('\n').map(uri => uri.trim()).filter(uri => uri)
+          : [];
+
+        const clientData = {
+          ...form.value,
+          redirect_uris: redirectUrisArray,
+          redirect_uris_text: undefined, // 移除临时字段
+          // 让服务端自动生成client_id
+          client_id: undefined  // 移除前端指定的ID，让服务端自动生成
+        }
+
+        let res;
+        if (dialogType.value === 'add') {
+          res = await http.request('post', apiMap.oauth2.manageClient, { data: clientData })
+        } else {
+          res = await http.request('put', apiMap.oauth2.manageClient, { data: clientData })
+        }
+
+        if (res.success) {
+          if (dialogType.value === 'add' && res.data?.client_secret) {
+            // 创建成功，显示生成的密钥
+            form.value.client_secret = res.data.client_secret;
+            showClientSecret.value = true;
+            // 显示信息提醒用户保存密钥
+            ElMessage.info(t('message.clientSecretGeneratedNotice') || '请立即保存客户端密钥，之后将无法再次查看');
+          }
+
+          ElMessage.success(
+            dialogType.value === 'add'
+              ? t('message.createSuccess')
+              : t('message.editSuccess')
+          )
+
+          if (dialogType.value !== 'add') {
+            // 编辑时直接关闭对话框
+            dialogVisible.value = false
+            getClientList() // 刷新列表
+          }
+          // 如果是创建，让用户先保存密钥再关闭
+        } else {
+          ElMessage.error(res.msg ||
+            (dialogType.value === 'add' ? t('message.createFailed') : t('message.editFailed'))
+          )
+        }
+      } catch (error: any) {
+        ElMessage.error(
+          `${dialogType.value === 'add' ? t('message.createFailed') : t('message.editFailed')}。${error.msg || error}`
+        )
+      }
+    }
+  })
 }
 
 onMounted(() => {
