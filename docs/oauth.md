@@ -172,28 +172,71 @@ curl -X POST http://localhost:4445/clients \
 4 grant_types: ["authorization_code", "client_credentials"] 
 - 例如：Web应用通常需要authorization_code进行用户登录，也需要client_credentials进行后台服务调用
 
-#### 响应类型 (Response Types)  
+#### 响应类型 (Response Types)
 
 指定OAuth2服务器在授权流程中返回的内容：
 
  - Code：返回授权码（配合Authorization Code使用）
  - Token：直接返回访问令牌（配合Implicit使用）
+ - ID Token：返回OIDC身份令牌（配合OIDC流程使用）
 
 不同授权类型的响应类型：
 
    - Authorization Code → 响应类型为 code
+     - 最安全的授权方式，适用于Web应用
+     - 流程：用户授权 → 返回授权码 → 后端用授权码换令牌
+
    - Implicit → 响应类型为 token
+     - 前端应用直接获取访问令牌
+     - 安全性较低，现代应用推荐使用Authorization Code + PKCE
+
+   - Authorization Code + ID Token → 响应类型为 "code id_token"
+     - 在授权码流程中同时返回授权码和ID令牌
+     - 适用于需要立即获得用户身份信息的前端应用
+
+   - Authorization Code + Token → 响应类型为 "code token"
+     - 在授权码流程中同时返回授权码和访问令牌
+     - 混合流程，适用于部分前端应用需求
+
+   - Authorization Code + ID Token + Token → 响应类型为 "code id_token token"
+     - 一次性返回所有需要的令牌
+     - 适用于复杂前端应用
+
    - Client Credentials → 无需重定向，无响应类型
      - 这是服务对服务的认证，客户端直接用凭证向服务器请求访问令牌
+
    - Refresh Token → 无响应类型
      - 用于刷新已有的访问令牌，通常不涉及用户交互
 
-响应类型多选：
+ID Token 详解：
+ID Token 是 OpenID Connect (OIDC) 协议中的身份令牌，包含用户的身份信息：
+{
+  "iss": "https://your-domain.com",      // 签发者
+  "sub": "user123",                      // 用户唯一标识
+  "aud": "my-client",                    // 接收方（客户端ID）
+  "exp": 1234567890,                     // 过期时间
+  "iat": 1234567890,                     // 签发时间
+  "email": "user@example.com",           // 用户邮箱
+  "name": "John Doe",                    // 用户姓名
+  "preferred_username": "johndoe"        // 首选用户名
+}
 
-1 # 某些高级场景支持多个响应类型
-2 response_types: ["code", "token"]  # 非标准用法，通常不建议
-3 response_types: ["code"]  # 标准用法，但系统可能为兼容设计了多选
-- 理论上不同授权类型对应不同响应类型，但在实现中可能为了兼容性支持多选
+ID Token vs Access Token:
+| 特性 | ID Token | Access Token |
+|------|----------|--------------|
+| 用途 | 身份认证 | 访问资源 |
+| 内容 | 用户身份信息 | 授权信息 |
+| 验证 | 验证用户身份 | 验证访问权限 |
+| 标准 | OIDC 标准 | OAuth2 标准 |
+
+响应类型多选：
+系统支持多个响应类型，实现OIDC混合流程：
+
+1 # OIDC混合流程示例
+2 response_types: ["code", "id_token"]    # 授权码+ID令牌
+3 response_types: ["code", "token"]       # 授权码+访问令牌
+4 response_types: ["code", "id_token", "token"]  # 授权码+ID令牌+访问令牌
+- 适用于需要同时获得授权码和用户身份信息的复杂前端应用
 
 #### 重定向URI (Redirect URIs)  
  - 作用：OAuth2服务器将用户重定向到的地址
