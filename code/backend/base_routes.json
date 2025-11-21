@@ -86,6 +86,22 @@
           "title": "page.title.audit",
           "showParent": true
         }
+      },
+      "oauth2": {
+        "path": "/system/oauth2/index",
+        "name": "Oauth2Index",
+        "meta": {
+          "title": "page.title.oauth2",
+          "showParent": true
+        }
+      },
+      "oauth2.detail": {
+        "path": "/system/oauth2/detail",
+        "name": "Oauth2Detail",
+        "meta": {
+          "showLink": false,
+          "title": "page.oauth2.detail"
+        }
       }
     }
   }

@@ -115,7 +115,12 @@
     "baseDnRequired": "请输入基础DN",
     "adminDnRequired": "请输入管理员DN",
     "maxLoginAttemptsRequired": "请输入最大登录尝试次数",
-    "lockoutDurationRequired": "请输入锁定时间"
+    "lockoutDurationRequired": "请输入锁定时间",
+    "getClientListFailed": "获取OAuth2客户端列表失败",
+    "getClientDetailFailed": "获取OAuth2客户端详情失败",
+    "noPermissionToViewOauth2ClientList": "您没有权限查看OAuth2客户端列表",
+    "noPermissionToViewOauth2Client": "您没有权限查看OAuth2客户端详情",
+    "missingClientId": "缺少客户端ID参数"
   },
   "page": {
     "title": {
@@ -127,7 +132,33 @@
       "role": "角色管理",
       "permission": "权限管理",
       "audit": "审计日志",
+      "oauth2": "OAuth2管理",
       "welcome": "欢迎来到"
+    },
+    "oauth2": {
+      "detail": "客户端详情",
+      "clientId": "客户端ID",
+      "clientName": "客户端名称",
+      "clientSecret": "客户端密钥",
+      "clientSecretHelp": "客户端密钥仅在创建时显示，请妥善保管",
+      "grantTypes": "授权类型",
+      "responseTypes": "响应类型",
+      "redirectUris": "重定向URI",
+      "scope": "授权范围",
+      "tokenAuthMethod": "令牌认证方式",
+      "enterClientId": "请输入客户端ID",
+      "enterClientName": "请输入客户端名称",
+      "enterClientSecret": "请输入客户端密钥",
+      "selectGrantTypes": "请选择授权类型",
+      "selectResponseTypes": "请选择响应类型",
+      "enterRedirectUris": "请输入重定向URI，每行一个",
+      "enterScope": "请输入授权范围",
+      "selectTokenAuthMethod": "请选择令牌认证方式",
+      "redirectUrisHelp": "每行输入一个重定向URI，例如: https://example.com/callback",
+      "scopeHelp": "多个范围用空格分隔，例如: openid profile email",
+      "clientIdLengthError": "客户端ID长度应在3-50个字符之间",
+      "searchClientId": "搜索客户端ID",
+      "searchClientName": "搜索客户端名称"
     },
     "user": {
       "detail": "用户详情",
@@ -316,7 +347,16 @@
     "newPassword": "新密码",
     "confirmPassword": "确认密码",
     "roleName": "角色名称",
-    "permissionName": "权限名称"
+    "permissionName": "权限名称",
+    "clientId": "客户端ID",
+    "clientName": "客户端名称",
+    "clientSecret": "客户端密钥",
+    "grantTypes": "授权类型",
+    "responseTypes": "响应类型",
+    "redirectUris": "重定向URI",
+    "scope": "授权范围",
+    "tokenAuthMethod": "令牌认证方式",
+    "createdAt": "创建时间"
   },
   "table": {
     "actions": "操作",

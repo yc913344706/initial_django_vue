@@ -9,6 +9,15 @@ export const apiMap = {
   // 获取异步路由
   getAsyncRoutes: "/auth/get-async-routes/",
 
+  // OAuth2管理
+  oauth2: {
+    manageClient: "/hydra/manage-client/",
+    userinfo: "/hydra/userinfo/",
+    login: "/hydra/login/",
+    consent: "/hydra/consent/",
+    logout: "/hydra/logout/",
+  },
+
   // 用户管理
   user: {
     userList: "/user/users/",

@@ -114,7 +114,12 @@
     "baseDnRequired": "Please enter base DN",
     "adminDnRequired": "Please enter admin DN",
     "maxLoginAttemptsRequired": "Please enter maximum login attempts",
-    "lockoutDurationRequired": "Please enter lockout duration"
+    "lockoutDurationRequired": "Please enter lockout duration",
+    "getClientListFailed": "Failed to get OAuth2 client list",
+    "getClientDetailFailed": "Failed to get OAuth2 client detail",
+    "noPermissionToViewOauth2ClientList": "You don't have permission to view OAuth2 client list",
+    "noPermissionToViewOauth2Client": "You don't have permission to view OAuth2 client detail",
+    "missingClientId": "Missing client ID parameter"
   },
   "page": {
     "title": {
@@ -126,7 +131,33 @@
       "role": "Role Management",
       "permission": "Permission Management",
       "audit": "Audit Log",
+      "oauth2": "OAuth2 Management",
       "welcome": "Welcome"
+    },
+    "oauth2": {
+      "detail": "Client Detail",
+      "clientId": "Client ID",
+      "clientName": "Client Name",
+      "clientSecret": "Client Secret",
+      "clientSecretHelp": "Client secret is only displayed when created, please keep it safe",
+      "grantTypes": "Grant Types",
+      "responseTypes": "Response Types",
+      "redirectUris": "Redirect URIs",
+      "scope": "Scopes",
+      "tokenAuthMethod": "Token Authentication Method",
+      "enterClientId": "Please enter client ID",
+      "enterClientName": "Please enter client name",
+      "enterClientSecret": "Please enter client secret",
+      "selectGrantTypes": "Please select grant types",
+      "selectResponseTypes": "Please select response types",
+      "enterRedirectUris": "Please enter redirect URIs, one per line",
+      "enterScope": "Please enter scopes",
+      "selectTokenAuthMethod": "Please select token authentication method",
+      "redirectUrisHelp": "Enter one redirect URI per line, e.g. https://example.com/callback",
+      "scopeHelp": "Multiple scopes separated by spaces, e.g. openid profile email",
+      "clientIdLengthError": "Client ID length should be between 3-50 characters",
+      "searchClientId": "Search client ID",
+      "searchClientName": "Search client name"
     },
     "user": {
       "detail": "User Detail",
@@ -317,7 +348,16 @@
     "newPassword": "New Password",
     "confirmPassword": "Confirm Password",
     "roleName": "Role Name",
-    "permissionName": "Permission Name"
+    "permissionName": "Permission Name",
+    "clientId": "Client ID",
+    "clientName": "Client Name",
+    "clientSecret": "Client Secret",
+    "grantTypes": "Grant Types",
+    "responseTypes": "Response Types",
+    "redirectUris": "Redirect URIs",
+    "scope": "Scopes",
+    "tokenAuthMethod": "Token Auth Method",
+    "createdAt": "Created At"
   },
   "table": {
     "actions": "Actions",

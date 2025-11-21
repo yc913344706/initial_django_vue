@@ -28,7 +28,7 @@ def hydra_login(request):
             # GET request from Hydra - display login form or return login URL
             login_challenge = request.GET.get('login_challenge')
             if not login_challenge:
-                return pub_error_response(10001, msg='Missing login challenge')
+                return pub_error_response(15001, msg='Missing login challenge')
 
             # Get login request from Hydra to check if user is already authenticated
             hydra_admin_url = "http://hydra:4445"
@@ -46,10 +46,10 @@ def hydra_login(request):
                         'message': 'User needs to authenticate'
                     })
                 else:
-                    return pub_error_response(10002, msg='Invalid login challenge')
+                    return pub_error_response(15002, msg='Invalid login challenge')
             except Exception as e:
                 color_logger.error(f"Failed to fetch login request from Hydra: {e}")
-                return pub_error_response(10003, msg='Failed to communicate with Hydra')
+                return pub_error_response(15003, msg='Failed to communicate with Hydra')
 
         elif request.method == 'POST':
             # POST request with username/password from login form
@@ -58,7 +58,7 @@ def hydra_login(request):
             login_challenge = body.get('login_challenge')
 
             if not all([username, password, login_challenge]):
-                return pub_error_response(10004, msg='Missing required parameters: username, password, login_challenge')
+                return pub_error_response(15004, msg='Missing required parameters: username, password, login_challenge')
 
             # Authenticate user using existing logic from myAuth app
             user_obj = None
@@ -96,7 +96,7 @@ def hydra_login(request):
                     detail={'message': 'OAuth2 login attempt failed', 'source': 'hydra'},
                     request=request
                 )
-                return pub_error_response(10005, msg='Invalid username or password')
+                return pub_error_response(15005, msg='Invalid username or password')
 
             # Authentication successful
             # Accept the login request with Hydra
@@ -133,14 +133,14 @@ def hydra_login(request):
                     })
                 else:
                     color_logger.error(f"Failed to accept login request: {response.text}")
-                    return pub_error_response(10006, msg='Failed to accept login request')
+                    return pub_error_response(15006, msg='Failed to accept login request')
             except Exception as e:
                 color_logger.error(f"Failed to communicate with Hydra: {e}")
-                return pub_error_response(10007, msg='Failed to communicate with Hydra')
+                return pub_error_response(15007, msg='Failed to communicate with Hydra')
 
     except Exception as e:
         color_logger.error(f"Hydra login endpoint error: {e}", exc_info=True)
-        return pub_error_response(10008, msg=f'Login endpoint error: {str(e)}')
+        return pub_error_response(15008, msg=f'Login endpoint error: {str(e)}')
 
 
 @csrf_exempt
@@ -157,7 +157,7 @@ def hydra_consent(request):
             # GET request from Hydra - get consent request
             consent_challenge = request.GET.get('consent_challenge')
             if not consent_challenge:
-                return pub_error_response(10009, msg='Missing consent challenge')
+                return pub_error_response(15009, msg='Missing consent challenge')
 
             # Get consent request from Hydra
             hydra_admin_url = "http://hydra:4445"
@@ -173,7 +173,7 @@ def hydra_consent(request):
                     user = User.objects.filter(username=user_identifier).first()
 
                     if not user:
-                        return pub_error_response(10010, msg='User not found')
+                        return pub_error_response(15010, msg='User not found')
 
                     user_permission_json = get_user_perm_json_all(user.uuid)
 
@@ -184,10 +184,10 @@ def hydra_consent(request):
                         'message': 'User needs to grant consent'
                     })
                 else:
-                    return pub_error_response(10011, msg='Invalid consent challenge')
+                    return pub_error_response(15011, msg='Invalid consent challenge')
             except Exception as e:
                 color_logger.error(f"Failed to fetch consent request from Hydra: {e}")
-                return pub_error_response(10012, msg='Failed to communicate with Hydra')
+                return pub_error_response(15012, msg='Failed to communicate with Hydra')
 
         elif request.method == 'POST':
             # POST request to grant consent
@@ -197,7 +197,7 @@ def hydra_consent(request):
             remember_for = body.get('remember_for', 3600)
 
             if not consent_challenge:
-                return pub_error_response(10013, msg='Missing consent challenge')
+                return pub_error_response(15013, msg='Missing consent challenge')
 
             # Accept the consent request with Hydra
             hydra_admin_url = "http://hydra:4445"
@@ -220,14 +220,14 @@ def hydra_consent(request):
                     })
                 else:
                     color_logger.error(f"Failed to accept consent request: {response.text}")
-                    return pub_error_response(10014, msg='Failed to accept consent request')
+                    return pub_error_response(15014, msg='Failed to accept consent request')
             except Exception as e:
                 color_logger.error(f"Failed to communicate with Hydra: {e}")
-                return pub_error_response(10015, msg='Failed to communicate with Hydra')
+                return pub_error_response(15015, msg='Failed to communicate with Hydra')
 
     except Exception as e:
         color_logger.error(f"Hydra consent endpoint error: {e}", exc_info=True)
-        return pub_error_response(10016, msg=f'Consent endpoint error: {str(e)}')
+        return pub_error_response(15016, msg=f'Consent endpoint error: {str(e)}')
 
 
 @require_http_methods(["GET"])
@@ -241,7 +241,7 @@ def hydra_userinfo(request):
         auth_header = request.META.get('HTTP_AUTHORIZATION', '')
 
         if not auth_header.startswith('Bearer '):
-            return pub_error_response(10017, msg='Invalid Authorization header')
+            return pub_error_response(15017, msg='Invalid Authorization header')
 
         access_token = auth_header[7:]  # Remove 'Bearer ' prefix
 
@@ -250,15 +250,15 @@ def hydra_userinfo(request):
         payload = token_manager.verify_token(access_token)
 
         if not payload:
-            return pub_error_response(10018, msg='Invalid or expired access token')
+            return pub_error_response(15018, msg='Invalid or expired access token')
 
         username = payload.get('username')
         if not username:
-            return pub_error_response(10019, msg='Token does not contain username')
+            return pub_error_response(15019, msg='Token does not contain username')
 
         user = User.objects.filter(username=username).first()
         if not user:
-            return pub_error_response(10020, msg='User not found')
+            return pub_error_response(15020, msg='User not found')
 
         # Return user information according to OIDC standard
         user_info = {
@@ -275,7 +275,7 @@ def hydra_userinfo(request):
 
     except Exception as e:
         color_logger.error(f"Hydra userinfo endpoint error: {e}", exc_info=True)
-        return pub_error_response(10021, msg=f'Userinfo endpoint error: {str(e)}')
+        return pub_error_response(15021, msg=f'Userinfo endpoint error: {str(e)}')
 
 
 @require_http_methods(["GET"])
@@ -312,7 +312,7 @@ def hydra_logout(request):
 
     except Exception as e:
         color_logger.error(f"Hydra logout endpoint error: {e}", exc_info=True)
-        return pub_error_response(10022, msg=f'Logout endpoint error: {str(e)}')
+        return pub_error_response(15022, msg=f'Logout endpoint error: {str(e)}')
 
 
 @csrf_exempt
@@ -348,30 +348,38 @@ def manage_oauth2_client(request):
                 return pub_success_response(response.json(), msg='OAuth2 client created successfully')
             else:
                 color_logger.error(f"Failed to create client: {response.text}")
-                return pub_error_response(10023, msg=f'Failed to create client: {response.text}')
+                return pub_error_response(15023, msg=f'Failed to create client: {response.text}')
 
         elif request.method == 'GET':
             # Get a specific client or list all clients
             client_id = request.GET.get('client_id')
+            color_logger.debug(f"Getting client. client_id: {client_id}")
+
             if client_id:
                 response = requests.get(f"{hydra_admin_url}/clients/{client_id}")
                 if response.status_code == 200:
                     return pub_success_response(response.json())
                 else:
-                    return pub_error_response(10024, msg=f'Failed to get client: {response.text}')
+                    return pub_error_response(15024, msg=f'Failed to get client: {response.text}')
             else:
+                color_logger.debug(f"No client_id provided")
+                _url = f"{hydra_admin_url}/clients"
+
+                color_logger.debug(f"hydra url: {_url}")
+
                 # List all clients
-                response = requests.get(f"{hydra_admin_url}/clients")
+                response = requests.get(_url)
+                color_logger.debug(f"List all clients: {response.text()}")
                 if response.status_code == 200:
                     return pub_success_response(response.json())
                 else:
-                    return pub_error_response(10025, msg=f'Failed to list clients: {response.text}')
+                    return pub_error_response(15025, msg=f'Failed to list clients: {response.text}')
 
         elif request.method == 'PUT':
             # Update an existing client
             client_id = body.get('client_id')
             if not client_id:
-                return pub_error_response(10026, msg='client_id is required for update')
+                return pub_error_response(15026, msg='client_id is required for update')
 
             update_data = {}
             if 'client_name' in body:
@@ -393,21 +401,21 @@ def manage_oauth2_client(request):
                 return pub_success_response(response.json(), msg='OAuth2 client updated successfully')
             else:
                 color_logger.error(f"Failed to update client: {response.text}")
-                return pub_error_response(10027, msg=f'Failed to update client: {response.text}')
+                return pub_error_response(15027, msg=f'Failed to update client: {response.text}')
 
         elif request.method == 'DELETE':
             # Delete a client
             client_id = body.get('client_id')
             if not client_id:
-                return pub_error_response(10028, msg='client_id is required for deletion')
+                return pub_error_response(15028, msg='client_id is required for deletion')
 
             response = requests.delete(f"{hydra_admin_url}/clients/{client_id}")
 
             if response.status_code == 204:
                 return pub_success_response(msg='OAuth2 client deleted successfully')
             else:
-                return pub_error_response(10029, msg=f'Failed to delete client: {response.text}')
+                return pub_error_response(15029, msg=f'Failed to delete client: {response.text}')
 
     except Exception as e:
         color_logger.error(f"Manage OAuth2 client endpoint error: {e}", exc_info=True)
-        return pub_error_response(10030, msg=f'OAuth2 client management error: {str(e)}')
+        return pub_error_response(15030, msg=f'OAuth2 client management error: {str(e)}')
