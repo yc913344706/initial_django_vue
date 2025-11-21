@@ -115,45 +115,6 @@ curl -X POST http://localhost:4445/clients \
 
 ### 支持的  OAuth2客户端配置字段详解
 
-***********
-
-1. 授权类型还有一个 Implicit，这个授权类型怎么理解？
-2. 响应类型，code对应Authorization Code，token对应Implicit，那授权类型是 Client Credentials 和 Refresh Token时候，响应类型为空？
-3. scope的openid, email, profile，填了代表什么意思，会影响什么？是不是还有其他支持的选项？
-4. 令牌认证方式，三种方式，具体有什么区别？
-
-***********
-
-1. 但是我看现在的代码，授权类型、响应类型，都支持多选，这个是正确的吗？
-2. scope，看你的解释，它主要是2个作用：
-   1. oauth系统，会根据标准scope，来返回给客户端scope允许的信息，比如openid，email，profile，但是我有个问题，这些信息，是从哪里拿到的呢？因为我们现在的架构，oauth系统，并不存储用户信息。
-   2. 自定义scope，比如：api:read，这个会怎么给客户端使用呢？jwt拆开后有这个？那如果是这样，就是说，客户端获取到了scope，其实是客户端的权限list？那岂不是这个应该在某个地方预定义好都有哪些权限list？这个对吗？
-3. 令牌认证方式，我见过header中有 Authorization: Bearer <token> 的方式，这个，我们的ory hydra，支持吗？
-
-
-***********
-
-1. 那假如我们的权限列表很复杂，通过scope来配置显得不足，我们当前有一个接口 @code/backend/apps/perm/urls.py 中的 user-permission-json/ ，可以获取用户的权限json。那是不是我们就配置基础scope，就行了？
-2. Authorization: Basic 和 Authorization: Bearer 有什么区别？
-3. 我看你说，在现在的 Django的AuthMiddleware会验证Authorization头中的Bearer token，说的是 @code/backend/apps/myAuth/middleware.py 这个里面的process_request方法吗？如果是，我没有看到验证的代码啊？
-
-***********
-
-@code/frontend/src/views/system/oauth2/index.vue 客户端id和客户端密码，是不是不要在前端填写，直接创建后显示uuid，密码只显示一次？这样是不是比较友好？
-
-***********
-
-我们有详情页面，但是现在的逻辑，在查看和编辑时候，并没有跳转到详情页面，而是在一个弹出框中进行，这块可以修改下，只有新建在弹出框中进行，编辑、查看，均跳转到详情页进行。
-
-***********
-***********
-
-
-
-
-
-
-
 #### 客户端ID (Client ID)  
  - 作用：OAuth2系统的唯一标识符，类似用户名
  - 用途：外部应用使用此ID向OAuth2服务器表明身份
@@ -171,6 +132,7 @@ curl -X POST http://localhost:4445/clients \
  - 用途：在某些授权类型中用于验证客户端身份
 
 #### 授权类型 (Grant Types)  
+
 指定该客户端可以使用的OAuth2授权方式：
 
  - Authorization Code（授权码模式）

@@ -54,3 +54,6 @@ output/
 
 data/
 vibe-docs/
+
+data_backup_*/
+logs_backup_*/
