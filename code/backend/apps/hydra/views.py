@@ -35,7 +35,7 @@ def hydra_login(request):
             hydra_login_request_url = f"{hydra_admin_url}/oauth2/auth/requests/login"
 
             try:
-                response = requests.get(f"{hydra_login_request_url}/{login_challenge}")
+                response = requests.get(f"{hydra_login_request_url}/{login_challenge}", allow_redirects=True)
                 if response.status_code == 200:
                     login_request = response.json()
                     # Check if user is already authenticated in our app
@@ -46,7 +46,7 @@ def hydra_login(request):
                         'message': 'User needs to authenticate'
                     })
                 else:
-                    return pub_error_response(15002, msg='Invalid login challenge')
+                    return pub_error_response(15002, msg=f'Invalid login challenge: Status {response.status_code}')
             except Exception as e:
                 color_logger.error(f"Failed to fetch login request from Hydra: {e}")
                 return pub_error_response(15003, msg='Failed to communicate with Hydra')
@@ -164,7 +164,7 @@ def hydra_consent(request):
             hydra_consent_request_url = f"{hydra_admin_url}/oauth2/auth/requests/consent"
 
             try:
-                response = requests.get(f"{hydra_consent_request_url}/{consent_challenge}")
+                response = requests.get(f"{hydra_consent_request_url}/{consent_challenge}", allow_redirects=True)
                 if response.status_code == 200:
                     consent_request = response.json()
 
@@ -184,7 +184,7 @@ def hydra_consent(request):
                         'message': 'User needs to grant consent'
                     })
                 else:
-                    return pub_error_response(15011, msg='Invalid consent challenge')
+                    return pub_error_response(15011, msg=f'Invalid consent challenge: Status {response.status_code}')
             except Exception as e:
                 color_logger.error(f"Failed to fetch consent request from Hydra: {e}")
                 return pub_error_response(15012, msg='Failed to communicate with Hydra')
@@ -268,7 +268,8 @@ def hydra_userinfo(request):
             'email': user.email,
             'name': user.nickname or user.username,
             'preferred_username': user.username,
-            'user_uuid': str(user.uuid)
+            'user_uuid': str(user.uuid),
+            'open_id': str(user.uuid)
         }
 
         return JsonResponse(user_info)
@@ -293,7 +294,7 @@ def hydra_logout(request):
             hydra_logout_accept_url = f"{hydra_admin_url}/oauth2/auth/requests/logout/accept"
 
             try:
-                response = requests.put(f"{hydra_logout_accept_url}?logout_challenge={logout_challenge}")
+                response = requests.put(f"{hydra_logout_accept_url}?logout_challenge={logout_challenge}", allow_redirects=True)
                 if response.status_code == 200:
                     logout_response = response.json()
                     return pub_success_response({
@@ -301,6 +302,7 @@ def hydra_logout(request):
                     })
                 else:
                     # If Hydra doesn't require accept, return success
+                    color_logger.warning(f"Could not accept logout challenge: Status {response.status_code}")
                     pass
             except Exception as e:
                 color_logger.warning(f"Could not accept logout challenge: {e}")
@@ -342,13 +344,13 @@ def manage_oauth2_client(request):
             # Remove None values
             client_data = {k: v for k, v in client_data.items() if v is not None}
 
-            response = requests.post(f"{hydra_admin_url}/clients", json=client_data)
+            response = requests.post(f"{hydra_admin_url}/admin/clients", json=client_data, allow_redirects=True)
 
             if response.status_code in [200, 201]:
                 return pub_success_response(response.json(), msg='OAuth2 client created successfully')
             else:
                 color_logger.error(f"Failed to create client: {response.text}")
-                return pub_error_response(15023, msg=f'Failed to create client: {response.text}')
+                return pub_error_response(15023, msg=f'Failed to create client: Status {response.status_code}, {response.text}')
 
         elif request.method == 'GET':
             # Get a specific client or list all clients
@@ -356,24 +358,24 @@ def manage_oauth2_client(request):
             color_logger.debug(f"Getting client. client_id: {client_id}")
 
             if client_id:
-                response = requests.get(f"{hydra_admin_url}/clients/{client_id}")
+                response = requests.get(f"{hydra_admin_url}/admin/clients/{client_id}", allow_redirects=True)
                 if response.status_code == 200:
                     return pub_success_response(response.json())
                 else:
-                    return pub_error_response(15024, msg=f'Failed to get client: {response.text}')
+                    return pub_error_response(15024, msg=f'Failed to get client: Status {response.status_code}, {response.text}')
             else:
                 color_logger.debug(f"No client_id provided")
-                _url = f"{hydra_admin_url}/clients"
+                _url = f"{hydra_admin_url}/admin/clients"
 
                 color_logger.debug(f"hydra url: {_url}")
 
                 # List all clients
-                response = requests.get(_url)
-                color_logger.debug(f"List all clients: {response.text()}")
+                response = requests.get(_url, allow_redirects=True)
+                color_logger.debug(f"List all clients status: {response.status_code}, response: {response.text[:500] if response.text else 'No response body'}...")
                 if response.status_code == 200:
                     return pub_success_response(response.json())
                 else:
-                    return pub_error_response(15025, msg=f'Failed to list clients: {response.text}')
+                    return pub_error_response(15025, msg=f'Failed to list clients: Status {response.status_code}, {response.text}')
 
         elif request.method == 'PUT':
             # Update an existing client
@@ -395,13 +397,13 @@ def manage_oauth2_client(request):
             if 'scope' in body:
                 update_data['scope'] = body['scope']
 
-            response = requests.put(f"{hydra_admin_url}/clients/{client_id}", json=update_data)
+            response = requests.put(f"{hydra_admin_url}/clients/{client_id}", json=update_data, allow_redirects=True)
 
             if response.status_code == 200:
                 return pub_success_response(response.json(), msg='OAuth2 client updated successfully')
             else:
                 color_logger.error(f"Failed to update client: {response.text}")
-                return pub_error_response(15027, msg=f'Failed to update client: {response.text}')
+                return pub_error_response(15027, msg=f'Failed to update client: Status {response.status_code}, {response.text}')
 
         elif request.method == 'DELETE':
             # Delete a client
@@ -409,12 +411,12 @@ def manage_oauth2_client(request):
             if not client_id:
                 return pub_error_response(15028, msg='client_id is required for deletion')
 
-            response = requests.delete(f"{hydra_admin_url}/clients/{client_id}")
+            response = requests.delete(f"{hydra_admin_url}/clients/{client_id}", allow_redirects=True)
 
             if response.status_code == 204:
                 return pub_success_response(msg='OAuth2 client deleted successfully')
             else:
-                return pub_error_response(15029, msg=f'Failed to delete client: {response.text}')
+                return pub_error_response(15029, msg=f'Failed to delete client: Status {response.status_code}, {response.text}')
 
     except Exception as e:
         color_logger.error(f"Manage OAuth2 client endpoint error: {e}", exc_info=True)

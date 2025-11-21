@@ -9,6 +9,7 @@ CURRENT_DIR="$(dirname $(realpath $0))"
 WORKSPACE="${CURRENT_DIR}"
 . "${WORKSPACE}"/lib/log.sh
 cd ${CURRENT_DIR} || die "cd ${CURRENT_DIR} failed"
+TIMESTAMP=$(date +%Y%m%d%H%M%S)
 
 echo "开始清理 initial_django_vue 项目..."
 
@@ -36,14 +37,16 @@ docker network ls --format='{{.ID}} {{.Name}}' | grep initial_django_vue_ | awk 
 echo "正在清理数据目录..."
 if [ -d "./data" ]; then
     echo "正在清空 data 目录"
-    rm -rf ./data/*
+    # rm -rf ./data/*
+    mv ./data ./data_backup_${TIMESTAMP}
 fi
 
 # 清理日志目录（不包括目录本身）
 echo "正在清理日志目录..."
 if [ -d "./logs" ]; then
     echo "正在清空 logs 目录"
-    rm -rf ./logs/*
+    # rm -rf ./logs/*
+    mv ./logs ./logs_backup_${TIMESTAMP}
 fi
 
 echo "清理完成！"

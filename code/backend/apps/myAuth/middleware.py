@@ -60,8 +60,20 @@ class AuthMiddleware:
                     return pub_error_response(99999, msg='payload中没有用户名')
                 color_logger.debug(f'中间件校验token成功：{current_path}, {current_method}')
                 
-                check_res = check_user_api_permission(
-                    user_name, {current_path_prefix: current_method.upper()}, is_user_name=True)
+                # 检查权限 - 对于OAuth2 token，需要特别处理
+                token_payload = token_manager.verify_token(access_token)
+                if token_payload and 'client_id' in token_payload:
+                    # 这是OAuth2 token，检查scope权限
+                    client_scopes = token_payload.get('scope', [])
+                    # 对于OAuth2 token，可以有额外的scope检查逻辑
+                    # 这里我们仍然使用现有的权限系统进行检查
+                    check_res = check_user_api_permission(
+                        user_name, {current_path_prefix: current_method.upper()}, is_user_name=True)
+                else:
+                    # 这是内部JWT token，使用原有权限检查
+                    check_res = check_user_api_permission(
+                        user_name, {current_path_prefix: current_method.upper()}, is_user_name=True)
+
                 if not check_res:
                     color_logger.debug(f'没有权限：{user_name}, {current_path}, {current_method}')
                     return pub_error_response(99987, msg=f'没有接口权限: {current_path_prefix}: {current_method}')

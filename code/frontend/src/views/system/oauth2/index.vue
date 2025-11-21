@@ -314,7 +314,7 @@ const getClientList = async () => {
     const res = await http.request('get', apiMap.oauth2.manageClient, {})
     if (res.success) {
       // Apply search filters
-      const filteredList = res.data.clients?.filter(client => {
+      const filteredList = res.data?.filter(client => {
         return (
           (!searchForm.value.client_id || client.client_id.includes(searchForm.value.client_id)) &&
           (!searchForm.value.client_name || client.client_name?.includes(searchForm.value.client_name))

@@ -5,6 +5,7 @@ from backend.settings import config_data
 from lib.log import color_logger
 
 from lib.redis_tool import delete_redis_value, get_redis_value, set_redis_value
+import requests
 
 
 class TokenManager:
@@ -25,6 +26,48 @@ class TokenManager:
         except Exception as e:
             color_logger.error(f"_generate_token error: {e}")
             return None
+
+    def is_jwt_token(self, token):
+        """检查是否为JWT格式的token"""
+        try:
+            # JWT格式是 header.payload.signature
+            parts = token.split('.')
+            return len(parts) == 3
+        except:
+            return False
+
+    def verify_oauth2_token_via_hydra(self, token):
+        """通过Hydra验证OAuth2 token"""
+        try:
+            # 从配置获取Hydra管理凭据，如果未配置则不使用认证
+            from backend.settings import config_data
+            hydra_client_id = config_data.get('HYDRA', {}).get('CLIENT_ID', 'admin')
+            hydra_client_secret = config_data.get('HYDRA', {}).get('CLIENT_SECRET', '')
+
+            auth = None
+            if hydra_client_id and hydra_client_secret:
+                auth = (hydra_client_id, hydra_client_secret)
+
+            # 调用Hydra的introspection端点验证token
+            response = requests.post(
+                "http://hydra:4445/admin/oauth2/introspect",
+                data={"token": token},
+                auth=auth  # 可选的认证，取决于Hydra配置
+            )
+            if response.status_code == 200:
+                token_info = response.json()
+                if token_info.get("active"):
+                    # Token有效，返回用户信息
+                    return {
+                        'username': token_info.get('sub'),  # OAuth2中的subject通常对应username
+                        'scope': token_info.get('scope', '').split(),
+                        'client_id': token_info.get('client_id'),
+                        'exp': token_info.get('exp'),
+                        'iat': token_info.get('iat')
+                    }
+        except Exception as e:
+            color_logger.error(f"Error verifying OAuth2 token with Hydra: {e}")
+        return None
 
     def generate_tokens(self, username):
         """生成access token和refresh token"""
@@ -90,67 +133,98 @@ class TokenManager:
             color_logger.error(f"_add_user_session error: {e}")
 
     def verify_token(self, token):
-        """验证token"""
+        """验证token - 支持内部JWT和外部OAuth2 token"""
         try:
-            # color_logger.debug(f"verify_token token: {token}")
-            payload = jwt.decode(
-                token,
-                config_data.get('AUTH', {}).get('JWT_SECRET'),
-                algorithms=[config_data.get('AUTH', {}).get('JWT_ALGORITHM')]
-            )
-            # color_logger.debug(f"verify_token payload: {payload}")
+            # 首先检查是否为内部JWT token
+            if self.is_jwt_token(token):
+                # 这是内部JWT token，使用原有逻辑验证
+                payload = jwt.decode(
+                    token,
+                    config_data.get('AUTH', {}).get('JWT_SECRET'),
+                    algorithms=[config_data.get('AUTH', {}).get('JWT_ALGORITHM')]
+                )
 
-            # 检查Redis中是否存在该特定会话的token
-            stored_token = get_redis_value(
-                redis_db_name='AUTH',
-                redis_key_name=f"access_token:{payload['username']}:{payload['session_id']}"
-            )
-            if not stored_token or stored_token != token:
-                return None
+                # 检查Redis中是否存在该特定会话的token
+                stored_token = get_redis_value(
+                    redis_db_name='AUTH',
+                    redis_key_name=f"access_token:{payload['username']}:{payload['session_id']}"
+                )
+                if not stored_token or stored_token != token:
+                    return None
 
-            return payload
+                return payload
+            else:
+                # 这可能是OAuth2 token，通过Hydra验证
+                return self.verify_oauth2_token_via_hydra(token)
+        except jwt.ExpiredSignatureError:
+            color_logger.debug("JWT token expired")
+            return None
+        except jwt.InvalidTokenError as e:
+            color_logger.debug(f"Invalid JWT token: {e}")
+            # 尝试作为OAuth2 token验证
+            return self.verify_oauth2_token_via_hydra(token)
         except Exception as e:
             # color_logger.error(f"verify_token error: {e}")
+            # 如果JWT验证失败，尝试OAuth2验证
+            oauth2_result = self.verify_oauth2_token_via_hydra(token)
+            if oauth2_result:
+                return oauth2_result
             return None
 
     def refresh_access_token(self, refresh_token):
         """使用refresh token刷新access token"""
         try:
-            color_logger.debug(f"开始refresh_access_token: {refresh_token}")
-            payload = jwt.decode(
-                refresh_token,
-                config_data.get('AUTH', {}).get('JWT_SECRET'),
-                algorithms=[config_data.get('AUTH', {}).get('JWT_ALGORITHM')]
-            )
-            color_logger.debug(f"refresh_access_token payload: {payload}")
+            # 检查是否为内部JWT refresh token
+            if self.is_jwt_token(refresh_token):
+                # 这是内部JWT refresh token，使用原有逻辑
+                color_logger.debug(f"开始refresh_access_token: {refresh_token}")
+                payload = jwt.decode(
+                    refresh_token,
+                    config_data.get('AUTH', {}).get('JWT_SECRET'),
+                    algorithms=[config_data.get('AUTH', {}).get('JWT_ALGORITHM')]
+                )
+                color_logger.debug(f"refresh_access_token payload: {payload}")
 
-            # 验证refresh token - 检查特定会话的refresh token
-            stored_refresh = get_redis_value(
-                redis_db_name='AUTH',
-                redis_key_name=f"refresh_token:{payload['username']}:{payload['session_id']}"
-            )
-            if not stored_refresh or stored_refresh != refresh_token:
-                color_logger.error(f"refresh_access_token refresh_token校验失败: 与redis中不一致")
+                # 验证refresh token - 检查特定会话的refresh token
+                stored_refresh = get_redis_value(
+                    redis_db_name='AUTH',
+                    redis_key_name=f"refresh_token:{payload['username']}:{payload['session_id']}"
+                )
+                if not stored_refresh or stored_refresh != refresh_token:
+                    color_logger.error(f"refresh_access_token refresh_token校验失败: 与redis中不一致")
+                    return None, None
+
+                # 生成新的access token，保持相同的会话ID
+                access_token = self._generate_token(
+                    payload['username'],
+                    payload['session_id'],  # 保持相同的会话ID
+                    config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE')
+                )
+                color_logger.debug(f"refresh_access_token 生成access_token")
+
+                # 更新Redis中特定会话的access token
+                set_redis_value(
+                    redis_db_name='AUTH',
+                    redis_key_name=f"access_token:{payload['username']}:{payload['session_id']}",
+                    redis_key_value=access_token,
+                    set_expire=config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE')
+                )
+                color_logger.debug(f"refresh_access_token 更新Redis")
+
+                return access_token, payload['username']
+            else:
+                # 这可能是OAuth2 refresh token，需要通过Hydra处理
+                # 但通常OAuth2的刷新流程由客户端直接与Hydra通信
+                # 我们这里返回错误，建议客户端直接与Hydra交互
+                color_logger.warning("OAuth2 refresh token should be handled directly with Hydra")
                 return None, None
-
-            # 生成新的access token，保持相同的会话ID
-            access_token = self._generate_token(
-                payload['username'],
-                payload['session_id'],  # 保持相同的会话ID
-                config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE')
-            )
-            color_logger.debug(f"refresh_access_token 生成access_token")
-
-            # 更新Redis中特定会话的access token
-            set_redis_value(
-                redis_db_name='AUTH',
-                redis_key_name=f"access_token:{payload['username']}:{payload['session_id']}",
-                redis_key_value=access_token,
-                set_expire=config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE')
-            )
-            color_logger.debug(f"refresh_access_token 更新Redis")
-
-            return access_token, payload['username']
+        except jwt.ExpiredSignatureError:
+            color_logger.debug("JWT refresh token expired")
+            return None, None
+        except jwt.InvalidTokenError as e:
+            color_logger.debug(f"Invalid JWT refresh token: {e}")
+            # 如果是无效的JWT token，仍然返回错误
+            return None, None
         except Exception as e:
             color_logger.error(f"refresh_access_token error: {e}")
             return None, None
