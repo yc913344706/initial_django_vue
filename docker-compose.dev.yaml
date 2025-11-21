@@ -164,3 +164,43 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+
+  hydra-migrate:
+    image: oryd/hydra:v2.2.0
+    container_name: initial_django_vue_hydra_migrate
+    environment:
+      - DSN=mysql://root:Admin@123@tcp(db_mysql:3306)/hydra?parseTime=true
+    depends_on:
+      db_mysql:
+        condition: service_healthy
+    command: migrate sql -e --yes
+    restart: "no"
+
+  hydra:
+    image: oryd/hydra:v2.2.0
+    container_name: initial_django_vue_hydra
+    ports:
+      - "4444:4444" # Public port
+      - "4445:4445" # Admin port
+    environment:
+      - DSN=mysql://root:Admin@123@tcp(db_mysql:3306)/hydra?parseTime=true
+      - SECRETS_SYSTEM=your-secret-key-change-this-in-production
+      - URLS_SELF_ISSUER=http://localhost:4444
+      - URLS_CONSENT=http://localhost:8080/api/v1/hydra/consent
+      - URLS_LOGIN=http://localhost:8080/api/v1/hydra/login
+      - URLS_LOGOUT=http://localhost:8080/api/v1/hydra/logout
+    depends_on:
+      db_mysql:
+        condition: service_healthy
+      hydra-migrate:
+        condition: service_completed_successfully
+    command:
+      - serve
+      - all
+      - --dev
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4444/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s

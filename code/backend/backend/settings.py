@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     'apps.perm',
     'apps.audit',
     'apps.ldapauth',
+    'apps.hydra',
 ]
 
 MIDDLEWARE = [
