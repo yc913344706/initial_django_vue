@@ -45,6 +45,15 @@
 - ✅ Login logs: User login, logout, failed login
 - ✅ Operation logs: Record all model additions, deletions, and modifications by model dimension.
 
+**OAuth2/OIDC Integration**
+
+- ✅ Standard OAuth2 provider with ORY Hydra
+- ✅ OpenID Connect (OIDC) support for identity verification
+- ✅ OAuth2 client management interface
+- ✅ Integration with existing user and permission systems
+- ✅ Support for Authorization Code, Client Credentials, and other grant types
+- ✅ ID Token support for user identity information
+
 **Frontend Features**
 
 - ✅ Dynamic menu (dynamically generated based on permissions)

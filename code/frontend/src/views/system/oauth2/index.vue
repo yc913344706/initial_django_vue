@@ -217,6 +217,7 @@ import { apiMap } from '@/config/api'
 import { hasPerms } from "@/utils/auth";
 import { Search } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
+import '@/style/system.scss'
 
 const { t } = useI18n()
 

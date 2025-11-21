@@ -7,12 +7,19 @@
 ## 架构
 
 ```
-外部应用 → Hydra OAuth2 Endpoints → Django后端认证 → Hydra返回token
+外部应用 → Hydra OAuth2 Endpoints ↔ Django后端认证 → Hydra返回token
 ```
 
-- **ORY Hydra**: 负责OAuth2协议处理和令牌管理
-- **Django后端**: 负责用户认证、权限验证
+- **ORY Hydra**: 负责OAuth2协议处理和令牌管理，对外提供标准OAuth2接口
+- **Django后端**: 负责用户认证、权限验证，Hydra在认证流程中回调此系统
 - **现有系统**: 保留原有用户、角色和权限系统
+- **Nginx**: 代理请求，/oauth2/ 路由到Hydra，/api/v1/hydra/ 路由到Django
+
+具体流程：
+1. 外部应用直接访问Hydra的OAuth2端点（如 /oauth2/auth, /oauth2/token）
+2. Hydra在认证流程中回调到Django的Hydra端点（如 /api/v1/hydra/login, /api/v1/hydra/consent）
+3. Django后端完成用户认证后返回结果给Hydra
+4. Hydra最终向外部应用返回令牌
 
 ## 部署配置
 
@@ -39,7 +46,41 @@ hydra:
 
 ### Nginx配置
 ```nginx
-# OAuth2 endpoints
+# OAuth2 endpoints - Standard Hydra public endpoints
+location /api/v1/oauth2/ {
+    proxy_pass http://hydra:4444/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+# Hydra endpoints handled by Django backend (login, consent, etc.)
+location /api/v1/hydra/ {
+    proxy_pass http://backend:8000/api/v1/hydra/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+# Hydra admin endpoints (for management) - typically internal only
+# location /hydra-admin/ {
+#     include /etc/nginx/conf.d/internal_network_access;
+#     proxy_pass http://hydra:4445/;
+#     proxy_http_version 1.1;
+#     proxy_set_header Host $host;
+#     proxy_set_header X-Real-IP $remote_addr;
+#     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#     proxy_set_header X-Forwarded-Proto $scheme;
+# }
+```
+
+注：根据实际需求，如果外部应用需要直接访问标准OAuth2端点，可能需要额外配置如下：
+```nginx
+# 标准OAuth2端点（如果外部应用使用）
 location /oauth2/ {
     proxy_pass http://hydra:4444/;
     proxy_http_version 1.1;
@@ -49,9 +90,9 @@ location /oauth2/ {
     proxy_set_header X-Forwarded-Proto $scheme;
 }
 
-# Hydra admin endpoints (for management)
-location /hydra-admin/ {
-    proxy_pass http://hydra:4445/;
+# OIDC UserInfo端点
+location /userinfo {
+    proxy_pass http://hydra:4444/userinfo;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -87,9 +128,9 @@ location /hydra-admin/ {
 - `GET/POST/PUT/DELETE /api/v1/hydra/manage-client` - OAuth2客户端管理
 
 ### Hydra公共API端点
-- `/oauth2/auth` - OAuth2授权端点
-- `/oauth2/token` - OAuth2令牌端点
-- `/oauth2/revoke` - OAuth2令牌撤销端点
+- `/api/v1/oauth2/auth` - OAuth2授权端点
+- `/api/v1/oauth2/token` - OAuth2令牌端点
+- `/api/v1/oauth2/revoke` - OAuth2令牌撤销端点
 - `/userinfo` - OIDC用户信息端点
 
 ### Hydra管理API端点
@@ -413,14 +454,14 @@ None（公开客户端）：
 ### 1. 外部应用集成
 外部应用使用标准OAuth2授权码流程与本系统集成：
 
-1. 重定向用户到: `http://localhost:8080/oauth2/auth?client_id=xxx&redirect_uri=xxx&response_type=code&scope=openid`
+1. 重定向用户到: `http://localhost:8080/api/v1/oauth2/auth?client_id=xxx&redirect_uri=xxx&response_type=code&scope=openid`
 2. 用户完成认证和授权
 3. 获得授权码
-4. 通过授权码换取token: `http://localhost:8080/oauth2/token`
+4. 通过授权码换取token: `http://localhost:8080/api/v1/oauth2/token`
 
 ### 2. OIDC支持
 系统支持OpenID Connect，外部应用可获取用户信息：
-- 用户信息端点: `http://localhost:8080/api/v1/hydra/userinfo`
+- 用户信息端点: `http://localhost:8080/userinfo`
 
 ## 管理界面
 
