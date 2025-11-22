@@ -2,6 +2,7 @@ import time
 import jwt
 import uuid
 from backend.settings import config_data
+from apps.user.models import User
 from lib.log import color_logger
 
 from lib.redis_tool import delete_redis_value, get_redis_value, set_redis_value
@@ -9,9 +10,10 @@ import requests
 
 
 class TokenManager:
-    def _generate_token(self, username, session_id, expire_time):
+    def _generate_token(self, user_id, username, session_id, expire_time):
         """生成JWT token"""
         payload = {
+            'user_id': user_id,
             'username': username,
             'session_id': session_id,
             'exp': int(time.time()) + expire_time,
@@ -69,18 +71,20 @@ class TokenManager:
             color_logger.error(f"Error verifying OAuth2 token with Hydra: {e}")
         return None
 
-    def generate_tokens(self, username):
+    def generate_tokens(self, user_obj: User):
         """生成access token和refresh token"""
         # 生成唯一的会话ID
         session_id = str(uuid.uuid4())
         
         access_token = self._generate_token(
-            username,
+            str(user_obj.uuid),
+            user_obj.username,
             session_id,
             config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE')
         )
         refresh_token = self._generate_token(
-            username,
+            str(user_obj.uuid),
+            user_obj.username,
             session_id,
             config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE')
         )
@@ -88,19 +92,19 @@ class TokenManager:
         # 存储到Redis - 使用用户名和会话ID的组合键
         set_redis_value(
             redis_db_name='AUTH',
-            redis_key_name=f"access_token:{username}:{session_id}",
+            redis_key_name=f"access_token:{user_obj.username}:{session_id}",
             redis_key_value=access_token,
             set_expire=config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE')
         )
         set_redis_value(
             redis_db_name='AUTH',
-            redis_key_name=f"refresh_token:{username}:{session_id}",
+            redis_key_name=f"refresh_token:{user_obj.username}:{session_id}",
             redis_key_value=refresh_token,
             set_expire=config_data.get('AUTH', {}).get('REFRESH_TOKEN_EXPIRE')
         )
         
         # 将会话ID添加到用户的活跃会话列表
-        self._add_user_session(username, session_id)
+        self._add_user_session(user_obj.username, session_id)
 
         return access_token, refresh_token, session_id
 
@@ -135,8 +139,10 @@ class TokenManager:
     def verify_token(self, token):
         """验证token - 支持内部JWT和外部OAuth2 token"""
         try:
+            color_logger.debug(f"verify_token")
             # 首先检查是否为内部JWT token
             if self.is_jwt_token(token):
+                color_logger.debug(f"verify_token - is jwt token")
                 # 这是内部JWT token，使用原有逻辑验证
                 payload = jwt.decode(
                     token,
@@ -154,6 +160,7 @@ class TokenManager:
 
                 return payload
             else:
+                color_logger.debug(f"verify_token - is not jwt token")
                 # 这可能是OAuth2 token，通过Hydra验证
                 return self.verify_oauth2_token_via_hydra(token)
         except jwt.ExpiredSignatureError:
@@ -196,6 +203,7 @@ class TokenManager:
 
                 # 生成新的access token，保持相同的会话ID
                 access_token = self._generate_token(
+                    payload['user_id'],
                     payload['username'],
                     payload['session_id'],  # 保持相同的会话ID
                     config_data.get('AUTH', {}).get('ACCESS_TOKEN_EXPIRE')

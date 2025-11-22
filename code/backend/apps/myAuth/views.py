@@ -141,7 +141,7 @@ def login(request):
         # 生成token
         color_logger.debug(f"generate_tokens: {username}")
         token_manager = TokenManager()
-        access_token, refresh_token, session_id = token_manager.generate_tokens(username)
+        access_token, refresh_token, session_id = token_manager.generate_tokens(user_obj)
 
         color_logger.debug(f"get_user_perm_json_all: {user_obj.uuid}")
         user_permission_json = get_user_perm_json_all(user_obj.uuid)
@@ -252,6 +252,25 @@ def logout(request):
     except Exception as e:
         color_logger.error(f"退出失败: {str(e)}")
         return pub_error_response(10010, msg=f"退出失败: {str(e)}")
+
+def verify_access_token(request):
+    """校验token"""
+    try:
+        if request.method != 'POST':
+            return pub_error_response(10011, msg='仅支持POST请求')
+        color_logger.info(f"开始校验token")
+        body = pub_get_request_body(request)
+
+        access_token = body.get('access-token')
+        
+        token_manager = TokenManager()
+        payload = token_manager.verify_token(access_token)
+        if not payload:
+            return pub_error_response(10016, msg='access_token校验失败')
+        return pub_success_response(payload)
+    except Exception as e:
+        color_logger.error(f"token校验失败: {e.args}")
+        return pub_error_response(10017, msg='access_token总体校验失败')
 
 def refresh_token(request):
     """刷新token"""
