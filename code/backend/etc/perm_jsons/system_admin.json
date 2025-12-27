@@ -17,7 +17,6 @@
         "/api/v1/audit/config/": ["GET"],
         "/api/v1/ldap/test-connection/": ["POST"],
         "/api/v1/ldap/security/config/": ["GET", "POST"],
-        "/api/v1/hydra/manage-client/": ["GET", "POST", "PUT", "DELETE"]
       }
     },
     "frontend": {
@@ -31,9 +30,7 @@
         "system.role",
         "system.role.detail",
         "system.group",
-        "system.group.detail",
-        "system.oauth2",
-        "system.oauth2.detail"
+        "system.group.detail"
       ],
       "resources": [
         "system.userList:read",
@@ -64,14 +61,7 @@
         "system.group:read",
         "system.group:create",
         "system.group:update",
-        "system.group:delete",
-        "system.oauth2ClientList:read",
-        "system.oauth2ClientList:create",
-        "system.oauth2ClientList:delete",
-        "system.oauth2Client:read",
-        "system.oauth2Client:create",
-        "system.oauth2Client:update",
-        "system.oauth2Client:delete"
+        "system.group:delete"
       ]
     }
   }
